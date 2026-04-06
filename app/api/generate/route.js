@@ -13,9 +13,11 @@ export async function POST(request) {
       return Response.json({ error: 'No key' }, { status: 500 });
     }
     const career = customGoal || careerPath;
-    const major = majorName || 'best recommended';
+    const major = majorName || '';
 
-    var roadmapPrompt = 'Return ONLY raw JSON. No markdown. No text.\n\n' + 'Best major roadmap at ' + schoolName + ' for ' + career + '.\n\nStructure: {"schoolFullName":"","major":"","careerTitle":"","departmentUrl":"real URL to dept homepage","recommendedMajors":["major1","major2","major3"],"semesters":[8 with name/courses(4 each: code/title/credits/type/desc)],"clubs":[],"milestones":[8 with sem/label],"skills":[5],"beyondClassroom":{"intro":"a 1-2 sentence intro about why beyond-classroom matters for this career","technicalSkills":[{"skill":"skill name","why":"why this matters","semester":"when to learn","resources":[{"name":"resource name","type":"Online Course","url":"https://example.com","cost":"Free","time":"10 hours"}]}],"networkingPlaybook":[{"phase":"phase name","semester":"Fall - Freshman","actions":["action 1","action 2"]}],"interviewPrep":[{"category":"category name","timeline":"when to start","resources":[{"name":"resource name","url":"https://example.com","desc":"short description"}]}],"weeklyHabits":["habit 1","habit 2","habit 3"],"careerInsiderTips":["tip 1","tip 2","tip 3"]}}\n\nPick the best major for this career at this school and put it in "major". Also provide 3 recommended majors available at this school in "recommendedMajors". Semesters: "Fall - Freshman" thru "Spring - Senior". Types: Core/Prerequisite/Elective/Gen Ed. Desc under 8 words. For IB: recruiting sophomore winter. Leave clubs as empty array []. Real course codes. beyondClassroom must have all fields filled with real useful data. technicalSkills must have exactly 2 items. networkingPlaybook must have exactly 2 items. interviewPrep must have exactly 1 item. weeklyHabits must have exactly 3 strings. careerInsiderTips must have exactly 3 strings. Nothing after closing brace.';
+    var majorLine = major ? ('Use "' + major + '" as the major.') : 'Pick the best major for ' + career + ' at ' + schoolName + '.';
+
+    var roadmapPrompt = 'Return ONLY raw JSON.\n\nCollege roadmap at ' + schoolName + ' for ' + career + '.\n\n' + majorLine + ' Provide 3 recommended majors that exist at this school in "recommendedMajors".\n\nIMPORTANT: Use REAL course codes from ' + schoolName + '. Do not use placeholder codes like 1XX or 2XX. Use actual department prefixes and real course numbers. Each course needs 3 or 4 credits. For departmentUrl use the real department webpage URL at this school.\n\nJSON structure:\n{"schoolFullName":"","major":"","careerTitle":"","departmentUrl":"","recommendedMajors":["","",""],"semesters":[{"name":"Fall - Freshman","courses":[{"code":"ECON 110","title":"Intro Microeconomics","credits":4,"type":"Core","desc":"Supply and demand fundamentals"}]}],"clubs":[],"milestones":[{"sem":1,"label":"milestone text"}],"skills":["skill1","skill2","skill3","skill4","skill5"],"beyondClassroom":{"intro":"Why this matters","technicalSkills":[{"skill":"name","why":"reason","semester":"Fall - Freshman","resources":[{"name":"resource","type":"Online Course","url":"https://example.com","cost":"Free","time":"10 hours"}]},{"skill":"name2","why":"reason2","semester":"Spring - Freshman","resources":[{"name":"resource2","type":"Book","url":"https://example.com","cost":"Free","time":"5 hours"}]}],"networkingPlaybook":[{"phase":"phase1","semester":"Fall - Freshman","actions":["action1","action2"]},{"phase":"phase2","semester":"Fall - Sophomore","actions":["action1","action2"]}],"interviewPrep":[{"category":"type","timeline":"Spring - Junior","resources":[{"name":"resource","url":"https://example.com","desc":"description"}]}],"weeklyHabits":["habit1","habit2","habit3"],"careerInsiderTips":["tip1","tip2","tip3"]}}\n\n8 semesters: "Fall - Freshman" thru "Spring - Senior". 4 courses each. Types: Core/Prerequisite/Elective/Gen Ed. Desc under 8 words. 8 milestones. Leave clubs as []. Nothing after closing brace.';
 
     var roadmapResponse = await fetch(GEMINI_API_URL, {
       method: 'POST',
@@ -28,13 +30,14 @@ export async function POST(request) {
         generationConfig: {
           responseMimeType: 'application/json',
           maxOutputTokens: 8192,
+          temperature: 0.7,
         },
       }),
     });
 
     if (!roadmapResponse.ok) {
       var errBody = await roadmapResponse.text();
-      console.error('Gemini roadmap error:', roadmapResponse.status, errBody);
+      console.error('Gemini error:', roadmapResponse.status, errBody);
       return Response.json({ error: 'AI error' }, { status: 502 });
     }
 
@@ -72,7 +75,7 @@ export async function POST(request) {
 
     // Club search using Gemini with Google Search grounding
     try {
-      var clubPrompt = 'Search for real student clubs and organizations at ' + schoolName + ' related to ' + career + '. Find real clubs that actually exist there.\n\nReturn ONLY a raw JSON array. No markdown. Format: [{"name":"real club name","type":"Professional","priority":"Essential","desc":"what they do in 8 words","url":"real URL to their page"}]\n\nFind 3-4 real clubs. Use real URLs from search results. If you cannot find a URL leave it as "". JSON array only, no other text.';
+      var clubPrompt = 'Search for real student clubs at ' + schoolName + ' related to ' + career + '.\n\nReturn ONLY a JSON array: [{"name":"real club name","type":"Professional","priority":"Essential","desc":"8 word description","url":"real URL or empty string"}]\n\nFind 3-4 real clubs. JSON array only.';
 
       var clubResponse = await fetch(GEMINI_API_URL, {
         method: 'POST',
@@ -83,9 +86,7 @@ export async function POST(request) {
         body: JSON.stringify({
           contents: [{ parts: [{ text: clubPrompt }] }],
           tools: [{ google_search: {} }],
-          generationConfig: {
-            maxOutputTokens: 2048,
-          },
+          generationConfig: { maxOutputTokens: 2048 },
         }),
       });
 
