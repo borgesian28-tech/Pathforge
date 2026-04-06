@@ -14,7 +14,7 @@ export default function OnboardingFlow({ onComplete, onLoading }) {
     if (!school.trim() || !selectedCareer) return;
     const career = CAREER_OPTIONS.find((c) => c.id === selectedCareer);
     const isCustom = selectedCareer === 'custom';
-    const major = isCustom ? '' : (selectedMajor || career.majors[0]);
+    const major = '';
 
     onLoading(true, selectedCareer, 'Searching ' + school + '\'s course catalog...');
 
@@ -111,14 +111,6 @@ export default function OnboardingFlow({ onComplete, onLoading }) {
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>Which school are you attending?</h2>
         <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 20 }}>We'll find real courses, clubs, AND everything your school won't teach you.</p>
         <input type="text" placeholder="e.g. Williams College, NYU, Stanford..." value={school} onChange={(e) => setSchool(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && school.trim() && handleBuild()} style={{ ...inp, marginBottom: 16 }} />
-        {!isCustom && (
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ color: '#8a8a9a', fontSize: 13, display: 'block', marginBottom: 8 }}>Preferred major:</label>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {career.majors.map((m) => (<button key={m} onClick={() => setSelectedMajor(m)} style={{ padding: '8px 16px', borderRadius: 20, border: 'none', background: selectedMajor === m ? career.accent : '#1a1a2e', color: selectedMajor === m ? '#000' : '#aaa', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{m}</button>))}
-            </div>
-          </div>
-        )}
         {isCustom && <div style={{ background: '#111122', border: '1px solid #fbbf2433', borderRadius: 12, padding: '12px 16px', marginBottom: 16 }}><div style={{ color: '#fbbf24', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>YOUR CUSTOM GOAL</div><p style={{ color: '#ccc', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{customGoal}</p></div>}
         <div style={{ background: '#0A5C3615', border: '1px solid #0A5C3633', borderRadius: 12, padding: '12px 16px', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
           <span style={{ fontSize: 16, marginTop: 1 }}>🚀</span>
