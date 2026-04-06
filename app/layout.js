@@ -1,4 +1,5 @@
 import './globals.css';
+import { AuthProvider } from '@/components/AuthContext';
 
 export const metadata = {
   title: 'PathForge — AI-Powered College Advising',
@@ -19,7 +20,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }
