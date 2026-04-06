@@ -9,8 +9,10 @@ export default function Dashboard({ profile, onReset }) {
   const [completedCourses, setCompletedCourses] = useState({});
   const [expandedMilestone, setExpandedMilestone] = useState(null);
   const [showMajors, setShowMajors] = useState(false);
+  const [currentProfile, setCurrentProfile] = useState(profile);
+  const [switchingMajor, setSwitchingMajor] = useState(false);
   const semRef = useRef(null);
-  const { courseData, careerObj } = profile;
+  const { courseData, careerObj } = currentProfile;
   const semesters = courseData.semesters || [];
   const clubs = courseData.clubs || [];
   const milestones = courseData.milestones || [];
@@ -25,6 +27,39 @@ export default function Dashboard({ profile, onReset }) {
   const progress = totalCourses > 0 ? Math.round((completedCount / totalCourses) * 100) : 0;
   const totalCredits = semesters.reduce(function(a, s) { return a + (s.courses ? s.courses.reduce(function(b, c) { return b + (c.credits || 3); }, 0) : 0); }, 0);
   const completedCredits = semesters.reduce(function(a, s, si) { return a + (s.courses ? s.courses.reduce(function(b, c, ci) { return b + (completedCourses[si + '-' + ci] ? (c.credits || 3) : 0); }, 0) : 0); }, 0);
+
+  const handleMajorSwitch = async function(newMajor) {
+    if (newMajor === (courseData.major || currentProfile.major)) return;
+    setSwitchingMajor(true);
+    try {
+      var res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          schoolName: currentProfile.school,
+          careerPath: currentProfile.careerLabel,
+          majorName: newMajor,
+          customGoal: null,
+        }),
+      });
+      if (!res.ok) throw new Error('API error');
+      var data = await res.json();
+      if (data.semesters) {
+        setCurrentProfile({
+          ...currentProfile,
+          major: data.major || newMajor,
+          courseData: data,
+        });
+        setCompletedCourses({});
+        setActiveSemester(0);
+        setActiveTab('courses');
+      }
+    } catch (err) {
+      console.error('Major switch failed:', err);
+      alert('Could not switch major. Please try again.');
+    }
+    setSwitchingMajor(false);
+  };
 
   useEffect(function() {
     if (semRef.current && semRef.current.children[activeSemester]) {
@@ -43,36 +78,43 @@ export default function Dashboard({ profile, onReset }) {
 
   return (
     <div style={{ minHeight: '100vh', background: '#08080f' }}>
+      {switchingMajor && (
+        <div style={{ position: 'fixed', inset: 0, background: '#08080fdd', zIndex: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 48, height: 48, borderRadius: '50%', border: '3px solid transparent', borderTopColor: careerObj.accent, animation: 'spin 1s linear infinite', marginBottom: 16 }} />
+          <p style={{ color: '#fff', fontSize: 16, fontWeight: 600 }}>Switching major...</p>
+          <p style={{ color: '#6a6a7a', fontSize: 13, marginTop: 4 }}>Rebuilding your course roadmap</p>
+        </div>
+      )}
       <div style={{ background: 'linear-gradient(135deg, ' + careerObj.color + 'cc, #08080f)', padding: '24px 20px 20px', borderBottom: '1px solid #1e1e32' }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}><span style={{ fontSize: 22 }}>🎓</span><span style={{ color: careerObj.accent, fontWeight: 700, fontSize: 14, letterSpacing: 1 }}>PATHFORGE</span></div>
-              <h1 style={{ fontFamily: "'Playfair Display', serif", color: '#fff', fontSize: 'clamp(20px, 4vw, 28px)', margin: '4px 0 2px' }}>{profile.name}'s Roadmap</h1>
-              <p style={{ color: '#aaa', fontSize: 13, margin: 0 }}>{careerObj.icon} {profile.careerLabel} • {courseData.major || profile.major} @ {courseData.schoolFullName || profile.school}</p>
+              <h1 style={{ fontFamily: "'Playfair Display', serif", color: '#fff', fontSize: 'clamp(20px, 4vw, 28px)', margin: '4px 0 2px' }}>{currentProfile.name}'s Roadmap</h1>
+              <p style={{ color: '#aaa', fontSize: 13, margin: 0 }}>{careerObj.icon} {currentProfile.careerLabel} • {courseData.major || currentProfile.major} @ {courseData.schoolFullName || currentProfile.school}</p>
             </div>
             <button onClick={onReset} style={{ background: '#ffffff11', border: '1px solid #ffffff22', borderRadius: 8, color: '#888', fontSize: 12, padding: '6px 12px', cursor: 'pointer' }}>↻ New</button>
           </div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#0A5C3622', border: '1px solid #0A5C3644', borderRadius: 20, padding: '4px 12px', marginTop: 10 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', animation: 'pulse 2s infinite' }} />
             <span style={{ color: '#4ade80', fontSize: 11, fontWeight: 600 }}>LIVE DATA</span>
-            <span style={{ color: '#6a7a6a', fontSize: 11 }}>from {profile.school}</span>
+            <span style={{ color: '#6a7a6a', fontSize: 11 }}>from {currentProfile.school}</span>
           </div>
           {recommendedMajors.length > 0 && (
             <div style={{ marginTop: 10 }}>
               <button onClick={function() { setShowMajors(!showMajors); }} style={{ background: '#ffffff0a', border: '1px solid #ffffff15', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
                 <span style={{ fontSize: 14 }}>🎓</span>
-                <span style={{ color: '#aaa', fontSize: 12, fontWeight: 600, flex: 1, textAlign: 'left' }}>Recommended Majors at {profile.school}</span>
+                <span style={{ color: '#aaa', fontSize: 12, fontWeight: 600, flex: 1, textAlign: 'left' }}>Recommended Majors at {currentProfile.school}</span>
                 <span style={{ color: '#6a6a7a', fontSize: 14, transform: showMajors ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▾</span>
               </button>
               {showMajors && (
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
                   {recommendedMajors.map(function(m, i) {
-                    var isCurrent = m === (courseData.major || profile.major);
+                    var isCurrent = m === (courseData.major || currentProfile.major);
                     return (
-                      <span key={i} style={{ padding: '6px 14px', borderRadius: 20, background: isCurrent ? careerObj.accent : '#1a1a2e', color: isCurrent ? '#000' : '#aaa', fontSize: 12, fontWeight: 600, border: isCurrent ? 'none' : '1px solid #2a2a3e' }}>
+                      <button key={i} onClick={function() { if (!isCurrent && !switchingMajor) handleMajorSwitch(m); }} style={{ padding: '6px 14px', borderRadius: 20, background: isCurrent ? careerObj.accent : '#1a1a2e', color: isCurrent ? '#000' : '#aaa', fontSize: 12, fontWeight: 600, border: isCurrent ? 'none' : '1px solid #2a2a3e', cursor: isCurrent ? 'default' : 'pointer', opacity: switchingMajor ? 0.5 : 1, transition: 'all 0.2s' }}>
                         {isCurrent ? '✓ ' : ''}{m}
-                      </span>
+                      </button>
                     );
                   })}
                 </div>
@@ -172,7 +214,7 @@ export default function Dashboard({ profile, onReset }) {
 
         {activeTab === 'clubs' && (
           <div style={{ marginTop: 20, display: 'grid', gap: 12 }}>
-            <p style={{ color: '#8a8a9a', fontSize: 14, margin: '0 0 8px' }}>Organizations at {profile.school} for your {profile.careerLabel} path.</p>
+            <p style={{ color: '#8a8a9a', fontSize: 14, margin: '0 0 8px' }}>Organizations at {currentProfile.school} for your {currentProfile.careerLabel} path.</p>
             {clubs.map(function(club, i) {
               var pc = { Essential: '#ef4444', Recommended: '#C9A84C', Helpful: '#3b82f6' };
               return (
@@ -194,12 +236,12 @@ export default function Dashboard({ profile, onReset }) {
           <div style={{ marginTop: 20 }}>
             <div style={{ background: 'linear-gradient(135deg, ' + careerObj.color + '44, #111122)', border: '1px solid #1e1e32', borderRadius: 16, padding: 20, marginBottom: 16 }}>
               <div style={{ fontSize: 36, marginBottom: 8 }}>{careerObj.icon}</div>
-              <h3 style={{ fontFamily: "'Playfair Display', serif", color: '#fff', fontSize: 22, margin: '0 0 6px' }}>{profile.careerLabel}</h3>
-              <p style={{ color: '#aaa', fontSize: 14, margin: 0 }}>{courseData.major} major at {courseData.schoolFullName || profile.school}</p>
+              <h3 style={{ fontFamily: "'Playfair Display', serif", color: '#fff', fontSize: 22, margin: '0 0 6px' }}>{currentProfile.careerLabel}</h3>
+              <p style={{ color: '#aaa', fontSize: 14, margin: 0 }}>{courseData.major} major at {courseData.schoolFullName || currentProfile.school}</p>
               {courseData.departmentUrl && courseData.departmentUrl.length > 0 && <a href={courseData.departmentUrl} target="_blank" rel="noopener noreferrer" style={{ color: careerObj.accent, fontSize: 13, display: 'inline-block', marginTop: 8, fontWeight: 600 }}>View Department Page ↗</a>}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
-              {[{ l: 'Major', v: courseData.major }, { l: 'School', v: profile.school }, { l: 'Credits', v: totalCredits }, { l: 'Semesters', v: semesters.length }].map(function(x, i) {
+              {[{ l: 'Major', v: courseData.major }, { l: 'School', v: currentProfile.school }, { l: 'Credits', v: totalCredits }, { l: 'Semesters', v: semesters.length }].map(function(x, i) {
                 return (
                   <div key={i} style={{ background: '#111122', border: '1px solid #1e1e32', borderRadius: 12, padding: '14px 16px' }}>
                     <div style={{ color: '#6a6a7a', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>{x.l}</div>
@@ -217,7 +259,7 @@ export default function Dashboard({ profile, onReset }) {
           </div>
         )}
       </div>
-      <style>{'@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}'}</style>
+      <style>{'@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}} @keyframes spin{to{transform:rotate(360deg)}}'}</style>
     </div>
   );
 }
