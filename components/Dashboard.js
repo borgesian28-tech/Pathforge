@@ -1,17 +1,21 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import CourseCard from './CourseCard';
 import BeyondClassroom from './BeyondClassroom';
+import { useAuth } from './AuthContext';
 
-export default function Dashboard({ profile, onReset }) {
+export default function Dashboard({ profile, onReset, savedProgress }) {
+  const { user, login, logout, saveRoadmap, saveProgress } = useAuth();
   const [activeTab, setActiveTab] = useState('courses');
   const [activeSemester, setActiveSemester] = useState(0);
-  const [completedCourses, setCompletedCourses] = useState({});
+  const [completedCourses, setCompletedCourses] = useState(savedProgress || {});
   const [expandedMilestone, setExpandedMilestone] = useState(null);
   const [showMajors, setShowMajors] = useState(false);
   const [currentProfile, setCurrentProfile] = useState(profile);
   const [switchingMajor, setSwitchingMajor] = useState(false);
+  const [saveStatus, setSaveStatus] = useState('');
   const semRef = useRef(null);
+  const saveTimer = useRef(null);
   const { courseData, careerObj } = currentProfile;
   const semesters = courseData.semesters || [];
   const clubs = courseData.clubs || [];
@@ -21,7 +25,28 @@ export default function Dashboard({ profile, onReset }) {
 
   const semesterLabels = ['Fall - Freshman','Spring - Freshman','Fall - Sophomore','Spring - Sophomore','Fall - Junior','Spring - Junior','Fall - Senior','Spring - Senior'];
 
-  const toggleCourse = function(si, ci) { var k = si + '-' + ci; setCompletedCourses(function(p) { var n = {}; for (var x in p) n[x] = p[x]; n[k] = !p[k]; return n; }); };
+  // Auto-save progress when checkboxes change
+  var debouncedSave = useCallback(function(courses) {
+    if (!user) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(function() {
+      saveProgress(courses);
+      setSaveStatus('Saved');
+      setTimeout(function() { setSaveStatus(''); }, 2000);
+    }, 1000);
+  }, [user, saveProgress]);
+
+  const toggleCourse = function(si, ci) {
+    var k = si + '-' + ci;
+    setCompletedCourses(function(p) {
+      var n = {};
+      for (var x in p) n[x] = p[x];
+      n[k] = !p[k];
+      debouncedSave(n);
+      return n;
+    });
+  };
+
   const totalCourses = semesters.reduce(function(a, s) { return a + (s.courses ? s.courses.length : 0); }, 0);
   const completedCount = Object.values(completedCourses).filter(Boolean).length;
   const progress = totalCourses > 0 ? Math.round((completedCount / totalCourses) * 100) : 0;
@@ -45,14 +70,16 @@ export default function Dashboard({ profile, onReset }) {
       if (!res.ok) throw new Error('API error');
       var data = await res.json();
       if (data.semesters) {
-        setCurrentProfile({
+        var newProfile = {
           ...currentProfile,
           major: data.major || newMajor,
           courseData: data,
-        });
+        };
+        setCurrentProfile(newProfile);
         setCompletedCourses({});
         setActiveSemester(0);
         setActiveTab('courses');
+        if (user) saveRoadmap(newProfile, {});
       }
     } catch (err) {
       console.error('Major switch failed:', err);
@@ -60,6 +87,13 @@ export default function Dashboard({ profile, onReset }) {
     }
     setSwitchingMajor(false);
   };
+
+  // Save roadmap to Firebase when first loaded
+  useEffect(function() {
+    if (user && currentProfile && !savedProgress) {
+      saveRoadmap(currentProfile, completedCourses);
+    }
+  }, [user]);
 
   useEffect(function() {
     if (semRef.current && semRef.current.children[activeSemester]) {
@@ -93,7 +127,20 @@ export default function Dashboard({ profile, onReset }) {
               <h1 style={{ fontFamily: "'Playfair Display', serif", color: '#fff', fontSize: 'clamp(20px, 4vw, 28px)', margin: '4px 0 2px' }}>{currentProfile.name}'s Roadmap</h1>
               <p style={{ color: '#aaa', fontSize: 13, margin: 0 }}>{careerObj.icon} {currentProfile.careerLabel} • {courseData.major || currentProfile.major} @ {courseData.schoolFullName || currentProfile.school}</p>
             </div>
-            <button onClick={onReset} style={{ background: '#ffffff11', border: '1px solid #ffffff22', borderRadius: 8, color: '#888', fontSize: 12, padding: '6px 12px', cursor: 'pointer' }}>↻ New</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {saveStatus && <span style={{ color: '#4ade80', fontSize: 11, fontWeight: 600 }}>✓ {saveStatus}</span>}
+              {user ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {user.photoURL && <img src={user.photoURL} alt="" style={{ width: 24, height: 24, borderRadius: '50%' }} referrerPolicy="no-referrer" />}
+                  <button onClick={function() { if (confirm('Start a new roadmap?')) { onReset(); } }} style={{ background: '#ffffff11', border: '1px solid #ffffff22', borderRadius: 8, color: '#888', fontSize: 12, padding: '6px 12px', cursor: 'pointer' }}>↻ New</button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <button onClick={login} style={{ background: '#ffffff11', border: '1px solid #ffffff22', borderRadius: 8, color: '#C9A84C', fontSize: 11, padding: '6px 10px', cursor: 'pointer', fontWeight: 600 }}>Sign in to save</button>
+                  <button onClick={onReset} style={{ background: '#ffffff11', border: '1px solid #ffffff22', borderRadius: 8, color: '#888', fontSize: 12, padding: '6px 12px', cursor: 'pointer' }}>↻ New</button>
+                </div>
+              )}
+            </div>
           </div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#0A5C3622', border: '1px solid #0A5C3644', borderRadius: 20, padding: '4px 12px', marginTop: 10 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', animation: 'pulse 2s infinite' }} />
@@ -147,6 +194,12 @@ export default function Dashboard({ profile, onReset }) {
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 16px 40px' }}>
         {activeTab === 'courses' && (
           <div style={{ marginTop: 20 }}>
+            {!user && (
+              <div style={{ background: 'linear-gradient(135deg, #C9A84C22, #111122)', border: '1px solid #C9A84C33', borderRadius: 10, padding: '10px 14px', marginBottom: 10, display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'space-between' }}>
+                <p style={{ color: '#C9A84C', fontSize: 12, margin: 0, fontWeight: 500 }}>⚠️ Sign in to save your progress — checkboxes will reset if you leave.</p>
+                <button onClick={login} style={{ background: '#C9A84C', border: 'none', borderRadius: 6, color: '#000', fontSize: 11, fontWeight: 700, padding: '5px 12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>Sign in</button>
+              </div>
+            )}
             <div style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 10, padding: '10px 14px', marginBottom: 14, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
               <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>ℹ️</span>
               <p style={{ color: '#8a8a9a', fontSize: 12, margin: 0, lineHeight: 1.5 }}>Courses are sourced from web data and may not reflect the latest catalog. <a href={'https://www.google.com/search?q=' + encodeURIComponent(currentProfile.school + ' course catalog')} target="_blank" rel="noopener noreferrer" style={{ color: careerObj.accent, textDecoration: 'none', fontWeight: 600 }}>Verify on your school's registrar ↗</a></p>
