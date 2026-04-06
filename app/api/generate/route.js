@@ -17,8 +17,8 @@ export async function POST(request) {
 
     var majorLine = major ? ('Use "' + major + '" as the major.') : 'Pick the best major for ' + career + ' at ' + schoolName + '.';
 
-    // Step 1: Search for real courses and department URL using Google Search grounding
-    var searchPrompt = 'Search the web for the course catalog at ' + schoolName + ' for students pursuing ' + career + '. ' + majorLine + '\n\nFind REAL courses with their actual course codes, titles, and credit hours from the official ' + schoolName + ' course catalog or registrar website. Also find the real URL to the relevant department page.\n\nAlso find 3 real majors/concentrations available at ' + schoolName + ' that are relevant to ' + career + '.\n\nReturn ONLY valid JSON in this exact format:\n{"schoolFullName":"","major":"","departmentUrl":"real verified URL","recommendedMajors":["m1","m2","m3"],"courses":[{"code":"REAL CODE","title":"Real Title","credits":3,"dept":"department"},{"code":"REAL CODE","title":"Real Title","credits":4,"dept":"department"}]}\n\nFind at least 20 real courses across different levels (intro, intermediate, advanced, elective). Use only courses you found in search results. JSON only, no other text.';
+    // Step 1: Search for real courses using Google Search grounding
+    var searchPrompt = 'Search the web for the course catalog at ' + schoolName + ' for students pursuing ' + career + '. ' + majorLine + '\n\nFind REAL courses with actual course codes, titles, and credit hours from the official ' + schoolName + ' course catalog.\n\nAlso find 3 real majors/concentrations at ' + schoolName + ' relevant to ' + career + '.\n\nReturn ONLY valid JSON:\n{"schoolFullName":"","major":"","recommendedMajors":["m1","m2","m3"],"courses":[{"code":"REAL CODE","title":"Real Title","credits":3}]}\n\nFind at least 20 real courses. Use only courses found in search results. JSON only.';
 
     var searchResponse = await fetch(GEMINI_API_URL, {
       method: 'POST',
@@ -29,17 +29,13 @@ export async function POST(request) {
       body: JSON.stringify({
         contents: [{ parts: [{ text: searchPrompt }] }],
         tools: [{ google_search: {} }],
-        generationConfig: {
-          maxOutputTokens: 4096,
-          temperature: 0.2,
-        },
+        generationConfig: { maxOutputTokens: 4096, temperature: 0.2 },
       }),
     });
 
     var searchedCourses = [];
     var searchedMajor = major;
     var searchedMajors = [];
-    var departmentUrl = '';
     var schoolFullName = schoolName;
 
     if (searchResponse.ok) {
@@ -74,33 +70,28 @@ export async function POST(request) {
         if (sJe !== -1) {
           try {
             var searchResult = JSON.parse(sTxt.substring(0, sJe + 1));
-            if (searchResult.courses && Array.isArray(searchResult.courses)) {
-              searchedCourses = searchResult.courses;
-            }
+            if (searchResult.courses && Array.isArray(searchResult.courses)) searchedCourses = searchResult.courses;
             if (searchResult.major) searchedMajor = searchResult.major;
             if (searchResult.recommendedMajors) searchedMajors = searchResult.recommendedMajors;
-            if (searchResult.departmentUrl) departmentUrl = searchResult.departmentUrl;
             if (searchResult.schoolFullName) schoolFullName = searchResult.schoolFullName;
           } catch(pe) {
-            console.error('Search JSON parse error:', pe.message);
+            console.error('Search parse error:', pe.message);
           }
         }
       }
-    } else {
-      console.error('Search failed:', searchResponse.status);
     }
 
-    // Step 2: Build the roadmap using the searched courses
+    // Step 2: Build roadmap with proper internship/recruitment timelines
     var courseList = '';
     if (searchedCourses.length > 0) {
-      courseList = '\n\nHere are REAL verified courses at ' + schoolName + '. You MUST use these exact course codes and titles when building the semester plan. Pick from this list:\n';
+      courseList = '\n\nVERIFIED COURSES at ' + schoolName + '. Use ONLY these exact codes and titles:\n';
       for (var cl = 0; cl < searchedCourses.length; cl++) {
         courseList += searchedCourses[cl].code + ' - ' + searchedCourses[cl].title + ' (' + (searchedCourses[cl].credits || 3) + ' cr)\n';
       }
-      courseList += '\nOnly use courses from the list above. Do NOT invent any course codes.';
+      courseList += '\nDo NOT invent any course codes. Only pick from this list.';
     }
 
-    var roadmapPrompt = 'You are a college advisor. Return ONLY valid JSON.\n\nBuild an 8-semester roadmap at ' + schoolName + ' for ' + career + ' as a ' + (searchedMajor || 'recommended') + ' major.' + courseList + '\n\n{"schoolFullName":"' + schoolFullName + '","major":"' + (searchedMajor || '') + '","careerTitle":"","departmentUrl":"' + departmentUrl + '","recommendedMajors":' + JSON.stringify(searchedMajors.length > 0 ? searchedMajors : [searchedMajor]) + ',"semesters":[{"name":"Fall - Freshman","courses":[{"code":"CODE","title":"Title","credits":3,"type":"Core","desc":"5-8 words"}]}],"clubs":[],"milestones":[{"sem":1,"label":"milestone"}],"skills":["s1","s2","s3","s4","s5"],"beyondClassroom":{"intro":"Why beyond classroom matters for this career","technicalSkills":[{"skill":"name","why":"reason","semester":"when","resources":[{"name":"resource","type":"Online Course","url":"https://url","cost":"Free","time":"10 hours"}]},{"skill":"name2","why":"reason2","semester":"when2","resources":[{"name":"resource2","type":"Book","url":"https://url","cost":"Free","time":"5 hours"}]}],"networkingPlaybook":[{"phase":"Build Foundation","semester":"Fall - Freshman","actions":["action1","action2"]},{"phase":"Expand Network","semester":"Fall - Sophomore","actions":["action1","action2"]}],"interviewPrep":[{"category":"type","timeline":"Spring - Junior","resources":[{"name":"resource","url":"https://url","desc":"description"}]}],"weeklyHabits":["habit1","habit2","habit3"],"careerInsiderTips":["tip1","tip2","tip3"]}}\n\n8 semesters from "Fall - Freshman" to "Spring - Senior". 4 courses each. 8 milestones. Types: Core/Prerequisite/Elective/Gen Ed. Desc under 8 words. clubs must be []. JSON only.';
+    var roadmapPrompt = 'You are an expert college career advisor. Return ONLY valid JSON.\n\nBuild an 8-semester roadmap at ' + schoolName + ' for ' + career + ' as a ' + (searchedMajor || 'recommended') + ' major.' + courseList + '\n\nCRITICAL — RECRUITMENT & INTERNSHIP TIMELINES:\nYou must include accurate recruitment and internship application timelines in the milestones. These are industry-specific and extremely important:\n- Investment Banking / Finance: Sophomore fall — network and prep. Sophomore winter/spring — apply for junior summer internships. Junior summer — IB summer analyst internship. Senior fall — full-time recruiting.\n- Management Consulting: Junior fall — apply for summer internships. Junior summer — consulting internship. Senior fall — full-time apps.\n- Software Engineering: Sophomore summer — first internship. Junior fall — apply to top companies. Junior summer — SWE internship at target company. Senior fall — full-time recruiting.\n- Data Science: Junior year — internship recruiting. Junior summer — DS internship.\n- Pre-Med: Sophomore/Junior summers — research and clinical experience. Junior spring — MCAT prep. Senior — med school applications.\n- Pre-Law: Junior year — LSAT prep. Senior fall — law school applications.\n- Sales & Trading: Sophomore fall — network with traders. Sophomore winter — apply for S&T summer analyst programs. Junior summer — S&T internship. Senior fall — full-time offers.\n- For ALL careers: include when to start networking, when applications open, when interviews happen, and when internships occur. These milestones are the most important part of the roadmap.\n\n{"schoolFullName":"' + schoolFullName + '","major":"' + (searchedMajor || '') + '","careerTitle":"","departmentUrl":"","recommendedMajors":' + JSON.stringify(searchedMajors.length > 0 ? searchedMajors : [searchedMajor]) + ',"semesters":[{"name":"Fall - Freshman","courses":[{"code":"CODE","title":"Title","credits":3,"type":"Core","desc":"5-8 words"}]}],"clubs":[],"milestones":[{"sem":1,"label":"milestone"}],"skills":["s1","s2","s3","s4","s5"],"beyondClassroom":{"intro":"Why beyond classroom matters","technicalSkills":[{"skill":"name","why":"reason","semester":"when","resources":[{"name":"resource","type":"Online Course","url":"https://url","cost":"Free","time":"10 hours"}]},{"skill":"name2","why":"reason2","semester":"when2","resources":[{"name":"resource2","type":"Book","url":"https://url","cost":"Free","time":"5 hours"}]}],"networkingPlaybook":[{"phase":"Build Foundation","semester":"Fall - Freshman","actions":["a1","a2"]},{"phase":"Expand Network","semester":"Fall - Sophomore","actions":["a1","a2"]}],"interviewPrep":[{"category":"type","timeline":"when to start","resources":[{"name":"resource","url":"https://url","desc":"description"}]}],"weeklyHabits":["h1","h2","h3"],"careerInsiderTips":["t1","t2","t3"]}}\n\n8 semesters "Fall - Freshman" to "Spring - Senior". 4 courses each. 8 milestones that reflect real recruitment timelines. Types: Core/Prerequisite/Elective/Gen Ed. Desc under 8 words. clubs must be []. For beyondClassroom resources, use real website names and URLs where possible. JSON only.';
 
     var roadmapResponse = await fetch(GEMINI_API_URL, {
       method: 'POST',
@@ -110,10 +101,7 @@ export async function POST(request) {
       },
       body: JSON.stringify({
         contents: [{ parts: [{ text: roadmapPrompt }] }],
-        generationConfig: {
-          maxOutputTokens: 8192,
-          temperature: 0.4,
-        },
+        generationConfig: { maxOutputTokens: 8192, temperature: 0.4 },
       }),
     });
 
@@ -145,10 +133,7 @@ export async function POST(request) {
       if (fm) roadmapText = fm[1].trim();
     }
     var bs = roadmapText.indexOf('{');
-    if (bs === -1) {
-      console.error('No JSON in roadmap:', roadmapText.substring(0, 300));
-      return Response.json({ error: 'No JSON' }, { status: 500 });
-    }
+    if (bs === -1) return Response.json({ error: 'No JSON' }, { status: 500 });
     roadmapText = roadmapText.substring(bs);
     var depth = 0, inStr = false, esc = false, je = -1;
     for (var j = 0; j < roadmapText.length; j++) {
@@ -164,14 +149,13 @@ export async function POST(request) {
     var roadmap = JSON.parse(roadmapText.substring(0, je + 1));
     if (!roadmap || !roadmap.semesters) return Response.json({ error: 'Bad data' }, { status: 500 });
 
-    // Ensure recommendedMajors exists
     if (!roadmap.recommendedMajors || roadmap.recommendedMajors.length === 0) {
       roadmap.recommendedMajors = searchedMajors.length > 0 ? searchedMajors : [roadmap.major || searchedMajor];
     }
 
-    // Step 3: Club search using Google Search grounding
+    // Step 3: Club search
     try {
-      var clubPrompt = 'Find real student clubs at ' + schoolName + ' for ' + career + '. Return ONLY a JSON array: [{"name":"club name","type":"Professional","priority":"Essential","desc":"8 words","url":""}] Find 3-4 real clubs. JSON only.';
+      var clubPrompt = 'Find real student clubs at ' + schoolName + ' for ' + career + '. Return ONLY a JSON array: [{"name":"club name","type":"Professional","priority":"Essential","desc":"8 words"}] Find 3-4 real clubs. No URLs needed. JSON only.';
 
       var clubResponse = await fetch(GEMINI_API_URL, {
         method: 'POST',
@@ -217,7 +201,7 @@ export async function POST(request) {
 
     if (!roadmap.clubs || roadmap.clubs.length === 0) {
       roadmap.clubs = [
-        { name: 'Check ' + schoolName + ' student org directory', type: 'General', priority: 'Essential', desc: 'Find clubs on campus', url: '' }
+        { name: 'Check ' + schoolName + ' student org directory', type: 'General', priority: 'Essential', desc: 'Find clubs on campus' }
       ];
     }
 
