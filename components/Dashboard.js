@@ -147,6 +147,10 @@ export default function Dashboard({ profile, onReset }) {
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 16px 40px' }}>
         {activeTab === 'courses' && (
           <div style={{ marginTop: 20 }}>
+            <div style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 10, padding: '10px 14px', marginBottom: 14, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>ℹ️</span>
+              <p style={{ color: '#8a8a9a', fontSize: 12, margin: 0, lineHeight: 1.5 }}>Courses are sourced from web data and may not reflect the latest catalog. <a href={'https://www.google.com/search?q=' + encodeURIComponent(currentProfile.school + ' course catalog')} target="_blank" rel="noopener noreferrer" style={{ color: careerObj.accent, textDecoration: 'none', fontWeight: 600 }}>Verify on your school's registrar ↗</a></p>
+            </div>
             <div style={{ position: 'relative', marginBottom: 4 }}>
               <button onClick={function() { if (semRef.current) semRef.current.scrollBy({ left: -150, behavior: 'smooth' }); }} style={{ position: 'absolute', left: -4, top: '50%', transform: 'translateY(-50%)', zIndex: 2, width: 28, height: 28, borderRadius: '50%', border: '1px solid #2a2a3e', background: '#0c0c18ee', color: '#aaa', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>‹</button>
               <div ref={semRef} className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '4px 32px 12px', scrollBehavior: 'smooth' }}>
