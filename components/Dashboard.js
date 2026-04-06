@@ -218,7 +218,10 @@ export default function Dashboard({ profile, onReset }) {
 
         {activeTab === 'clubs' && (
           <div style={{ marginTop: 20, display: 'grid', gap: 12 }}>
-            <p style={{ color: '#8a8a9a', fontSize: 14, margin: '0 0 8px' }}>Organizations at {currentProfile.school} for your {currentProfile.careerLabel} path.</p>
+            <div style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 10, padding: '10px 14px', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>ℹ️</span>
+              <p style={{ color: '#8a8a9a', fontSize: 12, margin: 0, lineHeight: 1.5 }}>Club suggestions are AI-generated. Verify availability on your school's official student org directory. <a href={'https://www.google.com/search?q=' + encodeURIComponent(currentProfile.school + ' student clubs organizations directory')} target="_blank" rel="noopener noreferrer" style={{ color: careerObj.accent, textDecoration: 'none', fontWeight: 600 }}>Find clubs at {currentProfile.school} ↗</a></p>
+            </div>
             {clubs.map(function(club, i) {
               var pc = { Essential: '#ef4444', Recommended: '#C9A84C', Helpful: '#3b82f6' };
               return (
@@ -229,7 +232,6 @@ export default function Dashboard({ profile, onReset }) {
                     <span style={{ background: (pc[club.priority] || '#888') + '22', color: pc[club.priority] || '#888', padding: '2px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600 }}>{club.priority}</span>
                   </div>
                   <p style={{ color: '#8a8a9a', fontSize: 13, marginTop: 10, lineHeight: 1.5 }}>{club.desc}</p>
-                  {club.url && club.url.length > 0 && <a href={club.url} target="_blank" rel="noopener noreferrer" style={{ color: careerObj.accent, fontSize: 12, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 8 }}>Visit club page ↗</a>}
                 </div>
               );
             })}
@@ -242,7 +244,6 @@ export default function Dashboard({ profile, onReset }) {
               <div style={{ fontSize: 36, marginBottom: 8 }}>{careerObj.icon}</div>
               <h3 style={{ fontFamily: "'Playfair Display', serif", color: '#fff', fontSize: 22, margin: '0 0 6px' }}>{currentProfile.careerLabel}</h3>
               <p style={{ color: '#aaa', fontSize: 14, margin: 0 }}>{courseData.major} major at {courseData.schoolFullName || currentProfile.school}</p>
-              {courseData.departmentUrl && courseData.departmentUrl.length > 0 && <a href={courseData.departmentUrl} target="_blank" rel="noopener noreferrer" style={{ color: careerObj.accent, fontSize: 13, display: 'inline-block', marginTop: 8, fontWeight: 600 }}>View Department Page ↗</a>}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
               {[{ l: 'Major', v: courseData.major }, { l: 'School', v: currentProfile.school }, { l: 'Credits', v: totalCredits }, { l: 'Semesters', v: semesters.length }].map(function(x, i) {
