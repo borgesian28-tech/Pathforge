@@ -13,9 +13,9 @@ export async function POST(request) {
       return Response.json({ error: 'No key' }, { status: 500 });
     }
     const career = customGoal || careerPath;
-    const major = majorName || 'recommended';
+    const major = majorName || 'best recommended';
 
-    var roadmapPrompt = 'Return ONLY raw JSON. No markdown. No text.\n\n' + major + ' major roadmap at ' + schoolName + ' for ' + career + '.\n\nStructure: {"schoolFullName":"","major":"","careerTitle":"","departmentUrl":"real URL to dept homepage","semesters":[8 with name/courses(4 each: code/title/credits/type/desc)],"clubs":[],"milestones":[8 with sem/label],"skills":[5],"beyondClassroom":{"intro":"","technicalSkills":[2 with skill/why/resources(1: name/type/url/cost/time)/semester],"networkingPlaybook":[2 with phase/semester/actions],"interviewPrep":[1 with category/resources(1: name/url/desc)/timeline],"weeklyHabits":[3],"careerInsiderTips":[3]}}\n\nSemesters: "Fall - Freshman" thru "Spring - Senior". Types: Core/Prerequisite/Elective/Gen Ed. Desc under 8 words. For IB: recruiting sophomore winter. Leave clubs as empty array []. Real course codes. Nothing after closing brace.';
+    var roadmapPrompt = 'Return ONLY raw JSON. No markdown. No text.\n\n' + 'Best major roadmap at ' + schoolName + ' for ' + career + '.\n\nStructure: {"schoolFullName":"","major":"","careerTitle":"","departmentUrl":"real URL to dept homepage","recommendedMajors":["major1","major2","major3"],"semesters":[8 with name/courses(4 each: code/title/credits/type/desc)],"clubs":[],"milestones":[8 with sem/label],"skills":[5],"beyondClassroom":{"intro":"a 1-2 sentence intro about why beyond-classroom matters for this career","technicalSkills":[{"skill":"skill name","why":"why this matters","semester":"when to learn","resources":[{"name":"resource name","type":"Online Course","url":"https://example.com","cost":"Free","time":"10 hours"}]}],"networkingPlaybook":[{"phase":"phase name","semester":"Fall - Freshman","actions":["action 1","action 2"]}],"interviewPrep":[{"category":"category name","timeline":"when to start","resources":[{"name":"resource name","url":"https://example.com","desc":"short description"}]}],"weeklyHabits":["habit 1","habit 2","habit 3"],"careerInsiderTips":["tip 1","tip 2","tip 3"]}}\n\nPick the best major for this career at this school and put it in "major". Also provide 3 recommended majors available at this school in "recommendedMajors". Semesters: "Fall - Freshman" thru "Spring - Senior". Types: Core/Prerequisite/Elective/Gen Ed. Desc under 8 words. For IB: recruiting sophomore winter. Leave clubs as empty array []. Real course codes. beyondClassroom must have all fields filled with real useful data. technicalSkills must have exactly 2 items. networkingPlaybook must have exactly 2 items. interviewPrep must have exactly 1 item. weeklyHabits must have exactly 3 strings. careerInsiderTips must have exactly 3 strings. Nothing after closing brace.';
 
     var roadmapResponse = await fetch(GEMINI_API_URL, {
       method: 'POST',
@@ -70,6 +70,7 @@ export async function POST(request) {
     var roadmap = JSON.parse(roadmapText.substring(0, je + 1));
     if (!roadmap || !roadmap.semesters) return Response.json({ error: 'Bad data' }, { status: 500 });
 
+    // Club search using Gemini with Google Search grounding
     try {
       var clubPrompt = 'Search for real student clubs and organizations at ' + schoolName + ' related to ' + career + '. Find real clubs that actually exist there.\n\nReturn ONLY a raw JSON array. No markdown. Format: [{"name":"real club name","type":"Professional","priority":"Essential","desc":"what they do in 8 words","url":"real URL to their page"}]\n\nFind 3-4 real clubs. Use real URLs from search results. If you cannot find a URL leave it as "". JSON array only, no other text.';
 
