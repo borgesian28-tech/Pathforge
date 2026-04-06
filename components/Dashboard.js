@@ -8,12 +8,14 @@ export default function Dashboard({ profile, onReset }) {
   const [activeSemester, setActiveSemester] = useState(0);
   const [completedCourses, setCompletedCourses] = useState({});
   const [expandedMilestone, setExpandedMilestone] = useState(null);
+  const [showMajors, setShowMajors] = useState(false);
   const semRef = useRef(null);
   const { courseData, careerObj } = profile;
   const semesters = courseData.semesters || [];
   const clubs = courseData.clubs || [];
   const milestones = courseData.milestones || [];
   const skills = courseData.skills || [];
+  const recommendedMajors = courseData.recommendedMajors || [];
 
   const semesterLabels = ['Fall - Freshman','Spring - Freshman','Fall - Sophomore','Spring - Sophomore','Fall - Junior','Spring - Junior','Fall - Senior','Spring - Senior'];
 
@@ -56,6 +58,27 @@ export default function Dashboard({ profile, onReset }) {
             <span style={{ color: '#4ade80', fontSize: 11, fontWeight: 600 }}>LIVE DATA</span>
             <span style={{ color: '#6a7a6a', fontSize: 11 }}>from {profile.school}</span>
           </div>
+          {recommendedMajors.length > 0 && (
+            <div style={{ marginTop: 10 }}>
+              <button onClick={function() { setShowMajors(!showMajors); }} style={{ background: '#ffffff0a', border: '1px solid #ffffff15', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
+                <span style={{ fontSize: 14 }}>🎓</span>
+                <span style={{ color: '#aaa', fontSize: 12, fontWeight: 600, flex: 1, textAlign: 'left' }}>Recommended Majors at {profile.school}</span>
+                <span style={{ color: '#6a6a7a', fontSize: 14, transform: showMajors ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▾</span>
+              </button>
+              {showMajors && (
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                  {recommendedMajors.map(function(m, i) {
+                    var isCurrent = m === (courseData.major || profile.major);
+                    return (
+                      <span key={i} style={{ padding: '6px 14px', borderRadius: 20, background: isCurrent ? careerObj.accent : '#1a1a2e', color: isCurrent ? '#000' : '#aaa', fontSize: 12, fontWeight: 600, border: isCurrent ? 'none' : '1px solid #2a2a3e' }}>
+                        {isCurrent ? '✓ ' : ''}{m}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
           <div style={{ marginTop: 14, background: '#ffffff0a', borderRadius: 12, padding: '12px 16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
               <span style={{ color: '#aaa', fontSize: 12 }}>{completedCount}/{totalCourses} courses • {completedCredits}/{totalCredits} credits</span>
