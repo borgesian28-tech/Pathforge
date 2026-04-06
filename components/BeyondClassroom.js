@@ -10,6 +10,62 @@ export default function BeyondClassroom({ data, accent, color }) {
     </div>
   );
 
+  var isValidUrl = function(url) {
+    if (!url || typeof url !== 'string') return false;
+    url = url.trim();
+    if (url === '' || url === '#') return false;
+    if (url.indexOf('example.com') !== -1) return false;
+    if (url.indexOf('http://') !== 0 && url.indexOf('https://') !== 0) return false;
+    return true;
+  };
+
+  var ResourceLink = function({ r }) {
+    var hasLink = isValidUrl(r.url);
+    if (hasLink) {
+      return (
+        <a href={r.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#111122', borderRadius: 8, textDecoration: 'none', border: '1px solid #1e1e32' }}>
+          <div>
+            <div style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{r.name}</div>
+            <div style={{ color: '#6a6a7a', fontSize: 11, marginTop: 2 }}>{r.type} • {r.time}</div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <span style={{ color: r.cost === 'Free' ? '#4ade80' : accent, fontSize: 12, fontWeight: 600 }}>{r.cost}</span>
+            <span style={{ color: accent, fontSize: 14 }}>↗</span>
+          </div>
+        </a>
+      );
+    }
+    return (
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#111122', borderRadius: 8, border: '1px solid #1e1e32' }}>
+        <div>
+          <div style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{r.name} <span style={{ color: '#6a6a7a', fontSize: 11 }}>(search online)</span></div>
+          <div style={{ color: '#6a6a7a', fontSize: 11, marginTop: 2 }}>{r.type} • {r.time}</div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <span style={{ color: r.cost === 'Free' ? '#4ade80' : accent, fontSize: 12, fontWeight: 600 }}>{r.cost}</span>
+        </div>
+      </div>
+    );
+  };
+
+  var InterviewLink = function({ r }) {
+    var hasLink = isValidUrl(r.url);
+    if (hasLink) {
+      return (
+        <a href={r.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', padding: '10px 14px', background: '#0a0a18', borderRadius: 8, textDecoration: 'none', border: '1px solid #1e1e32' }}>
+          <div style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{r.name} <span style={{ color: accent }}>↗</span></div>
+          <div style={{ color: '#8a8a9a', fontSize: 12, marginTop: 2 }}>{r.desc}</div>
+        </a>
+      );
+    }
+    return (
+      <div style={{ display: 'block', padding: '10px 14px', background: '#0a0a18', borderRadius: 8, border: '1px solid #1e1e32' }}>
+        <div style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{r.name} <span style={{ color: '#6a6a7a', fontSize: 11 }}>(search online)</span></div>
+        <div style={{ color: '#8a8a9a', fontSize: 12, marginTop: 2 }}>{r.desc}</div>
+      </div>
+    );
+  };
+
   const Section = ({ id, icon, title, children }) => {
     const open = openSection === id;
     return (
@@ -48,16 +104,7 @@ export default function BeyondClassroom({ data, accent, color }) {
                 {s.semester && <div style={{ color: accent, fontSize: 11, fontWeight: 600, marginBottom: 8 }}>📅 Best timing: {s.semester}</div>}
                 <div style={{ display: 'grid', gap: 6 }}>
                   {s.resources?.map((r, j) => (
-                    <a key={j} href={r.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#111122', borderRadius: 8, textDecoration: 'none', border: '1px solid #1e1e32' }}>
-                      <div>
-                        <div style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{r.name}</div>
-                        <div style={{ color: '#6a6a7a', fontSize: 11, marginTop: 2 }}>{r.type} • {r.time}</div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                        <span style={{ color: r.cost === 'Free' ? '#4ade80' : accent, fontSize: 12, fontWeight: 600 }}>{r.cost}</span>
-                        <span style={{ color: accent, fontSize: 14 }}>↗</span>
-                      </div>
-                    </a>
+                    <ResourceLink key={j} r={r} />
                   ))}
                 </div>
               </div>
@@ -91,10 +138,7 @@ export default function BeyondClassroom({ data, accent, color }) {
               <div style={{ color: accent, fontSize: 11, fontWeight: 600, marginBottom: 8 }}>📅 Start: {cat.timeline}</div>
               <div style={{ display: 'grid', gap: 6 }}>
                 {cat.resources?.map((r, j) => (
-                  <a key={j} href={r.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', padding: '10px 14px', background: '#0a0a18', borderRadius: 8, textDecoration: 'none', border: '1px solid #1e1e32' }}>
-                    <div style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{r.name} <span style={{ color: accent }}>↗</span></div>
-                    <div style={{ color: '#8a8a9a', fontSize: 12, marginTop: 2 }}>{r.desc}</div>
-                  </a>
+                  <InterviewLink key={j} r={r} />
                 ))}
               </div>
             </div>
