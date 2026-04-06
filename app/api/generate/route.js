@@ -12,7 +12,7 @@ export async function POST(request) {
     }
     const career = customGoal || careerPath;
     const major = majorName || 'recommended';
-    const prompt = 'Return ONLY a raw JSON object for a ' + major + ' major roadmap at ' + schoolName + ' for ' + career + '. No other text. No markdown.\n\nStructure: {"schoolFullName":"","major":"","careerTitle":"","departmentUrl":"","semesters":[8 with name/courses(4 each: code/title/credits/type/desc/url)],"clubs":[3 with name/type/priority/desc/url],"milestones":[8 with sem/label],"skills":[5],"beyondClassroom":{"intro":"","technicalSkills":[2 with skill/why/resources(1: name/type/url/cost/time)/semester],"networkingPlaybook":[2 with phase/semester/actions],"interviewPrep":[1 with category/resources(1: name/url/desc)/timeline],"weeklyHabits":[3],"careerInsiderTips":[3]}}\n\nSemester names: "Fall - Freshman" thru "Spring - Senior". Types: Core/Prerequisite/Elective/Gen Ed. Keep desc under 8 words. For IB: recruiting is sophomore winter. Use real course codes. Leave url as "" if unsure. Raw JSON only. Nothing after the closing brace.';
+    const prompt = 'Return ONLY a raw JSON object. No markdown. No text before or after.\n\nCreate a ' + major + ' major roadmap at ' + schoolName + ' for ' + career + '.\n\nStructure: {"schoolFullName":"","major":"","careerTitle":"","departmentUrl":"MUST be a real working URL to the department homepage at ' + schoolName + '","semesters":[8 with name/courses(4 each: code/title/credits/type/desc)],"clubs":[3 objects - MUST be real clubs that actually exist at ' + schoolName + ', each with name/type/priority/desc/url where url is the real club website or social media page],"milestones":[8 with sem/label],"skills":[5],"beyondClassroom":{"intro":"","technicalSkills":[2 with skill/why/resources(1: name/type/url/cost/time)/semester],"networkingPlaybook":[2 with phase/semester/actions],"interviewPrep":[1 with category/resources(1: name/url/desc)/timeline],"weeklyHabits":[3],"careerInsiderTips":[3]}}\n\nSemester names: "Fall - Freshman" thru "Spring - Senior". Course types: Core/Prerequisite/Elective/Gen Ed. Keep desc under 8 words. Courses do NOT have url field. For IB: recruiting is sophomore winter. For clubs: ONLY include clubs you are confident exist at ' + schoolName + '. Use their real website URL or leave url as "". departmentUrl MUST be real. Use real course codes. Nothing after closing brace.';
     var lastError = null;
     for (var attempt = 0; attempt < 2; attempt++) {
       try {
@@ -33,7 +33,7 @@ export async function POST(request) {
           if (fenceMatch) text = fenceMatch[1].trim();
         }
         var braceStart = text.indexOf('{');
-        if (braceStart === -1) { lastError = 'No JSON found'; continue; }
+        if (braceStart === -1) { lastError = 'No JSON'; continue; }
         text = text.substring(braceStart);
         var depth = 0;
         var inString = false;
@@ -49,18 +49,16 @@ export async function POST(request) {
           if (ch === '}') { depth--; if (depth === 0) { jsonEnd = j; break; } }
         }
         if (jsonEnd === -1) { lastError = 'Incomplete JSON'; continue; }
-        var jsonStr = text.substring(0, jsonEnd + 1);
-        var parsed = JSON.parse(jsonStr);
+        var parsed = JSON.parse(text.substring(0, jsonEnd + 1));
         if (parsed && parsed.semesters && parsed.semesters.length > 0) {
           return Response.json(parsed);
         }
         lastError = 'No semesters';
       } catch(e) {
         lastError = e.message;
-        console.error('Attempt ' + attempt + ' error:', e.message);
+        console.error('Attempt ' + attempt + ':', e.message);
       }
     }
-    console.error('All attempts failed:', lastError);
     return Response.json({ error: 'Failed: ' + lastError }, { status: 500 });
   } catch (err) {
     console.error(err);

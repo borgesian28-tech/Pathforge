@@ -9,20 +9,14 @@ export default function CourseCard({ course, semIdx, cIdx, completed, onToggle, 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>{course.code}</span>
-            <span style={{ background: `${tc}33`, color: tc, padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600 }}>{course.type}</span>
+            <span style={{ background: tc + '33', color: tc, padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600 }}>{course.type}</span>
           </div>
           <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>{course.title}</div>
           <div style={{ color: '#6a6a7a', fontSize: 12, marginTop: 4 }}>{course.desc}</div>
-          {course.url && (
-            <a href={course.url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
-              style={{ color: accent, fontSize: 12, marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 4, textDecoration: 'none', fontWeight: 600 }}>
-              View in catalog ↗
-            </a>
-          )}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
           <span style={{ color: '#6a6a7a', fontSize: 12 }}>{course.credits} cr</span>
-          <div onClick={() => onToggle(semIdx, cIdx)}
+          <div onClick={function() { onToggle(semIdx, cIdx); }}
             style={{ width: 22, height: 22, borderRadius: 6, border: completed ? 'none' : '2px solid #3a3a4e', background: completed ? '#0A5C36' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: '#fff', cursor: 'pointer' }}>
             {completed && '✓'}
           </div>
