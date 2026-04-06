@@ -1,6 +1,6 @@
 export const maxDuration = 60;
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
 
 export async function POST(request) {
   try {
@@ -17,7 +17,7 @@ export async function POST(request) {
 
     var majorLine = major ? ('Use "' + major + '" as the major.') : 'Pick the best major for ' + career + ' at ' + schoolName + '.';
 
-    var roadmapPrompt = 'Return ONLY raw JSON.\n\nCollege roadmap at ' + schoolName + ' for ' + career + '.\n\n' + majorLine + ' Provide 3 recommended majors that exist at this school in "recommendedMajors".\n\nIMPORTANT: Use REAL course codes from ' + schoolName + '. Do not use placeholder codes like 1XX or 2XX. Use actual department prefixes and real course numbers. Each course needs 3 or 4 credits. For departmentUrl use the real department webpage URL at this school.\n\nJSON structure:\n{"schoolFullName":"","major":"","careerTitle":"","departmentUrl":"","recommendedMajors":["","",""],"semesters":[{"name":"Fall - Freshman","courses":[{"code":"ECON 110","title":"Intro Microeconomics","credits":4,"type":"Core","desc":"Supply and demand fundamentals"}]}],"clubs":[],"milestones":[{"sem":1,"label":"milestone text"}],"skills":["skill1","skill2","skill3","skill4","skill5"],"beyondClassroom":{"intro":"Why this matters","technicalSkills":[{"skill":"name","why":"reason","semester":"Fall - Freshman","resources":[{"name":"resource","type":"Online Course","url":"https://example.com","cost":"Free","time":"10 hours"}]},{"skill":"name2","why":"reason2","semester":"Spring - Freshman","resources":[{"name":"resource2","type":"Book","url":"https://example.com","cost":"Free","time":"5 hours"}]}],"networkingPlaybook":[{"phase":"phase1","semester":"Fall - Freshman","actions":["action1","action2"]},{"phase":"phase2","semester":"Fall - Sophomore","actions":["action1","action2"]}],"interviewPrep":[{"category":"type","timeline":"Spring - Junior","resources":[{"name":"resource","url":"https://example.com","desc":"description"}]}],"weeklyHabits":["habit1","habit2","habit3"],"careerInsiderTips":["tip1","tip2","tip3"]}}\n\n8 semesters: "Fall - Freshman" thru "Spring - Senior". 4 courses each. Types: Core/Prerequisite/Elective/Gen Ed. Desc under 8 words. 8 milestones. Leave clubs as []. Nothing after closing brace.';
+    var roadmapPrompt = 'You are a college advisor. Return ONLY valid JSON with no extra text.\n\nCreate a college roadmap at ' + schoolName + ' for ' + career + '.\n' + majorLine + '\n\nProvide 3 recommended majors that exist at ' + schoolName + ' in "recommendedMajors".\n\nUse REAL course codes from ' + schoolName + '. No placeholders like 1XX. Use real department prefixes and numbers. 3-4 credits per course. For departmentUrl use the school website URL.\n\n{"schoolFullName":"full name","major":"chosen major","careerTitle":"career title","departmentUrl":"https://school.edu/dept","recommendedMajors":["m1","m2","m3"],"semesters":[{"name":"Fall - Freshman","courses":[{"code":"ECON 110","title":"Intro Microeconomics","credits":4,"type":"Core","desc":"Supply demand fundamentals"}]},{"name":"Spring - Freshman","courses":[...]},{"name":"Fall - Sophomore","courses":[...]},{"name":"Spring - Sophomore","courses":[...]},{"name":"Fall - Junior","courses":[...]},{"name":"Spring - Junior","courses":[...]},{"name":"Fall - Senior","courses":[...]},{"name":"Spring - Senior","courses":[...]}],"clubs":[],"milestones":[{"sem":1,"label":"m1"},{"sem":2,"label":"m2"},{"sem":3,"label":"m3"},{"sem":4,"label":"m4"},{"sem":5,"label":"m5"},{"sem":6,"label":"m6"},{"sem":7,"label":"m7"},{"sem":8,"label":"m8"}],"skills":["s1","s2","s3","s4","s5"],"beyondClassroom":{"intro":"Why beyond classroom matters","technicalSkills":[{"skill":"name","why":"reason","semester":"when","resources":[{"name":"r","type":"Online Course","url":"https://url","cost":"Free","time":"10h"}]},{"skill":"name2","why":"reason2","semester":"when2","resources":[{"name":"r2","type":"Book","url":"https://url","cost":"Free","time":"5h"}]}],"networkingPlaybook":[{"phase":"p1","semester":"Fall - Freshman","actions":["a1","a2"]},{"phase":"p2","semester":"Fall - Sophomore","actions":["a1","a2"]}],"interviewPrep":[{"category":"cat","timeline":"Spring - Junior","resources":[{"name":"r","url":"https://url","desc":"d"}]}],"weeklyHabits":["h1","h2","h3"],"careerInsiderTips":["t1","t2","t3"]}}\n\n4 courses per semester. Types: Core/Prerequisite/Elective/Gen Ed. Desc under 8 words. clubs must be []. Return ONLY the JSON.';
 
     var roadmapResponse = await fetch(GEMINI_API_URL, {
       method: 'POST',
@@ -28,7 +28,6 @@ export async function POST(request) {
       body: JSON.stringify({
         contents: [{ parts: [{ text: roadmapPrompt }] }],
         generationConfig: {
-          responseMimeType: 'application/json',
           maxOutputTokens: 8192,
           temperature: 0.7,
         },
@@ -38,7 +37,7 @@ export async function POST(request) {
     if (!roadmapResponse.ok) {
       var errBody = await roadmapResponse.text();
       console.error('Gemini error:', roadmapResponse.status, errBody);
-      return Response.json({ error: 'AI error' }, { status: 502 });
+      return Response.json({ error: 'AI error: ' + roadmapResponse.status }, { status: 502 });
     }
 
     var roadmapData = await roadmapResponse.json();
@@ -51,13 +50,22 @@ export async function POST(request) {
         }
       }
     }
+
+    if (!roadmapText) {
+      console.error('Empty response from Gemini', JSON.stringify(roadmapData).substring(0, 500));
+      return Response.json({ error: 'Empty AI response' }, { status: 500 });
+    }
+
     roadmapText = roadmapText.trim();
     if (roadmapText.indexOf('```') !== -1) {
       var fm = roadmapText.match(/```(?:json)?\s*([\s\S]*?)```/);
       if (fm) roadmapText = fm[1].trim();
     }
     var bs = roadmapText.indexOf('{');
-    if (bs === -1) return Response.json({ error: 'No JSON' }, { status: 500 });
+    if (bs === -1) {
+      console.error('No JSON found in response:', roadmapText.substring(0, 300));
+      return Response.json({ error: 'No JSON' }, { status: 500 });
+    }
     roadmapText = roadmapText.substring(bs);
     var depth = 0, inStr = false, esc = false, je = -1;
     for (var j = 0; j < roadmapText.length; j++) {
@@ -75,7 +83,7 @@ export async function POST(request) {
 
     // Club search using Gemini with Google Search grounding
     try {
-      var clubPrompt = 'Search for real student clubs at ' + schoolName + ' related to ' + career + '.\n\nReturn ONLY a JSON array: [{"name":"real club name","type":"Professional","priority":"Essential","desc":"8 word description","url":"real URL or empty string"}]\n\nFind 3-4 real clubs. JSON array only.';
+      var clubPrompt = 'Find real student clubs at ' + schoolName + ' for ' + career + '. Return ONLY a JSON array: [{"name":"club name","type":"Professional","priority":"Essential","desc":"8 words","url":""}] Find 3-4 real clubs. JSON only.';
 
       var clubResponse = await fetch(GEMINI_API_URL, {
         method: 'POST',
