@@ -19,10 +19,46 @@ export async function POST(request) {
     }
 
     const career = careerGoal;
+    var catalogUrl = body.catalogUrl || '';
+
+    // If user provided a catalog URL, fetch the actual page content
+    var catalogContent = '';
+    if (catalogUrl && catalogUrl.trim()) {
+      try {
+        var catalogResponse = await fetch(catalogUrl.trim(), {
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PathForge/1.0)' },
+          signal: AbortSignal.timeout(10000),
+        });
+        if (catalogResponse.ok) {
+          var html = await catalogResponse.text();
+          var text = html
+            .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+            .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+            .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, '')
+            .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, '')
+            .replace(/<header[^>]*>[\s\S]*?<\/header>/gi, '')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&#\d+;/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          if (text.length > 8000) text = text.substring(0, 8000);
+          if (text.length > 100) {
+            catalogContent = '\n\nSCHOOL CATALOG PAGE CONTENT (from ' + catalogUrl.trim() + '):\n"""\n' + text + '\n"""\n\nYou MUST use the real courses from the catalog content above. These are REAL courses offered at the student\'s actual high school. Extract course names, levels (AP/Honors/Standard), and descriptions from this content. Do NOT make up courses — use ONLY courses found in this catalog.\n';
+          }
+        }
+      } catch (fetchErr) {
+        console.error('HS Catalog fetch error:', fetchErr.message);
+        catalogContent = '\n\nThe student provided this catalog URL: ' + catalogUrl.trim() + '\nSearch this URL to find real courses offered at their high school.\n';
+      }
+    }
 
     // Generate high school roadmap
     const prompt = `You are a high school guidance counselor. Create a 4-year high school roadmap for a student interested in ${career}.
-
+${catalogContent}
 CRITICAL: Return ONLY valid JSON with no extra text, no markdown, no backticks, no preamble.
 
 {
