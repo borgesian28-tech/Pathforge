@@ -62,11 +62,11 @@ function HSChatbot({ careerField, accent, primaryColor, darkMode }) {
   ];
 
   var chatBg = dm ? '#0c0c18' : '#ffffff';
-  var chatBdr = dm ? '#1e1e32' : '#d0d0dc';
-  var chatCardBg = dm ? '#111122' : '#f5f5fa';
-  var chatTx = dm ? '#fff' : '#1a1a2a';
-  var chatTxSub = dm ? '#ccc' : '#444';
-  var chatTxMut = dm ? '#6a6a7a' : '#888';
+  var chatBdr = dm ? '#1e1e32' : '#d5d5e0';
+  var chatCardBg = dm ? '#111122' : '#f7f7fa';
+  var chatTx = dm ? '#fff' : '#111111';
+  var chatTxSub = dm ? '#ccc' : '#222222';
+  var chatTxMut = dm ? '#6a6a7a' : '#666666';
 
   if (!open) {
     return (
@@ -167,18 +167,18 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
   const standardizedTests = roadmap.standardizedTests || {};
 
   // Theme
-  var bg = darkMode ? '#08080f' : '#f2f2f7';
-  var bgCard = darkMode ? '#111122' : '#ffffff';
-  var bgSec = darkMode ? '#1a1a2e' : '#e9e9f0';
-  var bdr = darkMode ? '#1e1e32' : '#d0d0dc';
-  var bdrL = darkMode ? '#2a2a3e' : '#c0c0cc';
-  var tx = darkMode ? '#fff' : '#1a1a2a';
-  var txSub = darkMode ? '#ccc' : '#444';
-  var txMut = darkMode ? '#6a6a7a' : '#888';
-  var txDim = darkMode ? '#8a8a9a' : '#777';
+  var bg = darkMode ? '#08080f' : '#ffffff';
+  var bgCard = darkMode ? '#111122' : '#f7f7fa';
+  var bgSec = darkMode ? '#1a1a2e' : '#ededf3';
+  var bdr = darkMode ? '#1e1e32' : '#d5d5e0';
+  var bdrL = darkMode ? '#2a2a3e' : '#c5c5d0';
+  var tx = darkMode ? '#fff' : '#111111';
+  var txSub = darkMode ? '#ccc' : '#333333';
+  var txMut = darkMode ? '#6a6a7a' : '#666666';
+  var txDim = darkMode ? '#8a8a9a' : '#555555';
   var accent = '#8b5cf6';
   var primaryColor = '#6366f1';
-  var tabBg = darkMode ? '#0a0a0f' : '#f5f5fa';
+  var tabBg = darkMode ? '#0a0a0f' : '#ffffff';
   var btnBg = darkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)';
   var headerBg = darkMode ? 'linear-gradient(135deg, #8b5cf6, #6366f1)' : 'linear-gradient(135deg, #a78bfa, #818cf8)';
 
