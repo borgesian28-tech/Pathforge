@@ -23,13 +23,46 @@ export async function POST(request) {
 
     var majorLine = major ? ('Use "' + major + '" as the major.') : 'Pick the best major for ' + career + ' at ' + schoolName + '.';
 
-    var catalogContext = '';
+    // If user provided a catalog URL, fetch the actual page content
+    var catalogContent = '';
     if (catalogUrl && catalogUrl.trim()) {
-      catalogContext = '\n\nIMPORTANT: The student has provided a direct link to their school\'s course catalog or club directory: ' + catalogUrl + '\nYou MUST prioritize finding courses from this specific URL/page. Search this URL first and use the courses listed there. This is the most authoritative source for real course offerings.\n';
+      try {
+        var catalogResponse = await fetch(catalogUrl.trim(), {
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PathForge/1.0)' },
+          signal: AbortSignal.timeout(10000),
+        });
+        if (catalogResponse.ok) {
+          var html = await catalogResponse.text();
+          // Strip HTML tags but keep text content
+          var text = html
+            .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+            .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+            .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, '')
+            .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, '')
+            .replace(/<header[^>]*>[\s\S]*?<\/header>/gi, '')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&#\d+;/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          // Limit to ~8000 chars to fit in prompt
+          if (text.length > 8000) text = text.substring(0, 8000);
+          if (text.length > 100) {
+            catalogContent = '\n\nCATALOG PAGE CONTENT (from ' + catalogUrl.trim() + '):\n"""\n' + text + '\n"""\n\nCRITICAL — CATALOG PROVIDED: The student uploaded their actual school course catalog. You MUST extract ONLY real course codes and titles that appear in the catalog content above. Every course code and title in your response must come directly from this catalog. Do NOT make up course codes like "ECON 3XX" or "Elective 4" — if a course is not in the catalog, do not include it. Match exact course codes (e.g. ECON 111, MATH 205) and exact titles from the text.\n';
+          }
+        }
+      } catch (fetchErr) {
+        console.error('Catalog fetch error:', fetchErr.message);
+        // Fall back to telling Gemini to search for it
+        catalogContent = '\n\nThe student provided this catalog URL: ' + catalogUrl.trim() + '\nSearch this URL to find real courses.\n';
+      }
     }
 
     // Step 1: Search for real courses using Google Search grounding
-    var searchPrompt = 'Search the web for the ' + levelLabel + ' course catalog at ' + schoolName + ' for students pursuing ' + career + '. ' + majorLine + catalogContext + '\n\nFind REAL ' + levelLabel + ' courses with actual course codes, titles, and credit hours from the official ' + schoolName + ' course catalog.' + (isMasters ? ' IMPORTANT: Only find GRADUATE-level courses (500+ or 600+ level). Do NOT include undergraduate courses (100-400 level). Look for the master\'s/graduate school catalog specifically, NOT the undergraduate catalog. The major should be a master\'s degree program (M.A., M.S., M.Ed., MBA, etc.), NOT a Ph.D. program.' : '') + '\n\nCRITICAL RULES FOR COURSE CODES:\n- Every course code MUST have a real number (e.g. ECON 101, CS 201, MATH 350). \n- NEVER use placeholder codes like "4XX", "3XX", "XXX", or any code with X in it.\n- If you cannot find the exact course number, use a specific real number from the catalog.\n- Each course must have a unique, specific code — no duplicates, no placeholders.\n\nAlso find 3 real ' + levelLabel + ' majors/concentrations at ' + schoolName + ' relevant to ' + career + '.\n\nReturn ONLY valid JSON:\n{"schoolFullName":"","major":"","recommendedMajors":["m1","m2","m3"],"courses":[{"code":"REAL CODE WITH NUMBER","title":"Real Title","credits":3}]}\n\nFind at least ' + (isMasters ? '12' : '20') + ' real courses. Use only courses found in search results. JSON only.';
+    var searchPrompt = 'Search the web for the ' + levelLabel + ' course catalog at ' + schoolName + ' for students pursuing ' + career + '. ' + majorLine + catalogContent + '\n\nFind REAL ' + levelLabel + ' courses with actual course codes, titles, and credit hours from the official ' + schoolName + ' course catalog.' + (isMasters ? ' IMPORTANT: Only find GRADUATE-level courses (500+ or 600+ level). Do NOT include undergraduate courses (100-400 level). Look for the master\'s/graduate school catalog specifically, NOT the undergraduate catalog. The major should be a master\'s degree program (M.A., M.S., M.Ed., MBA, etc.), NOT a Ph.D. program.' : '') + '\n\nCRITICAL RULES FOR COURSE CODES:\n- Every course code MUST have a real number (e.g. ECON 101, CS 201, MATH 350). \n- NEVER use placeholder codes like "4XX", "3XX", "XXX", or any code with X in it.\n- If you cannot find the exact course number, use a specific real number from the catalog.\n- Each course must have a unique, specific code — no duplicates, no placeholders.\n\nAlso find 3 real ' + levelLabel + ' majors/concentrations at ' + schoolName + ' relevant to ' + career + '.\n\nReturn ONLY valid JSON:\n{"schoolFullName":"","major":"","recommendedMajors":["m1","m2","m3"],"courses":[{"code":"REAL CODE WITH NUMBER","title":"Real Title","credits":3}]}\n\nFind at least ' + (isMasters ? '12' : '20') + ' real courses. Use only courses found in search results. JSON only.';
 
     var searchResponse = await fetch(GEMINI_API_URL, {
       method: 'POST',
