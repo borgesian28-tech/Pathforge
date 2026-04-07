@@ -12,11 +12,52 @@ export default function OnboardingFlow({ onComplete, onLoading, user, onLogin })
   const [customGoal, setCustomGoal] = useState('');
 
   const handleBuild = async () => {
-    if (!school.trim() || !selectedCareer) return;
+    if (!school.trim() && programLevel !== 'highschool') return;
+    if (!selectedCareer) return;
+    
     const career = CAREER_OPTIONS.find((c) => c.id === selectedCareer);
     const isCustom = selectedCareer === 'custom';
     const major = '';
 
+    // High school flow
+    if (programLevel === 'highschool') {
+      onLoading(true, selectedCareer, 'Building your high school roadmap...');
+      
+      try {
+        const res = await fetch('/api/generate-hs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            careerGoal: isCustom ? customGoal : career.label,
+            customGoal: isCustom ? customGoal : null,
+          }),
+        });
+
+        if (!res.ok) throw new Error('API error');
+
+        const data = await res.json();
+
+        if (data.years) {
+          onComplete({
+            name,
+            career: selectedCareer,
+            careerLabel: data.careerField || career.label,
+            programLevel: 'highschool',
+            hsRoadmap: data,
+            careerObj: isCustom ? { ...career, label: data.careerField || 'Custom Path' } : career,
+          });
+        } else {
+          throw new Error('Invalid data');
+        }
+      } catch (err) {
+        console.error(err);
+        onLoading(false);
+        alert('Couldn\'t fetch data. Please try again.');
+      }
+      return;
+    }
+
+    // College flow (existing code)
     onLoading(true, selectedCareer, 'Searching ' + school + '\'s course catalog...');
 
     try {
@@ -139,6 +180,7 @@ export default function OnboardingFlow({ onComplete, onLoading, user, onLogin })
         <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 24 }}>This helps us tailor the roadmap to your program.</p>
         <div style={{ display: 'grid', gap: 12 }}>
           {[
+            { id: 'highschool', label: 'High School', icon: '📖', desc: 'Preparing for college applications' },
             { id: 'undergraduate', label: 'Undergraduate', icon: '🎓', desc: '4-year bachelor\'s degree program' },
             { id: 'masters', label: 'Master\'s / Graduate', icon: '📚', desc: 'Graduate-level degree program' },
           ].map((p) => {
@@ -170,15 +212,31 @@ export default function OnboardingFlow({ onComplete, onLoading, user, onLogin })
       <div style={{ maxWidth: 520, width: '100%' }} className="fade-in">
         <button onClick={() => setStep(2)} style={backBtn}>← Back</button>
         <p style={{ color: career.accent, fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP 3 OF 3</p>
-        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>Which school are you attending?</h2>
-        <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 20 }}>We'll find real courses, clubs, AND everything your school won't teach you.</p>
-        <input type="text" placeholder="e.g. Williams College, NYU, Stanford..." value={school} onChange={(e) => setSchool(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && school.trim() && handleBuild()} style={{ ...inp, marginBottom: 16 }} />
-        {isCustom && <div style={{ background: '#111122', border: '1px solid #fbbf2433', borderRadius: 12, padding: '12px 16px', marginBottom: 16 }}><div style={{ color: '#fbbf24', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>YOUR CUSTOM GOAL</div><p style={{ color: '#ccc', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{customGoal}</p></div>}
-        <div style={{ background: '#0A5C3615', border: '1px solid #0A5C3633', borderRadius: 12, padding: '12px 16px', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-          <span style={{ fontSize: 16, marginTop: 1 }}>🚀</span>
-          <p style={{ color: '#8a8a9a', fontSize: 13, margin: 0, lineHeight: 1.5 }}>Your roadmap includes <strong style={{ color: '#4ade80' }}>what college won't teach you</strong> — technical skills, networking playbooks, interview prep, and insider tips.</p>
-        </div>
-        <button onClick={handleBuild} disabled={!school.trim()} style={btn(!!school.trim(), career.accent, career.color)}>🚀 Search & Build My Roadmap</button>
+        
+        {programLevel === 'highschool' ? (
+          <>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>Ready to build your plan!</h2>
+            <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 20 }}>We'll create a personalized 4-year high school roadmap to prepare you for top colleges in {isCustom ? customGoal : career.label}.</p>
+            {isCustom && <div style={{ background: '#111122', border: '1px solid #fbbf2433', borderRadius: 12, padding: '12px 16px', marginBottom: 16 }}><div style={{ color: '#fbbf24', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>YOUR CUSTOM GOAL</div><p style={{ color: '#ccc', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{customGoal}</p></div>}
+            <div style={{ background: '#0A5C3615', border: '1px solid #0A5C3633', borderRadius: 12, padding: '12px 16px', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 16, marginTop: 1 }}>🎓</span>
+              <p style={{ color: '#8a8a9a', fontSize: 13, margin: 0, lineHeight: 1.5 }}>Your roadmap includes <strong style={{ color: '#4ade80' }}>AP/Honors course recommendations</strong>, extracurriculars, top colleges, and a complete timeline for college applications.</p>
+            </div>
+            <button onClick={handleBuild} style={btn(true, career.accent, career.color)}>🚀 Build My High School Roadmap</button>
+          </>
+        ) : (
+          <>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>Which school are you attending?</h2>
+            <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 20 }}>We'll find real courses, clubs, AND everything your school won't teach you.</p>
+            <input type="text" placeholder="e.g. Williams College, NYU, Stanford..." value={school} onChange={(e) => setSchool(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && school.trim() && handleBuild()} style={{ ...inp, marginBottom: 16 }} />
+            {isCustom && <div style={{ background: '#111122', border: '1px solid #fbbf2433', borderRadius: 12, padding: '12px 16px', marginBottom: 16 }}><div style={{ color: '#fbbf24', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>YOUR CUSTOM GOAL</div><p style={{ color: '#ccc', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{customGoal}</p></div>}
+            <div style={{ background: '#0A5C3615', border: '1px solid #0A5C3633', borderRadius: 12, padding: '12px 16px', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 16, marginTop: 1 }}>🚀</span>
+              <p style={{ color: '#8a8a9a', fontSize: 13, margin: 0, lineHeight: 1.5 }}>Your roadmap includes <strong style={{ color: '#4ade80' }}>what college won't teach you</strong> — technical skills, networking playbooks, interview prep, and insider tips.</p>
+            </div>
+            <button onClick={handleBuild} disabled={!school.trim()} style={btn(!!school.trim(), career.accent, career.color)}>🚀 Search & Build My Roadmap</button>
+          </>
+        )}
       </div>
     </div>
   );
