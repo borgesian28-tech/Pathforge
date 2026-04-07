@@ -58,6 +58,7 @@ export default function OnboardingFlow({ onComplete, onLoading, user, onLogin })
 
   const inp = { width: '100%', padding: '14px 20px', borderRadius: 12, border: '1px solid #2a2a3e', background: '#111122', color: '#fff', fontSize: 16, outline: 'none', boxSizing: 'border-box' };
   const btn = (ok, a = '#C9A84C', bg = '#8B6914') => ({ marginTop: 16, padding: '13px 40px', borderRadius: 10, border: 'none', background: ok ? `linear-gradient(135deg, ${a}, ${bg})` : '#2a2a3e', color: ok ? '#000' : '#555', fontWeight: 700, fontSize: 15, cursor: ok ? 'pointer' : 'default', width: '100%', transition: 'all 0.3s' });
+  const backBtn = { padding: '8px 16px', borderRadius: 8, border: '1px solid #2a2a3e', background: 'transparent', color: '#8a8a9a', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 16 };
 
   if (step === 0) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%)', padding: 20 }}>
@@ -98,6 +99,7 @@ export default function OnboardingFlow({ onComplete, onLoading, user, onLogin })
   if (step === 1) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%)', padding: 20 }}>
       <div style={{ maxWidth: 600, width: '100%' }} className="fade-in">
+        <button onClick={() => setStep(0)} style={backBtn}>← Back</button>
         <p style={{ color: '#C9A84C', fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP 1 OF 3</p>
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>Hey {name}, where do you want to go?</h2>
         <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 24 }}>Pick a career path — or describe your own.</p>
@@ -131,6 +133,7 @@ export default function OnboardingFlow({ onComplete, onLoading, user, onLogin })
   if (step === 2) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%)', padding: 20 }}>
       <div style={{ maxWidth: 520, width: '100%' }} className="fade-in">
+        <button onClick={() => setStep(1)} style={backBtn}>← Back</button>
         <p style={{ color: CAREER_OPTIONS.find(c => c.id === selectedCareer)?.accent || '#C9A84C', fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP 2 OF 3</p>
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>What level are you?</h2>
         <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 24 }}>This helps us tailor the roadmap to your program.</p>
@@ -165,6 +168,7 @@ export default function OnboardingFlow({ onComplete, onLoading, user, onLogin })
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%)', padding: 20 }}>
       <div style={{ maxWidth: 520, width: '100%' }} className="fade-in">
+        <button onClick={() => setStep(2)} style={backBtn}>← Back</button>
         <p style={{ color: career.accent, fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP 3 OF 3</p>
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>Which school are you attending?</h2>
         <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 20 }}>We'll find real courses, clubs, AND everything your school won't teach you.</p>
