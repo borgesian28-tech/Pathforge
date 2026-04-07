@@ -159,176 +159,141 @@ export async function POST(request) {
       roadmap.recommendedMajors = searchedMajors.length > 0 ? searchedMajors : [roadmap.major || searchedMajor];
     }
 
-    // Step 3: Club search
-    try {
-      var clubPrompt = 'Find real student clubs and organizations at ' + schoolName + ' that are DIRECTLY related to ' + career + ' and the field of ' + (searchedMajor || career) + '.\n\nCRITICAL RULES:\n- ONLY include clubs that are directly relevant to ' + career + ' or the ' + (searchedMajor || career) + ' field.\n- Do NOT include generic clubs like "Accounting Society", "Health Club", "Business Club" unless they are specifically relevant to the career path of ' + career + '.\n- For example, if someone is pursuing Education, only include education-related clubs like "Future Teachers Association", "Student Education Association", etc.\n- If you cannot find at least 2 clubs directly related to this field at ' + schoolName + ', return this exact JSON: [{"name":"Visit ' + schoolName + ' Student Organizations Directory","type":"Directory","priority":"Essential","desc":"Browse all available clubs on campus"}]\n\nReturn ONLY a JSON array: [{"name":"club name","type":"Professional","priority":"Essential","desc":"8 words max"}] Find 3-4 RELEVANT clubs only. No URLs needed. JSON only.';
+    // Helper functions for parallel API calls
+    var geminiCall = function(prompt, useSearch, maxTokens) {
+      var body = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: maxTokens || 2048, temperature: 0.3 } };
+      if (useSearch) body.tools = [{ google_search: {} }];
+      return fetch(GEMINI_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey }, body: JSON.stringify(body) })
+        .then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; });
+    };
 
-      var clubResponse = await fetch(GEMINI_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey,
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: clubPrompt }] }],
-          tools: [{ google_search: {} }],
-          generationConfig: { maxOutputTokens: 2048 },
-        }),
-      });
+    var extractText = function(data) {
+      if (!data || !data.candidates || !data.candidates[0] || !data.candidates[0].content) return '';
+      var parts = data.candidates[0].content.parts || [];
+      var txt = '';
+      for (var p = 0; p < parts.length; p++) { if (parts[p].text) txt += parts[p].text; }
+      return txt.trim();
+    };
 
-      if (clubResponse.ok) {
-        var clubData = await clubResponse.json();
-        var clubText = '';
-        var clubCandidates = clubData.candidates || [];
-        if (clubCandidates.length > 0 && clubCandidates[0].content && clubCandidates[0].content.parts) {
-          for (var k = 0; k < clubCandidates[0].content.parts.length; k++) {
-            if (clubCandidates[0].content.parts[k].text) {
-              clubText += clubCandidates[0].content.parts[k].text;
-            }
-          }
-        }
-        clubText = clubText.trim();
-        if (clubText.indexOf('```') !== -1) {
-          var cm = clubText.match(/```(?:json)?\s*([\s\S]*?)```/);
-          if (cm) clubText = cm[1].trim();
-        }
-        var arrStart = clubText.indexOf('[');
-        var arrEnd = clubText.lastIndexOf(']');
-        if (arrStart !== -1 && arrEnd > arrStart) {
-          var clubs = JSON.parse(clubText.substring(arrStart, arrEnd + 1));
-          if (Array.isArray(clubs) && clubs.length > 0) {
-            roadmap.clubs = clubs;
-          }
+    var cleanJson = function(text) {
+      if (!text) return '';
+      if (text.indexOf('```') !== -1) { var m = text.match(/```(?:json)?\s*([\s\S]*?)```/); if (m) text = m[1].trim(); }
+      return text;
+    };
+
+    var parseJsonObj = function(text) {
+      var start = text.indexOf('{');
+      if (start === -1) return null;
+      var d = 0, inS = false, esc = false, end = -1, t = text.substring(start);
+      for (var i = 0; i < t.length; i++) {
+        var c = t[i];
+        if (esc) { esc = false; continue; }
+        if (c === '\\') { esc = true; continue; }
+        if (c === '"') { inS = !inS; continue; }
+        if (inS) continue;
+        if (c === '{') d++; if (c === '}') { d--; if (d === 0) { end = i; break; } }
+      }
+      if (end === -1) return null;
+      return JSON.parse(t.substring(0, end + 1));
+    };
+
+    // Build all course codes for professor search
+    var allCourses = [];
+    for (var si = 0; si < roadmap.semesters.length; si++) {
+      var sem = roadmap.semesters[si];
+      if (sem.courses) {
+        for (var ci = 0; ci < sem.courses.length; ci++) {
+          allCourses.push(sem.courses[ci].code + ' - ' + sem.courses[ci].title);
         }
       }
-    } catch(clubErr) {
-      console.error('Club search failed:', clubErr.message);
     }
+
+    // Define all prompts
+    var clubPrompt = 'Find real student clubs at ' + schoolName + ' DIRECTLY related to ' + career + ' and ' + (searchedMajor || career) + '.\n\nRULES:\n- ONLY clubs directly relevant to ' + career + '.\n- No generic clubs unless specifically relevant.\n- If fewer than 2 relevant clubs found, return: [{"name":"Visit ' + schoolName + ' Student Organizations Directory","type":"Directory","priority":"Essential","desc":"Browse all available clubs on campus"}]\n\nReturn ONLY JSON array: [{"name":"club","type":"Professional","priority":"Essential","desc":"8 words max"}] 3-4 clubs. JSON only.';
+
+    var brandPrompt = 'Official school colors and website for ' + schoolFullName + ' (' + schoolName + ')?\n\nReturn ONLY JSON:\n{"primaryColor":"#hex","secondaryColor":"#hex","domain":"school.edu"}\n\nprimaryColor = main/dark brand color. secondaryColor = accent/lighter. domain = .edu domain without https://. JSON only.';
+
+    var outcomesPrompt = 'Salary and career data for ' + career + ' from ' + schoolFullName + '.\n\nReturn ONLY JSON (no wrapper):\n{"entrySalary":{"low":50000,"high":70000,"median":60000},"midSalary":{"low":80000,"high":120000,"median":100000},"seniorSalary":{"low":120000,"high":200000,"median":160000},"topEmployers":[{"name":"Company","type":"Industry","roles":["Role"]}],"placementRate":"95%","medianTimeToOffer":"3 months before graduation","topCities":["City1","City2","City3"],"growthOutlook":"2-3 sentence outlook","dailyActions":[' + Array.from({length: numSemesters}, function(_, i) { return '{"semester":' + (i+1) + ',"actions":["action1","action2","action3"]}'; }).join(',') + ']}\n\n5-8 real employers. ' + numSemesters + ' semester entries with 3-5 specific tactical daily habits each. JSON only.';
+
+    var profPrompt = 'Search for highly-rated professors at ' + schoolName + ' who teach these courses:\n' + allCourses.join('\n') + '\n\nFor each course, find the best-rated professor using RateMyProfessors or similar sources.\n\nReturn ONLY JSON array:\n[{"code":"COURSE CODE","professor":"Prof. Name","rating":4.5,"difficulty":3.2,"tags":["Helpful","Clear lectures"]}]\n\nUse real professor names found in search results. rating is out of 5.0. difficulty is out of 5.0. tags are 1-2 word descriptions. If you cannot find a professor for a course, skip it. JSON only.';
+
+    // Fire ALL calls in parallel
+    var results = await Promise.all([
+      geminiCall(clubPrompt, true, 2048),
+      geminiCall(brandPrompt, true, 512),
+      geminiCall(outcomesPrompt, true, 4096),
+      geminiCall(profPrompt, true, 4096),
+    ]);
+
+    // Parse clubs
+    try {
+      var clubText = cleanJson(extractText(results[0]));
+      var arrS = clubText.indexOf('['), arrE = clubText.lastIndexOf(']');
+      if (arrS !== -1 && arrE > arrS) {
+        var clubs = JSON.parse(clubText.substring(arrS, arrE + 1));
+        if (Array.isArray(clubs) && clubs.length > 0) roadmap.clubs = clubs;
+      }
+    } catch(e) { console.error('Club parse:', e.message); }
 
     if (!roadmap.clubs || roadmap.clubs.length === 0) {
-      roadmap.clubs = [
-        { name: 'Visit ' + schoolName + ' Student Organizations Directory', type: 'Directory', priority: 'Essential', desc: 'Browse all clubs at your school' }
-      ];
+      roadmap.clubs = [{ name: 'Visit ' + schoolName + ' Student Organizations Directory', type: 'Directory', priority: 'Essential', desc: 'Browse all clubs at your school' }];
     }
 
-    // Step 4: School branding (colors + website domain for logo)
+    // Parse branding
     try {
-      var brandPrompt = 'What are the official school colors and website domain for ' + schoolFullName + ' (' + schoolName + ')?\n\nReturn ONLY valid JSON:\n{"primaryColor":"#hexcode","secondaryColor":"#hexcode","domain":"example.edu"}\n\nUse the actual official hex color codes for the school. primaryColor should be the main/darkest brand color. secondaryColor should be the accent/lighter brand color. domain should be the main .edu website domain without https://. JSON only.';
+      var brandText = cleanJson(extractText(results[1]));
+      var branding = parseJsonObj(brandText);
+      if (branding && branding.primaryColor) {
+        roadmap.schoolBranding = {
+          primaryColor: branding.primaryColor,
+          secondaryColor: branding.secondaryColor || branding.primaryColor,
+          domain: branding.domain || '',
+          logoUrl: branding.domain ? 'https://www.google.com/s2/favicons?domain=' + branding.domain + '&sz=128' : '',
+        };
+      }
+    } catch(e) { console.error('Brand parse:', e.message); }
 
-      var brandResponse = await fetch(GEMINI_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey,
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: brandPrompt }] }],
-          tools: [{ google_search: {} }],
-          generationConfig: { maxOutputTokens: 512, temperature: 0.1 },
-        }),
-      });
+    // Parse outcomes
+    try {
+      var outText = cleanJson(extractText(results[2]));
+      console.log('Outcomes raw length:', outText.length);
+      var outObj = parseJsonObj(outText);
+      if (outObj) {
+        if (outObj.outcomes) roadmap.outcomes = outObj.outcomes;
+        else if (outObj.entrySalary || outObj.topEmployers) roadmap.outcomes = outObj;
+        console.log('Outcomes parsed:', !!roadmap.outcomes);
+      }
+    } catch(e) { console.error('Outcomes parse:', e.message); }
 
-      if (brandResponse.ok) {
-        var brandData = await brandResponse.json();
-        var brandText = '';
-        var brandCandidates = brandData.candidates || [];
-        if (brandCandidates.length > 0 && brandCandidates[0].content && brandCandidates[0].content.parts) {
-          for (var b = 0; b < brandCandidates[0].content.parts.length; b++) {
-            if (brandCandidates[0].content.parts[b].text) {
-              brandText += brandCandidates[0].content.parts[b].text;
+    // Parse professors and attach to courses
+    try {
+      var profText = cleanJson(extractText(results[3]));
+      var pArrS = profText.indexOf('['), pArrE = profText.lastIndexOf(']');
+      if (pArrS !== -1 && pArrE > pArrS) {
+        var profs = JSON.parse(profText.substring(pArrS, pArrE + 1));
+        if (Array.isArray(profs)) {
+          // Build lookup by course code
+          var profMap = {};
+          for (var pi = 0; pi < profs.length; pi++) {
+            if (profs[pi].code) profMap[profs[pi].code.toUpperCase().replace(/\s+/g, '')] = profs[pi];
+          }
+          // Attach to semester courses
+          for (var si2 = 0; si2 < roadmap.semesters.length; si2++) {
+            if (roadmap.semesters[si2].courses) {
+              for (var ci2 = 0; ci2 < roadmap.semesters[si2].courses.length; ci2++) {
+                var cCode = roadmap.semesters[si2].courses[ci2].code.toUpperCase().replace(/\s+/g, '');
+                if (profMap[cCode]) {
+                  roadmap.semesters[si2].courses[ci2].professor = profMap[cCode].professor;
+                  roadmap.semesters[si2].courses[ci2].profRating = profMap[cCode].rating;
+                  roadmap.semesters[si2].courses[ci2].profDifficulty = profMap[cCode].difficulty;
+                  roadmap.semesters[si2].courses[ci2].profTags = profMap[cCode].tags || [];
+                }
+              }
             }
           }
-        }
-        brandText = brandText.trim();
-        if (brandText.indexOf('```') !== -1) {
-          var bm = brandText.match(/```(?:json)?\s*([\s\S]*?)```/);
-          if (bm) brandText = bm[1].trim();
-        }
-        var bbs = brandText.indexOf('{');
-        var bbe = brandText.lastIndexOf('}');
-        if (bbs !== -1 && bbe > bbs) {
-          var branding = JSON.parse(brandText.substring(bbs, bbe + 1));
-          if (branding.primaryColor) roadmap.schoolBranding = {
-            primaryColor: branding.primaryColor,
-            secondaryColor: branding.secondaryColor || branding.primaryColor,
-            domain: branding.domain || '',
-            logoUrl: branding.domain ? 'https://www.google.com/s2/favicons?domain=' + branding.domain + '&sz=128' : '',
-          };
         }
       }
-    } catch(brandErr) {
-      console.error('Brand search failed:', brandErr.message);
-    }
-
-    // Step 5: Salary & Outcomes data
-    try {
-      var outcomesPrompt = 'Find salary and career outcome data for ' + career + ' graduates from ' + schoolFullName + ' (' + schoolName + ').\n\nReturn ONLY valid JSON with this exact structure (no wrapper object):\n{"entrySalary":{"low":50000,"high":70000,"median":60000},"midSalary":{"low":80000,"high":120000,"median":100000},"seniorSalary":{"low":120000,"high":200000,"median":160000},"topEmployers":[{"name":"Company Name","type":"Industry type","roles":["Role 1","Role 2"]}],"placementRate":"95%","medianTimeToOffer":"3 months before graduation","topCities":["New York","San Francisco","Chicago"],"growthOutlook":"Description of industry growth outlook in 2-3 sentences","dailyActions":[{"semester":1,"actions":["Specific action item","Another action"]},{"semester":2,"actions":["Action for sem 2"]},{"semester":3,"actions":["Action for sem 3"]},{"semester":4,"actions":["Action for sem 4"]}' + (isMasters ? '' : ',{"semester":5,"actions":["Action for sem 5"]},{"semester":6,"actions":["Action for sem 6"]},{"semester":7,"actions":["Action for sem 7"]},{"semester":8,"actions":["Action for sem 8"]}') + ']}\n\nUse realistic salary figures for ' + career + '. topEmployers should be 5-8 real companies that recruit for ' + career + ' roles. dailyActions should have ' + numSemesters + ' entries with 3-5 specific, actionable habits per semester (e.g. "Send 2 LinkedIn requests to ' + career + ' professionals" not just "Network"). JSON only, no wrapper object.';
-
-      var outcomesResponse = await fetch(GEMINI_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey,
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: outcomesPrompt }] }],
-          tools: [{ google_search: {} }],
-          generationConfig: { maxOutputTokens: 4096, temperature: 0.3 },
-        }),
-      });
-
-      if (outcomesResponse.ok) {
-        var outcomesData = await outcomesResponse.json();
-        var outcomesText = '';
-        var outcomesCandidates = outcomesData.candidates || [];
-        if (outcomesCandidates.length > 0 && outcomesCandidates[0].content && outcomesCandidates[0].content.parts) {
-          for (var oi = 0; oi < outcomesCandidates[0].content.parts.length; oi++) {
-            if (outcomesCandidates[0].content.parts[oi].text) {
-              outcomesText += outcomesCandidates[0].content.parts[oi].text;
-            }
-          }
-        }
-        outcomesText = outcomesText.trim();
-        console.log('Outcomes raw length:', outcomesText.length);
-        if (outcomesText.indexOf('```') !== -1) {
-          var om = outcomesText.match(/```(?:json)?\s*([\s\S]*?)```/);
-          if (om) outcomesText = om[1].trim();
-        }
-        var obs = outcomesText.indexOf('{');
-        if (obs !== -1) {
-          // Use depth-tracking parser to find matching closing brace
-          var oDepth = 0, oInStr = false, oEsc = false, oJe = -1;
-          var oTxt = outcomesText.substring(obs);
-          for (var oj = 0; oj < oTxt.length; oj++) {
-            var oc = oTxt[oj];
-            if (oEsc) { oEsc = false; continue; }
-            if (oc === '\\') { oEsc = true; continue; }
-            if (oc === '"') { oInStr = !oInStr; continue; }
-            if (oInStr) continue;
-            if (oc === '{') oDepth++;
-            if (oc === '}') { oDepth--; if (oDepth === 0) { oJe = oj; break; } }
-          }
-          if (oJe !== -1) {
-            var outcomesResult = JSON.parse(oTxt.substring(0, oJe + 1));
-            // Handle both wrapped {"outcomes":{...}} and unwrapped {...} formats
-            if (outcomesResult.outcomes) {
-              roadmap.outcomes = outcomesResult.outcomes;
-            } else if (outcomesResult.entrySalary || outcomesResult.topEmployers) {
-              roadmap.outcomes = outcomesResult;
-            }
-            console.log('Outcomes parsed successfully:', !!roadmap.outcomes);
-          } else {
-            console.log('Outcomes: could not find matching closing brace');
-          }
-        } else {
-          console.log('Outcomes: no JSON found in response');
-        }
-      } else {
-        console.error('Outcomes API error:', outcomesResponse.status);
-      }
-    } catch(outcomesErr) {
-      console.error('Outcomes search failed:', outcomesErr.message);
-    }
+    } catch(e) { console.error('Prof parse:', e.message); }
 
     return Response.json(roadmap);
   } catch (err) {
