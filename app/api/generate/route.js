@@ -23,94 +23,13 @@ export async function POST(request) {
 
     var majorLine = major ? ('Use "' + major + '" as the major.') : 'Pick the best major for ' + career + ' at ' + schoolName + '.';
 
-    // If user provided a catalog URL, fetch the actual page content
+    // If user provided a catalog URL, use Gemini's Google Search grounding to visit it
     var catalogContent = '';
-    if (catalogUrl && catalogUrl.trim()) {
-      try {
-        var baseUrl = catalogUrl.trim().replace(/\?.*$/, '');
-        var origin = '';
-        try { var u = new URL(baseUrl); origin = u.origin; } catch(e) {}
-
-        var stripHtml = function(h) {
-          return h
-            .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-            .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-            .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, '')
-            .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, '')
-            .replace(/<header[^>]*>[\s\S]*?<\/header>/gi, '')
-            .replace(/<[^>]+>/g, ' ')
-            .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#\d+;/g, ' ')
-            .replace(/\s+/g, ' ').trim();
-        };
-
-        var fetchOpts = { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PathForge/1.0)' }, signal: AbortSignal.timeout(10000) };
-        var mainRes = await fetch(catalogUrl.trim(), fetchOpts);
-        if (mainRes.ok) {
-          var contentType = mainRes.headers.get('content-type') || '';
-          var mainHtml = await mainRes.text();
-
-          if (contentType.includes('pdf')) {
-            catalogContent = '\n\nThe student provided a PDF catalog link: ' + catalogUrl.trim() + '\nSearch this PDF to find real course codes and titles.\n';
-          } else {
-            var allText = stripHtml(mainHtml);
-
-            // Find PDF links
-            var pdfLinks = [];
-            var pdfRegex = /href=["']([^"']*\.pdf[^"']*)/gi;
-            var pdfMatch;
-            while ((pdfMatch = pdfRegex.exec(mainHtml)) !== null) {
-              var pdfUrl = pdfMatch[1];
-              if (pdfUrl.startsWith('/')) pdfUrl = origin + pdfUrl;
-              if (!pdfUrl.startsWith('http')) continue;
-              var pdfLower = pdfUrl.toLowerCase();
-              if (pdfLower.includes('curriculum') || pdfLower.includes('course') || pdfLower.includes('catalog') || pdfLower.includes('pathway') || pdfLower.includes('program') || pdfLower.includes('academic') || pdfLower.includes('bulletin')) {
-                pdfLinks.push(pdfUrl);
-              }
-            }
-
-            if (pdfLinks.length > 0) {
-              catalogContent = '\n\nThe student\'s school catalog page links to these PDF documents with real course listings:\n';
-              for (var pi = 0; pi < Math.min(pdfLinks.length, 3); pi++) {
-                catalogContent += '- ' + pdfLinks[pi] + '\n';
-              }
-              catalogContent += '\nSearch these PDF URLs to find REAL course codes and titles.\n';
-            }
-
-            // Find department sub-pages
-            var deptLinks = [];
-            var linkRegex = /href=["']([^"']*(?:math|econ|comput|english|science|history|language|arts|department|courses|biology|chemistry|physics|politic|philosoph|psycholog)[^"']*)/gi;
-            var linkMatch;
-            while ((linkMatch = linkRegex.exec(mainHtml)) !== null) {
-              var subUrl = linkMatch[1];
-              if (subUrl.startsWith('/')) subUrl = origin + subUrl;
-              if (!subUrl.startsWith('http') || subUrl === catalogUrl.trim() || subUrl === baseUrl) continue;
-              if (deptLinks.indexOf(subUrl) === -1) deptLinks.push(subUrl);
-            }
-
-            // Fetch sub-pages
-            var subTexts = [];
-            for (var di = 0; di < Math.min(deptLinks.length, 4); di++) {
-              try {
-                var subRes = await fetch(deptLinks[di], { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PathForge/1.0)' }, signal: AbortSignal.timeout(5000) });
-                if (subRes.ok) { var st = stripHtml(await subRes.text()); if (st.length > 100) subTexts.push(st.substring(0, 2000)); }
-              } catch(se) {}
-            }
-
-            var combined = allText;
-            if (subTexts.length > 0) combined += '\n\n--- DEPARTMENT PAGES ---\n' + subTexts.join('\n\n');
-            if (combined.length > 12000) combined = combined.substring(0, 12000);
-
-            if (combined.length > 200 && !catalogContent) {
-              catalogContent = '\n\nCATALOG PAGE CONTENT (from ' + baseUrl + '):\n"""\n' + combined + '\n"""\n\nCRITICAL — CATALOG PROVIDED: Every course code and title in your response must come directly from this catalog. Do NOT make up course codes like "ECON 3XX" or "Elective 4". Match exact course codes and titles from the text.\n';
-            } else if (combined.length > 200 && catalogContent) {
-              catalogContent += '\n\nADDITIONAL PAGE CONTENT:\n"""\n' + combined.substring(0, 4000) + '\n"""\n';
-            }
-          }
-        }
-      } catch (fetchErr) {
-        console.error('Catalog fetch error:', fetchErr.message);
-        catalogContent = '\n\nThe student provided this catalog URL: ' + catalogUrl.trim() + '\nSearch this URL to find real courses.\n';
-      }
+    var hasCatalogUrl = catalogUrl && catalogUrl.trim();
+    
+    if (hasCatalogUrl) {
+      var cleanUrl = catalogUrl.trim().replace(/\?.*$/, '');
+      catalogContent = '\n\nCRITICAL — REAL SCHOOL CATALOG:\nThe student provided their school\'s course catalog URL: ' + cleanUrl + '\n\nYou MUST:\n1. Search and visit this URL: ' + cleanUrl + '\n2. Look for any linked PDF documents (often "Course Catalog", "Curriculum Pathways", "Course of Studies", "Bulletin")\n3. Search for and read those PDFs to find REAL course codes and titles\n4. Use ONLY course codes and titles that actually exist at this school\n5. Do NOT use placeholder codes like "ECON 3XX" or generic names like "Elective Course"\n6. Match exact course codes (e.g. ECON 111, MATH 205, CS 201) and exact titles from the catalog\n\nEvery course in your response must be a real course from this specific school\'s catalog. Search thoroughly.\n';
     }
 
     // Step 1: Search for real courses using Google Search grounding
