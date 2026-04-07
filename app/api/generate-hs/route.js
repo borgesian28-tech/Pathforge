@@ -18,87 +18,58 @@ export async function POST(request) {
     const career = careerGoal;
 
     // Generate high school roadmap
-    const prompt = `You are a high school guidance counselor helping a student prepare for college in the field of ${career}.
+    const prompt = `You are a high school guidance counselor. Create a 4-year high school roadmap for a student interested in ${career}.
 
-Create a comprehensive 4-year high school roadmap (Freshman through Senior year) with specific course recommendations, extracurriculars, and college prep advice.
+CRITICAL: Return ONLY valid JSON with no extra text, no markdown, no backticks, no preamble.
 
-IMPORTANT RULES:
-- Recommend REAL course names (AP Biology, Honors Chemistry, AP Calculus BC, etc.)
-- Be specific about which AP/Honors courses to take each year
-- Focus on rigor and courses that prepare for ${career}
-- Include realistic timeline for standardized tests (SAT/ACT, AP exams)
-- Recommend 5-7 extracurricular activities relevant to ${career}
-- List 8-12 top colleges/universities known for ${career} programs
-
-Return ONLY valid JSON (no markdown, no backticks):
 {
   "careerField": "${career}",
   "years": [
     {
       "year": "Freshman",
       "courses": [
-        {
-          "name": "Course name",
-          "type": "AP/Honors/Standard",
-          "why": "Brief reason why this matters for ${career}"
-        }
+        {"name": "Honors Biology", "type": "Honors", "why": "Foundation for life sciences"},
+        {"name": "Algebra I", "type": "Standard", "why": "Math fundamentals"},
+        {"name": "English I", "type": "Standard", "why": "Writing skills"},
+        {"name": "World History", "type": "Standard", "why": "Cultural awareness"},
+        {"name": "Physical Education", "type": "Standard", "why": "Health requirement"},
+        {"name": "Art or Music", "type": "Elective", "why": "Creative expression"}
       ],
-      "focus": "Main focus areas this year",
-      "milestones": ["milestone 1", "milestone 2"]
+      "focus": "Build strong academic foundation and explore interests",
+      "milestones": ["Join 1-2 clubs", "Maintain 3.5+ GPA", "Build study habits"]
     }
   ],
   "extracurriculars": [
-    {
-      "activity": "Activity name",
-      "type": "Club/Sport/Competition/Volunteer",
-      "relevance": "How this relates to ${career}",
-      "commitment": "Time commitment description"
-    }
+    {"activity": "Science Club", "type": "Club", "relevance": "Hands-on science experience", "commitment": "2-3 hours/week"},
+    {"activity": "Debate Team", "type": "Competition", "relevance": "Critical thinking", "commitment": "4-5 hours/week"}
   ],
   "topColleges": [
-    {
-      "name": "University name",
-      "strengths": "What makes this school great for ${career}",
-      "selectivity": "Highly Selective/Selective/Moderately Selective"
-    }
+    {"name": "MIT", "strengths": "Top engineering programs", "selectivity": "Highly Selective"},
+    {"name": "Stanford", "strengths": "Innovation culture", "selectivity": "Highly Selective"}
   ],
   "standardizedTests": {
-    "sat": {
-      "when": "When to take it",
-      "target": "Target score for top programs",
-      "prep": "Preparation advice"
-    },
-    "act": {
-      "when": "When to take it",
-      "target": "Target score",
-      "prep": "Preparation advice"
-    },
-    "ap": ["List of recommended AP exams to take"]
+    "sat": {"when": "Spring of Junior year", "target": "1400-1600 for top schools", "prep": "Start prep junior fall with Khan Academy"},
+    "act": {"when": "Alternative to SAT", "target": "32-36 for top schools", "prep": "Practice tests and official prep"},
+    "ap": ["AP Biology", "AP Calculus BC", "AP Chemistry", "AP English Literature"]
   },
   "summerActivities": [
-    {
-      "year": "After Freshman Year",
-      "activities": ["activity 1", "activity 2", "activity 3"]
-    }
+    {"year": "After Freshman Year", "activities": ["Summer reading", "Local internship", "Community service"]},
+    {"year": "After Sophomore Year", "activities": ["Pre-college program", "Job or internship", "Leadership role"]},
+    {"year": "After Junior Year", "activities": ["Intensive program", "Research project", "College visits"]}
   ],
   "collegeAppTimeline": [
-    {
-      "when": "Junior Spring",
-      "tasks": ["task 1", "task 2"]
-    }
+    {"when": "Junior Spring", "tasks": ["Take SAT/ACT", "Visit colleges", "Build college list"]},
+    {"when": "Summer Before Senior", "tasks": ["Draft essays", "Request recommendations", "Finalize list"]},
+    {"when": "Senior Fall", "tasks": ["Submit early apps", "Continue regular apps", "Interview prep"]},
+    {"when": "Senior Winter", "tasks": ["Submit regular apps", "Apply for aid", "Wait for decisions"]}
   ],
-  "skills": ["skill1", "skill2", "skill3", "skill4", "skill5"]
+  "skills": ["Critical thinking", "Time management", "Written communication", "Research", "Leadership"]
 }
 
-Requirements:
-- 4 years with 6-8 courses each
-- 5-7 extracurriculars
-- 8-12 top colleges
-- 4 summer activity entries
-- Realistic college app timeline
-- 5-8 key skills to develop
-
-JSON only. No extra text.`;
+Return 4 years (Freshman, Sophomore, Junior, Senior) with 6-8 courses each.
+8-12 colleges for ${career}.
+5-7 extracurriculars.
+JSON ONLY - no other text.`;
 
     const response = await fetch(GEMINI_API_URL, {
       method: 'POST',
