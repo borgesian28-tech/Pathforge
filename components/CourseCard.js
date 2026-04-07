@@ -5,7 +5,7 @@ import { TYPE_COLORS } from '@/lib/constants';
 export default function CourseCard({ course, semIdx, cIdx, completed, onToggle, accent }) {
   const [expanded, setExpanded] = useState(false);
   const tc = TYPE_COLORS[course.type] || '#444';
-  const hasProf = course.professor && course.profRating;
+  const hasProf = course.professor && typeof course.professor === "string" && course.professor.length > 1 && Number(course.profRating) > 0;
 
   var ratingColor = function(r) {
     if (r >= 4.0) return '#4ade80';
