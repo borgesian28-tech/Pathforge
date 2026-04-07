@@ -6,6 +6,7 @@ export default function OnboardingFlow({ onComplete, onLoading, user, onLogin })
   const [step, setStep] = useState(0);
   const [name, setName] = useState(user ? (user.displayName || '').split(' ')[0] : '');
   const [selectedCareer, setSelectedCareer] = useState(null);
+  const [programLevel, setProgramLevel] = useState(null);
   const [school, setSchool] = useState('');
   const [selectedMajor, setSelectedMajor] = useState('');
   const [customGoal, setCustomGoal] = useState('');
@@ -27,6 +28,7 @@ export default function OnboardingFlow({ onComplete, onLoading, user, onLogin })
           careerPath: isCustom ? customGoal : career.label,
           majorName: major,
           customGoal: isCustom ? customGoal : null,
+          programLevel: programLevel,
         }),
       });
 
@@ -95,7 +97,7 @@ export default function OnboardingFlow({ onComplete, onLoading, user, onLogin })
   if (step === 1) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%)', padding: 20 }}>
       <div style={{ maxWidth: 600, width: '100%' }} className="fade-in">
-        <p style={{ color: '#C9A84C', fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP 1 OF 2</p>
+        <p style={{ color: '#C9A84C', fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP 1 OF 3</p>
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>Hey {name}, where do you want to go?</h2>
         <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 24 }}>Pick a career path — or describe your own.</p>
         <div style={{ display: 'grid', gap: 10 }}>
@@ -125,12 +127,44 @@ export default function OnboardingFlow({ onComplete, onLoading, user, onLogin })
     </div>
   );
 
+  if (step === 2) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%)', padding: 20 }}>
+      <div style={{ maxWidth: 520, width: '100%' }} className="fade-in">
+        <p style={{ color: CAREER_OPTIONS.find(c => c.id === selectedCareer)?.accent || '#C9A84C', fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP 2 OF 3</p>
+        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>What level are you?</h2>
+        <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 24 }}>This helps us tailor the roadmap to your program.</p>
+        <div style={{ display: 'grid', gap: 12 }}>
+          {[
+            { id: 'undergraduate', label: 'Undergraduate', icon: '🎓', desc: '4-year bachelor\'s degree program' },
+            { id: 'masters', label: 'Master\'s / Graduate', icon: '📚', desc: 'Graduate-level degree program' },
+          ].map((p) => {
+            const sel = programLevel === p.id;
+            const accent = CAREER_OPTIONS.find(c => c.id === selectedCareer)?.accent || '#C9A84C';
+            const color = CAREER_OPTIONS.find(c => c.id === selectedCareer)?.color || '#0A5C36';
+            return (
+              <button key={p.id} onClick={() => setProgramLevel(p.id)}
+                style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '18px 20px', borderRadius: 14, border: sel ? `2px solid ${accent}` : '1px solid #2a2a3e', background: sel ? `${color}22` : '#111122', cursor: 'pointer', transition: 'all 0.25s', textAlign: 'left' }}>
+                <span style={{ fontSize: 32 }}>{p.icon}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{p.label}</div>
+                  <div style={{ color: '#6a6a7a', fontSize: 13, marginTop: 2 }}>{p.desc}</div>
+                </div>
+                {sel && <span style={{ color: accent, fontSize: 18 }}>✓</span>}
+              </button>
+            );
+          })}
+        </div>
+        <button onClick={() => programLevel && setStep(3)} disabled={!programLevel} style={btn(!!programLevel, CAREER_OPTIONS.find(c => c.id === selectedCareer)?.accent, CAREER_OPTIONS.find(c => c.id === selectedCareer)?.color)}>Continue →</button>
+      </div>
+    </div>
+  );
+
   const career = CAREER_OPTIONS.find((c) => c.id === selectedCareer);
   const isCustom = selectedCareer === 'custom';
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%)', padding: 20 }}>
       <div style={{ maxWidth: 520, width: '100%' }} className="fade-in">
-        <p style={{ color: career.accent, fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP 2 OF 2</p>
+        <p style={{ color: career.accent, fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP 3 OF 3</p>
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>Which school are you attending?</h2>
         <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 20 }}>We'll find real courses, clubs, AND everything your school won't teach you.</p>
         <input type="text" placeholder="e.g. Williams College, NYU, Stanford..." value={school} onChange={(e) => setSchool(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && school.trim() && handleBuild()} style={{ ...inp, marginBottom: 16 }} />
