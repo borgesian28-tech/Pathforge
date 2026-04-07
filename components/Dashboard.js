@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import CourseCard from './CourseCard';
 import BeyondClassroom from './BeyondClassroom';
 import AiAdvisor from './AiAdvisor';
+import InterviewSimulator from './InterviewSimulator';
 import { useAuth } from './AuthContext';
 
 export default function Dashboard({ profile, onReset, savedProgress }) {
@@ -122,6 +123,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   var tabs = [
     { id: 'courses', label: 'Courses', icon: '📚' },
     { id: 'beyond', label: 'Beyond Class', icon: '⚡' },
+    { id: 'interview', label: 'Interview', icon: '🎯' },
     { id: 'outcomes', label: 'Outcomes', icon: '💰' },
     { id: 'timeline', label: 'Timeline', icon: '📍' },
     { id: 'clubs', label: 'Clubs', icon: '🏛️' },
@@ -263,6 +265,8 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
         )}
 
         {activeTab === 'beyond' && <BeyondClassroom data={courseData.beyondClassroom} accent={accentColor} color={primaryColor} />}
+
+        {activeTab === 'interview' && <InterviewSimulator profile={currentProfile} accent={accentColor} primaryColor={primaryColor} />}
 
         {activeTab === 'outcomes' && (
           <div style={{ marginTop: 20 }}>
