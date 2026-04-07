@@ -19,9 +19,35 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   const [majors, setMajors] = useState([profile]); // Array of profiles for different majors
   const [activeMajorIndex, setActiveMajorIndex] = useState(0);
   const [addingMajor, setAddingMajor] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
+  const [combinedView, setCombinedView] = useState(false);
   const semRef = useRef(null);
   const saveTimer = useRef(null);
-  const { courseData, careerObj } = currentProfile;
+  
+  // Use combined profile if enabled and 2 majors exist
+  const displayProfile = (combinedView && majors.length === 2) ? {
+    ...currentProfile,
+    courseData: {
+      ...currentProfile.courseData,
+      semesters: [
+        ...majors[0].courseData.semesters.map((sem, i) => ({
+          ...sem,
+          courses: [
+            ...(majors[0].courseData.semesters[i]?.courses || []),
+            ...(majors[1].courseData.semesters[i]?.courses || [])
+          ]
+        }))
+      ],
+      clubs: [
+        ...(majors[0].courseData.clubs || []),
+        ...(majors[1].courseData.clubs || [])
+      ],
+      // Keep outcomes from primary major
+      outcomes: majors[0].courseData.outcomes
+    }
+  } : currentProfile;
+  
+  const { courseData, careerObj } = displayProfile;
   const semesters = courseData.semesters || [];
   const clubs = courseData.clubs || [];
   const milestones = courseData.milestones || [];
@@ -32,6 +58,15 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   const accentColor = schoolBranding ? schoolBranding.secondaryColor : careerObj.accent;
   const primaryColor = schoolBranding ? schoolBranding.primaryColor : careerObj.color;
   const logoUrl = schoolBranding ? schoolBranding.logoUrl : '';
+
+  // Theme colors
+  const bgMain = darkMode ? '#08080f' : '#f5f5f5';
+  const bgCard = darkMode ? '#111122' : '#ffffff';
+  const bgSecondary = darkMode ? '#1a1a2e' : '#e8e8e8';
+  const borderColor = darkMode ? '#1e1e32' : '#d0d0d0';
+  const textMain = darkMode ? '#fff' : '#1a1a1a';
+  const textMuted = darkMode ? '#8a8a9a' : '#666666';
+  const headerBg = darkMode ? '#0a0a0f' : '#ffffff';
 
   // Daily action: pick one action from current semester's list, rotating by day
   var dailyAction = null;
@@ -120,6 +155,10 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
 
   const addNewMajor = async function(majorName) {
     if (!majorName.trim()) return;
+    if (majors.length >= 2) {
+      alert('Maximum of 2 majors allowed. Please remove one first.');
+      return;
+    }
     setAddingMajor(true);
     try {
       var res = await fetch('/api/generate', {
@@ -152,6 +191,48 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
       alert('Could not add major. Please try again.');
     }
     setAddingMajor(false);
+  };
+
+  const changeSchool = async function() {
+    var newSchool = prompt('Enter the name of the new school (e.g., Stanford, MIT):');
+    if (!newSchool || !newSchool.trim()) return;
+    
+    if (!confirm('This will regenerate your entire roadmap for ' + newSchool + '. Continue?')) return;
+    
+    setSwitchingMajor(true);
+    try {
+      var res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          schoolName: newSchool,
+          careerPath: currentProfile.careerLabel,
+          majorName: courseData.major,
+          customGoal: null,
+          programLevel: currentProfile.programLevel || 'undergraduate',
+        }),
+      });
+      if (!res.ok) throw new Error('API error');
+      var data = await res.json();
+      if (data.semesters) {
+        var newProfile = {
+          ...currentProfile,
+          school: newSchool,
+          courseData: data,
+        };
+        setCurrentProfile(newProfile);
+        setMajors([newProfile]);
+        setActiveMajorIndex(0);
+        setCompletedCourses({});
+        setActiveSemester(0);
+        setActiveTab('courses');
+        if (user) saveRoadmap(newProfile, {});
+      }
+    } catch (err) {
+      console.error('Change school failed:', err);
+      alert('Could not change school. Please try again.');
+    }
+    setSwitchingMajor(false);
   };
 
   // Save roadmap to Firebase when first loaded
@@ -196,10 +277,16 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
                 <span style={{ color: accentColor, fontWeight: 700, fontSize: 14, letterSpacing: 1 }}>PATHFORGE</span>
               </div>
               <h1 style={{ fontFamily: "'Playfair Display', serif", color: '#fff', fontSize: 'clamp(20px, 4vw, 28px)', margin: '4px 0 2px' }}>{currentProfile.name}'s Roadmap</h1>
-              <p style={{ color: '#aaa', fontSize: 13, margin: 0 }}>{careerObj.icon} {currentProfile.careerLabel} • {courseData.major || currentProfile.major} @ {courseData.schoolFullName || currentProfile.school}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <p style={{ color: '#aaa', fontSize: 13, margin: 0 }}>{careerObj.icon} {currentProfile.careerLabel} • {courseData.major || currentProfile.major} @ {courseData.schoolFullName || currentProfile.school}</p>
+                <button onClick={changeSchool} style={{ background: '#ffffff11', border: '1px solid #ffffff22', borderRadius: 6, color: accentColor, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>Change School</button>
+              </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {saveStatus && <span style={{ color: '#4ade80', fontSize: 11, fontWeight: 600 }}>✓ {saveStatus}</span>}
+              <button onClick={function() { setDarkMode(!darkMode); }} style={{ background: '#ffffff11', border: '1px solid #ffffff22', borderRadius: 8, color: '#fff', fontSize: 18, width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
+                {darkMode ? '☀️' : '🌙'}
+              </button>
               {user ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   {user.photoURL && <img src={user.photoURL} alt="" style={{ width: 24, height: 24, borderRadius: '50%' }} referrerPolicy="no-referrer" />}
@@ -222,9 +309,16 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
           {/* Major tabs - always show Add Major button */}
           {true && (
             <div style={{ marginTop: 12 }}>
-              <div style={{ color: '#6a6a7a', fontSize: 11, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Your Majors</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <div style={{ color: '#6a6a7a', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Your Majors</div>
+                {majors.length === 2 && (
+                  <button onClick={function() { setCombinedView(!combinedView); }} style={{ background: combinedView ? accentColor + '22' : 'transparent', border: '1px solid ' + accentColor + '44', borderRadius: 6, color: accentColor, fontSize: 11, fontWeight: 600, padding: '4px 10px', cursor: 'pointer' }}>
+                    {combinedView ? '✓ Combined View' : 'Combine Majors'}
+                  </button>
+                )}
+              </div>
               <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-                {majors.map(function(maj, idx) {
+                {majors.length > 1 && majors.map(function(maj, idx) {
                   var isActive = idx === activeMajorIndex;
                   return (
                     <button
@@ -247,27 +341,29 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
                     </button>
                   );
                 })}
-                <button
-                  onClick={function() {
-                    var newMajorName = prompt('Enter the name of the major you want to add (e.g., Economics, Psychology):');
-                    if (newMajorName) addNewMajor(newMajorName);
-                  }}
-                  disabled={addingMajor}
-                  style={{
-                    background: '#1a1a2e',
-                    border: '2px dashed #2a2a3e',
-                    color: accentColor,
-                    padding: '8px 14px',
-                    borderRadius: 8,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: addingMajor ? 'not-allowed' : 'pointer',
-                    whiteSpace: 'nowrap',
-                    opacity: addingMajor ? 0.5 : 1
-                  }}
-                >
-                  {addingMajor ? 'Adding...' : '+ Add Major'}
-                </button>
+                {majors.length < 2 && (
+                  <button
+                    onClick={function() {
+                      var newMajorName = prompt('Enter the name of the major you want to add (e.g., Economics, Psychology):');
+                      if (newMajorName) addNewMajor(newMajorName);
+                    }}
+                    disabled={addingMajor}
+                    style={{
+                      background: '#1a1a2e',
+                      border: '2px dashed #2a2a3e',
+                      color: accentColor,
+                      padding: '8px 14px',
+                      borderRadius: 8,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: addingMajor ? 'not-allowed' : 'pointer',
+                      whiteSpace: 'nowrap',
+                      opacity: addingMajor ? 0.5 : 1
+                    }}
+                  >
+                    {addingMajor ? 'Adding...' : '+ Add Major'}
+                  </button>
+                )}
               </div>
             </div>
           )}
