@@ -211,6 +211,55 @@ export async function POST(request) {
       ];
     }
 
+    // Step 4: School branding (colors + website domain for logo)
+    try {
+      var brandPrompt = 'What are the official school colors and website domain for ' + schoolFullName + ' (' + schoolName + ')?\n\nReturn ONLY valid JSON:\n{"primaryColor":"#hexcode","secondaryColor":"#hexcode","domain":"example.edu"}\n\nUse the actual official hex color codes for the school. primaryColor should be the main/darkest brand color. secondaryColor should be the accent/lighter brand color. domain should be the main .edu website domain without https://. JSON only.';
+
+      var brandResponse = await fetch(GEMINI_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey,
+        },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: brandPrompt }] }],
+          tools: [{ google_search: {} }],
+          generationConfig: { maxOutputTokens: 512, temperature: 0.1 },
+        }),
+      });
+
+      if (brandResponse.ok) {
+        var brandData = await brandResponse.json();
+        var brandText = '';
+        var brandCandidates = brandData.candidates || [];
+        if (brandCandidates.length > 0 && brandCandidates[0].content && brandCandidates[0].content.parts) {
+          for (var b = 0; b < brandCandidates[0].content.parts.length; b++) {
+            if (brandCandidates[0].content.parts[b].text) {
+              brandText += brandCandidates[0].content.parts[b].text;
+            }
+          }
+        }
+        brandText = brandText.trim();
+        if (brandText.indexOf('```') !== -1) {
+          var bm = brandText.match(/```(?:json)?\s*([\s\S]*?)```/);
+          if (bm) brandText = bm[1].trim();
+        }
+        var bbs = brandText.indexOf('{');
+        var bbe = brandText.lastIndexOf('}');
+        if (bbs !== -1 && bbe > bbs) {
+          var branding = JSON.parse(brandText.substring(bbs, bbe + 1));
+          if (branding.primaryColor) roadmap.schoolBranding = {
+            primaryColor: branding.primaryColor,
+            secondaryColor: branding.secondaryColor || branding.primaryColor,
+            domain: branding.domain || '',
+            logoUrl: branding.domain ? 'https://logo.clearbit.com/' + branding.domain : '',
+          };
+        }
+      }
+    } catch(brandErr) {
+      console.error('Brand search failed:', brandErr.message);
+    }
+
     return Response.json(roadmap);
   } catch (err) {
     console.error(err);
