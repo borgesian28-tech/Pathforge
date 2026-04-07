@@ -4,6 +4,7 @@ import { useAuth } from '@/components/AuthContext';
 import OnboardingFlow from '@/components/OnboardingFlow';
 import LoadingScreen from '@/components/LoadingScreen';
 import Dashboard from '@/components/Dashboard';
+import HSCourseAdvisor from '@/components/HSCourseAdvisor';
 
 export default function Home() {
   const { user, loading: authLoading, login, logout, saveRoadmap, loadRoadmap } = useAuth();
@@ -13,6 +14,7 @@ export default function Home() {
   const [loadingCareer, setLoadingCareer] = useState(null);
   const [loadingStatus, setLoadingStatus] = useState('Initializing...');
   const [checkingSaved, setCheckingSaved] = useState(false);
+  const [showHSAdvisor, setShowHSAdvisor] = useState(false);
 
   // When user logs in, check for saved roadmap
   useEffect(function() {
@@ -63,16 +65,74 @@ export default function Home() {
     return <LoadingScreen status={loadingStatus} career={loadingCareer} />;
   }
 
-  if (profile) {
-    return <Dashboard profile={profile} onReset={handleReset} savedProgress={savedProgress} />;
-  }
-
   return (
-    <OnboardingFlow
-      onComplete={handleComplete}
-      onLoading={handleLoading}
-      user={user}
-      onLogin={login}
-    />
+    <>
+      {profile ? (
+        <Dashboard profile={profile} onReset={handleReset} savedProgress={savedProgress} />
+      ) : (
+        <OnboardingFlow
+          onComplete={handleComplete}
+          onLoading={handleLoading}
+          user={user}
+          onLogin={login}
+        />
+      )}
+      
+      {/* HS Course Advisor - floating button */}
+      {!showHSAdvisor && (
+        <button
+          onClick={() => setShowHSAdvisor(true)}
+          style={{
+            position: 'fixed',
+            bottom: 20,
+            right: 20,
+            background: '#8b5cf6',
+            border: 'none',
+            borderRadius: 12,
+            padding: '12px 18px',
+            color: '#fff',
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: 'pointer',
+            boxShadow: '0 4px 20px rgba(139, 92, 246, 0.4)',
+            zIndex: 999,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8
+          }}
+        >
+          <span style={{ fontSize: 16 }}>🎓</span>
+          HS Course Help
+        </button>
+      )}
+      
+      {showHSAdvisor && (
+        <div style={{ position: 'relative', zIndex: 1000 }}>
+          <HSCourseAdvisor />
+          <button
+            onClick={() => setShowHSAdvisor(false)}
+            style={{
+              position: 'fixed',
+              bottom: 20,
+              right: 440,
+              background: '#1a1a2e',
+              border: '1px solid #2a2a3e',
+              borderRadius: 8,
+              width: 32,
+              height: 32,
+              color: '#888',
+              fontSize: 16,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1001
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+    </>
   );
 }
