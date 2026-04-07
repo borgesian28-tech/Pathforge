@@ -165,8 +165,8 @@ export async function POST(request) {
     }
 
     // Helper functions for parallel API calls
-    var geminiCall = function(prompt, useSearch, maxTokens) {
-      var body = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: maxTokens || 2048, temperature: 0.3 } };
+    var geminiCall = function(prompt, useSearch, maxTokens, temp) {
+      var body = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: maxTokens || 2048, temperature: temp !== undefined ? temp : 0.3 } };
       if (useSearch) body.tools = [{ google_search: {} }];
       return fetch(GEMINI_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey }, body: JSON.stringify(body) })
         .then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; });
@@ -226,7 +226,7 @@ export async function POST(request) {
     var results = await Promise.all([
       geminiCall(clubPrompt, true, 2048),
       geminiCall(brandPrompt, true, 512),
-      geminiCall(outcomesPrompt, true, 4096),
+      geminiCall(outcomesPrompt, true, 4096, 0.1),
       geminiCall(profPrompt, true, 4096),
     ]);
 
@@ -273,29 +273,43 @@ export async function POST(request) {
     // Parse professors and attach to courses
     try {
       var profText = cleanJson(extractText(results[3]));
+      console.log('Prof raw length:', profText.length);
       var pArrS = profText.indexOf('['), pArrE = profText.lastIndexOf(']');
       if (pArrS !== -1 && pArrE > pArrS) {
         var profs = JSON.parse(profText.substring(pArrS, pArrE + 1));
         if (Array.isArray(profs)) {
-          // Build lookup by course code
+          // Build lookup by normalized course code
           var profMap = {};
           for (var pi = 0; pi < profs.length; pi++) {
-            if (profs[pi].code) profMap[profs[pi].code.toUpperCase().replace(/\s+/g, '')] = profs[pi];
+            if (profs[pi].code) {
+              // Normalize: uppercase, remove all spaces, dashes, dots
+              var normCode = profs[pi].code.toUpperCase().replace(/[\s\-\.]/g, '');
+              profMap[normCode] = profs[pi];
+              // Also store with single space between letters and numbers (e.g. "ECON101" and "ECON 101")
+              var spaced = profs[pi].code.toUpperCase().replace(/\s+/g, ' ').trim();
+              profMap[spaced] = profs[pi];
+            }
           }
           // Attach to semester courses
+          var matchCount = 0;
           for (var si2 = 0; si2 < roadmap.semesters.length; si2++) {
             if (roadmap.semesters[si2].courses) {
               for (var ci2 = 0; ci2 < roadmap.semesters[si2].courses.length; ci2++) {
-                var cCode = roadmap.semesters[si2].courses[ci2].code.toUpperCase().replace(/\s+/g, '');
-                if (profMap[cCode]) {
-                  roadmap.semesters[si2].courses[ci2].professor = profMap[cCode].professor;
-                  roadmap.semesters[si2].courses[ci2].profRating = profMap[cCode].rating;
-                  roadmap.semesters[si2].courses[ci2].profDifficulty = profMap[cCode].difficulty;
-                  roadmap.semesters[si2].courses[ci2].profTags = profMap[cCode].tags || [];
+                var courseCode = roadmap.semesters[si2].courses[ci2].code;
+                var normC = courseCode.toUpperCase().replace(/[\s\-\.]/g, '');
+                var spacedC = courseCode.toUpperCase().replace(/\s+/g, ' ').trim();
+                var match = profMap[normC] || profMap[spacedC];
+                if (match) {
+                  roadmap.semesters[si2].courses[ci2].professor = match.professor;
+                  roadmap.semesters[si2].courses[ci2].profRating = parseFloat(match.rating) || 0;
+                  roadmap.semesters[si2].courses[ci2].profDifficulty = parseFloat(match.difficulty) || 0;
+                  roadmap.semesters[si2].courses[ci2].profTags = match.tags || [];
+                  matchCount++;
                 }
               }
             }
           }
+          console.log('Prof matched:', matchCount, 'of', profs.length);
         }
       }
     } catch(e) { console.error('Prof parse:', e.message); }
