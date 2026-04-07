@@ -202,17 +202,6 @@ export async function POST(request) {
       return JSON.parse(t.substring(0, end + 1));
     };
 
-    // Build all course codes for professor search
-    var allCourses = [];
-    for (var si = 0; si < roadmap.semesters.length; si++) {
-      var sem = roadmap.semesters[si];
-      if (sem.courses) {
-        for (var ci = 0; ci < sem.courses.length; ci++) {
-          allCourses.push(sem.courses[ci].code + ' - ' + sem.courses[ci].title);
-        }
-      }
-    }
-
     // Define all prompts
     var clubPrompt = 'Find real student clubs at ' + schoolName + ' DIRECTLY related to ' + career + ' and ' + (searchedMajor || career) + '.\n\nRULES:\n- ONLY clubs directly relevant to ' + career + '.\n- No generic clubs unless specifically relevant.\n- If fewer than 2 relevant clubs found, return: [{"name":"Visit ' + schoolName + ' Student Organizations Directory","type":"Directory","priority":"Essential","desc":"Browse all available clubs on campus"}]\n\nReturn ONLY JSON array: [{"name":"club","type":"Professional","priority":"Essential","desc":"8 words max"}] 3-4 clubs. JSON only.';
 
@@ -220,14 +209,11 @@ export async function POST(request) {
 
     var outcomesPrompt = 'Salary and career data specifically for ' + career + ' roles.\n\nCRITICAL RULES:\n- topEmployers MUST be companies that actually hire for ' + career + ' roles specifically. For Investment Banking, only list investment banks (Goldman Sachs, Morgan Stanley, JPMorgan, etc.) — NOT consulting firms, NOT tech companies. For Software Engineering, list tech companies. Match employers to the EXACT career path.\n- topCities MUST be major job market cities where ' + career + ' jobs are concentrated (e.g. New York, London, San Francisco) — NOT the city where ' + schoolName + ' is located unless it is genuinely a major hub for ' + career + '.\n- Salary data should reflect ' + career + ' compensation specifically, not general graduate salaries.\n\nReturn ONLY JSON (no wrapper):\n{"entrySalary":{"low":50000,"high":70000,"median":60000},"midSalary":{"low":80000,"high":120000,"median":100000},"seniorSalary":{"low":120000,"high":200000,"median":160000},"topEmployers":[{"name":"Company","type":"Industry","roles":["Role"]}],"placementRate":"95%","medianTimeToOffer":"3 months before graduation","topCities":["City1","City2","City3"],"growthOutlook":"2-3 sentence outlook","dailyActions":[' + Array.from({length: numSemesters}, function(_, i) { return '{"semester":' + (i+1) + ',"actions":["action1","action2","action3"]}'; }).join(',') + ']}\n\n5-8 real employers that specifically hire ' + career + ' professionals. ' + numSemesters + ' semester entries with 3-5 specific tactical daily habits each. JSON only.';
 
-    var profPrompt = 'Search for highly-rated professors at ' + schoolName + ' who teach these courses:\n' + allCourses.join('\n') + '\n\nFor each course, find the best-rated professor using RateMyProfessors or similar sources.\n\nReturn ONLY JSON array:\n[{"code":"COURSE CODE","professor":"Prof. Name","rating":4.5,"difficulty":3.2,"tags":["Helpful","Clear lectures"]}]\n\nUse real professor names found in search results. rating is out of 5.0. difficulty is out of 5.0. tags are 1-2 word descriptions. If you cannot find a professor for a course, skip it. JSON only.';
-
-    // Fire ALL calls in parallel
+    // Fire all calls in parallel — all at temperature 0.1 for consistency
     var results = await Promise.all([
-      geminiCall(clubPrompt, true, 2048),
-      geminiCall(brandPrompt, true, 512),
+      geminiCall(clubPrompt, true, 2048, 0.1),
+      geminiCall(brandPrompt, true, 512, 0.1),
       geminiCall(outcomesPrompt, true, 4096, 0.1),
-      geminiCall(profPrompt, true, 4096),
     ]);
 
     // Parse clubs
@@ -261,58 +247,12 @@ export async function POST(request) {
     // Parse outcomes
     try {
       var outText = cleanJson(extractText(results[2]));
-      console.log('Outcomes raw length:', outText.length);
       var outObj = parseJsonObj(outText);
       if (outObj) {
         if (outObj.outcomes) roadmap.outcomes = outObj.outcomes;
         else if (outObj.entrySalary || outObj.topEmployers) roadmap.outcomes = outObj;
-        console.log('Outcomes parsed:', !!roadmap.outcomes);
       }
     } catch(e) { console.error('Outcomes parse:', e.message); }
-
-    // Parse professors and attach to courses
-    try {
-      var profText = cleanJson(extractText(results[3]));
-      console.log('Prof raw length:', profText.length);
-      var pArrS = profText.indexOf('['), pArrE = profText.lastIndexOf(']');
-      if (pArrS !== -1 && pArrE > pArrS) {
-        var profs = JSON.parse(profText.substring(pArrS, pArrE + 1));
-        if (Array.isArray(profs)) {
-          // Build lookup by normalized course code
-          var profMap = {};
-          for (var pi = 0; pi < profs.length; pi++) {
-            if (profs[pi].code) {
-              // Normalize: uppercase, remove all spaces, dashes, dots
-              var normCode = profs[pi].code.toUpperCase().replace(/[\s\-\.]/g, '');
-              profMap[normCode] = profs[pi];
-              // Also store with single space between letters and numbers (e.g. "ECON101" and "ECON 101")
-              var spaced = profs[pi].code.toUpperCase().replace(/\s+/g, ' ').trim();
-              profMap[spaced] = profs[pi];
-            }
-          }
-          // Attach to semester courses
-          var matchCount = 0;
-          for (var si2 = 0; si2 < roadmap.semesters.length; si2++) {
-            if (roadmap.semesters[si2].courses) {
-              for (var ci2 = 0; ci2 < roadmap.semesters[si2].courses.length; ci2++) {
-                var courseCode = roadmap.semesters[si2].courses[ci2].code;
-                var normC = courseCode.toUpperCase().replace(/[\s\-\.]/g, '');
-                var spacedC = courseCode.toUpperCase().replace(/\s+/g, ' ').trim();
-                var match = profMap[normC] || profMap[spacedC];
-                if (match && match.professor && parseFloat(match.rating) > 0) {
-                  roadmap.semesters[si2].courses[ci2].professor = match.professor;
-                  roadmap.semesters[si2].courses[ci2].profRating = parseFloat(match.rating);
-                  roadmap.semesters[si2].courses[ci2].profDifficulty = parseFloat(match.difficulty) || null;
-                  roadmap.semesters[si2].courses[ci2].profTags = match.tags || [];
-                  matchCount++;
-                }
-              }
-            }
-          }
-          console.log('Prof matched:', matchCount, 'of', profs.length);
-        }
-      }
-    } catch(e) { console.error('Prof parse:', e.message); }
 
     return Response.json(roadmap);
   } catch (err) {
