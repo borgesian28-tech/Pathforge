@@ -157,14 +157,17 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
   const [activeYear, setActiveYear] = useState(0);
   const [expandedCollege, setExpandedCollege] = useState(null);
   const [darkMode, setDarkMode] = useState(true);
+  const [catalogUrl, setCatalogUrl] = useState('');
+  const [currentRoadmap, setCurrentRoadmap] = useState(roadmap);
+  const [regenerating, setRegenerating] = useState(false);
 
-  const years = roadmap.years || [];
-  const extracurriculars = roadmap.extracurriculars || [];
-  const topColleges = roadmap.topColleges || [];
-  const skills = roadmap.skills || [];
-  const summerActivities = roadmap.summerActivities || [];
-  const collegeAppTimeline = roadmap.collegeAppTimeline || [];
-  const standardizedTests = roadmap.standardizedTests || {};
+  const years = currentRoadmap.years || [];
+  const extracurriculars = currentRoadmap.extracurriculars || [];
+  const topColleges = currentRoadmap.topColleges || [];
+  const skills = currentRoadmap.skills || [];
+  const summerActivities = currentRoadmap.summerActivities || [];
+  const collegeAppTimeline = currentRoadmap.collegeAppTimeline || [];
+  const standardizedTests = currentRoadmap.standardizedTests || {};
 
   // Theme
   var bg = darkMode ? '#08080f' : '#ffffff';
@@ -192,11 +195,41 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
 
   return (
     <div style={{ minHeight: '100vh', background: bg, transition: 'background 0.3s' }}>
+      {/* Regenerating overlay */}
+      {regenerating && (
+        <div style={{ position: 'fixed', inset: 0, background: darkMode ? '#08080fdd' : '#ffffffdd', zIndex: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 48, height: 48, borderRadius: '50%', border: '3px solid transparent', borderTopColor: accent, animation: 'spin 1s linear infinite', marginBottom: 16 }} />
+          <p style={{ color: tx, fontSize: 16, fontWeight: 600 }}>Scanning your catalog...</p>
+          <p style={{ color: txMut, fontSize: 13, marginTop: 4 }}>Rebuilding courses from your school's catalog</p>
+        </div>
+      )}
       {/* Header */}
       <div style={{ background: headerBg, padding: '24px 20px 20px', transition: 'all 0.3s' }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <button onClick={onReset} style={{ background: btnBg, backdropFilter: 'blur(10px)', border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', marginBottom: 10 }}>← New Roadmap</button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={onReset} style={{ background: btnBg, backdropFilter: 'blur(10px)', border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>← New Roadmap</button>
+              <button onClick={function() {
+                var url = prompt('Paste a link to your high school\'s course catalog:\n\n(e.g. https://yourschool.edu/course-catalog)');
+                if (url && url.trim()) {
+                  setCatalogUrl(url.trim());
+                  setRegenerating(true);
+                  fetch('/api/generate-hs', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ careerGoal: currentRoadmap.careerField, catalogUrl: url.trim() }),
+                  }).then(function(res) { return res.json(); }).then(function(data) {
+                    if (data.years) {
+                      setCurrentRoadmap(data);
+                      setActiveYear(0);
+                      setActiveTab('courses');
+                    }
+                    setRegenerating(false);
+                  }).catch(function() { setRegenerating(false); alert('Could not scan catalog. Please try again.'); });
+                }
+              }} style={{ background: btnBg, backdropFilter: 'blur(10px)', border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                {catalogUrl ? '✓ Catalog Linked' : '🔗 Link Catalog'}
+              </button>
+            </div>
             <button onClick={function() { setDarkMode(!darkMode); }} style={{ background: btnBg, backdropFilter: 'blur(10px)', border: 'none', color: '#fff', fontSize: 18, width: 36, height: 36, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={darkMode ? 'Light Mode' : 'Dark Mode'}>
               {darkMode ? '☀️' : '🌙'}
             </button>
@@ -205,7 +238,7 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
             <span style={{ fontSize: 40 }}>🎓</span>
             <div>
               <h1 style={{ fontFamily: "'Playfair Display', serif", color: '#fff', fontSize: 26, fontWeight: 700, margin: 0, textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>High School Roadmap</h1>
-              <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14, margin: '4px 0 0', fontWeight: 500 }}>Preparing for {roadmap.careerField}</p>
+              <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14, margin: '4px 0 0', fontWeight: 500 }}>Preparing for {currentRoadmap.careerField}</p>
             </div>
           </div>
         </div>
@@ -288,7 +321,7 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
         {activeTab === 'colleges' && (
           <div>
             <p style={{ color: txSub, fontSize: 14, marginBottom: 20, lineHeight: 1.6 }}>
-              These colleges are known for strong programs in {roadmap.careerField}. Research each school's specific requirements and culture.
+              These colleges are known for strong programs in {currentRoadmap.careerField}. Research each school's specific requirements and culture.
             </p>
             <div style={{ display: 'grid', gap: 12 }}>
               {topColleges.map(function(college, i) {
@@ -416,7 +449,7 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
         )}
       </div>
 
-      <HSChatbot careerField={roadmap.careerField} accent={accent} primaryColor={primaryColor} darkMode={darkMode} />
+      <HSChatbot careerField={currentRoadmap.careerField} accent={accent} primaryColor={primaryColor} darkMode={darkMode} />
       <style>{'@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}} @keyframes spin{to{transform:rotate(360deg)}}'}</style>
     </div>
   );
