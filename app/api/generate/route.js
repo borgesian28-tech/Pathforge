@@ -262,7 +262,7 @@ export async function POST(request) {
 
     // Step 5: Salary & Outcomes data
     try {
-      var outcomesPrompt = 'Search the web for salary and career outcome data for ' + career + ' graduates from ' + schoolFullName + ' (' + schoolName + ').\n\nFind real data about:\n- Entry-level salary range for ' + career + ' from ' + schoolName + '\n- Mid-career salary range (5-10 years experience)\n- Senior-level salary range (10+ years)\n- Top employers that recruit from ' + schoolName + ' for ' + career + ' roles\n- Job placement rate or employment statistics for ' + schoolName + ' graduates\n\nReturn ONLY valid JSON:\n{"outcomes":{"entrySalary":{"low":50000,"high":70000,"median":60000},"midSalary":{"low":80000,"high":120000,"median":100000},"seniorSalary":{"low":120000,"high":200000,"median":160000},"topEmployers":[{"name":"Company Name","type":"Industry type","roles":["Role 1","Role 2"]},{"name":"Company 2","type":"Industry type","roles":["Role 1"]}],"placementRate":"95%","medianTimeToOffer":"3 months before graduation","topCities":["New York","San Francisco","Chicago"],"growthOutlook":"Description of industry growth outlook in 2-3 sentences","dailyActions":[{"semester":1,"actions":["Specific action item for this week","Another specific daily habit"]},{"semester":2,"actions":["Action for semester 2","Another action"]},{"semester":3,"actions":["Action for semester 3"]},{"semester":4,"actions":["Action for semester 4"]},{"semester":5,"actions":["Action for semester 5"]},{"semester":6,"actions":["Action for semester 6"]},{"semester":7,"actions":["Action for semester 7"]},{"semester":8,"actions":["Action for semester 8"]}]}}\n\nUse realistic salary figures based on search results. topEmployers should be 5-8 real companies that actively recruit from ' + schoolName + '. dailyActions should have ' + numSemesters + ' semesters with 3-5 specific, actionable daily/weekly habits per semester that move the needle for ' + career + ' recruiting. Make actions very specific and tactical (e.g. "Send 2 LinkedIn connection requests to ' + career + ' professionals" not "Network"). JSON only.';
+      var outcomesPrompt = 'Find salary and career outcome data for ' + career + ' graduates from ' + schoolFullName + ' (' + schoolName + ').\n\nReturn ONLY valid JSON with this exact structure (no wrapper object):\n{"entrySalary":{"low":50000,"high":70000,"median":60000},"midSalary":{"low":80000,"high":120000,"median":100000},"seniorSalary":{"low":120000,"high":200000,"median":160000},"topEmployers":[{"name":"Company Name","type":"Industry type","roles":["Role 1","Role 2"]}],"placementRate":"95%","medianTimeToOffer":"3 months before graduation","topCities":["New York","San Francisco","Chicago"],"growthOutlook":"Description of industry growth outlook in 2-3 sentences","dailyActions":[{"semester":1,"actions":["Specific action item","Another action"]},{"semester":2,"actions":["Action for sem 2"]},{"semester":3,"actions":["Action for sem 3"]},{"semester":4,"actions":["Action for sem 4"]}' + (isMasters ? '' : ',{"semester":5,"actions":["Action for sem 5"]},{"semester":6,"actions":["Action for sem 6"]},{"semester":7,"actions":["Action for sem 7"]},{"semester":8,"actions":["Action for sem 8"]}') + ']}\n\nUse realistic salary figures for ' + career + '. topEmployers should be 5-8 real companies that recruit for ' + career + ' roles. dailyActions should have ' + numSemesters + ' entries with 3-5 specific, actionable habits per semester (e.g. "Send 2 LinkedIn requests to ' + career + ' professionals" not just "Network"). JSON only, no wrapper object.';
 
       var outcomesResponse = await fetch(GEMINI_API_URL, {
         method: 'POST',
@@ -289,6 +289,7 @@ export async function POST(request) {
           }
         }
         outcomesText = outcomesText.trim();
+        console.log('Outcomes raw length:', outcomesText.length);
         if (outcomesText.indexOf('```') !== -1) {
           var om = outcomesText.match(/```(?:json)?\s*([\s\S]*?)```/);
           if (om) outcomesText = om[1].trim();
@@ -297,10 +298,18 @@ export async function POST(request) {
         var obe = outcomesText.lastIndexOf('}');
         if (obs !== -1 && obe > obs) {
           var outcomesResult = JSON.parse(outcomesText.substring(obs, obe + 1));
+          // Handle both wrapped {"outcomes":{...}} and unwrapped {...} formats
           if (outcomesResult.outcomes) {
             roadmap.outcomes = outcomesResult.outcomes;
+          } else if (outcomesResult.entrySalary || outcomesResult.topEmployers) {
+            roadmap.outcomes = outcomesResult;
           }
+          console.log('Outcomes parsed successfully:', !!roadmap.outcomes);
+        } else {
+          console.log('Outcomes: no JSON found in response');
         }
+      } else {
+        console.error('Outcomes API error:', outcomesResponse.status);
       }
     } catch(outcomesErr) {
       console.error('Outcomes search failed:', outcomesErr.message);
