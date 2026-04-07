@@ -21,6 +21,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   const [addingMajor, setAddingMajor] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
   const [combinedView, setCombinedView] = useState(false);
+  const [catalogUrl, setCatalogUrl] = useState('');
   const semRef = useRef(null);
   const saveTimer = useRef(null);
 
@@ -113,7 +114,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
     try {
       var res = await fetch('/api/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: newMajor, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate' }),
+        body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: newMajor, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '' }),
       });
       if (!res.ok) throw new Error('API error');
       var data = await res.json();
@@ -145,7 +146,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
     try {
       var res = await fetch('/api/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: majorName, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate' }),
+        body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: majorName, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '' }),
       });
       if (!res.ok) throw new Error('API error');
       var data = await res.json();
@@ -169,7 +170,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
     try {
       var res = await fetch('/api/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ schoolName: newSchool, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate' }),
+        body: JSON.stringify({ schoolName: newSchool, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '' }),
       });
       if (!res.ok) throw new Error('API error');
       var data = await res.json();
@@ -231,6 +232,13 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <p style={{ color: txSub, fontSize: 13, margin: 0 }}>{careerObj.icon} {currentProfile.careerLabel} • {courseData.major || currentProfile.major} @ {courseData.schoolFullName || currentProfile.school}</p>
                 <button onClick={changeSchool} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 6, color: accentColor, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>Change School</button>
+                <button onClick={function() {
+                  var url = prompt('Paste a link to your school\'s course catalog or club directory:\n\n(e.g. https://catalog.williams.edu/math/)');
+                  if (url && url.trim()) {
+                    setCatalogUrl(url.trim());
+                    alert('Catalog link saved! Next time you switch majors or regenerate, we\'ll scan this page for real courses.');
+                  }
+                }} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 6, color: accentColor, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>{catalogUrl ? '✓ Catalog Linked' : '🔗 Link Catalog'}</button>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -385,8 +393,8 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
           </div>
         )}
 
-        {activeTab === 'beyond' && <BeyondClassroom data={courseData.beyondClassroom} accent={accentColor} color={primaryColor} />}
-        {activeTab === 'interview' && <InterviewSimulator profile={currentProfile} accent={accentColor} primaryColor={primaryColor} />}
+        {activeTab === 'beyond' && <BeyondClassroom data={courseData.beyondClassroom} accent={accentColor} color={primaryColor} darkMode={darkMode} />}
+        {activeTab === 'interview' && <InterviewSimulator profile={currentProfile} accent={accentColor} primaryColor={primaryColor} darkMode={darkMode} />}
 
         {activeTab === 'outcomes' && (
           <div style={{ marginTop: 20 }}>
@@ -490,7 +498,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
           </div>
         )}
       </div>
-      <AiAdvisor profile={currentProfile} accent={accentColor} primaryColor={primaryColor} />
+      <AiAdvisor profile={currentProfile} accent={accentColor} primaryColor={primaryColor} darkMode={darkMode} />
       <style>{'@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}} @keyframes spin{to{transform:rotate(360deg)}}'}</style>
     </div>
   );
