@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import CourseCard from './CourseCard';
 import BeyondClassroom from './BeyondClassroom';
+import AiAdvisor from './AiAdvisor';
 import { useAuth } from './AuthContext';
 
 export default function Dashboard({ profile, onReset, savedProgress }) {
@@ -459,6 +460,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
           </div>
         )}
       </div>
+      <AiAdvisor profile={currentProfile} accent={accentColor} primaryColor={primaryColor} />
       <style>{'@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}} @keyframes spin{to{transform:rotate(360deg)}}'}</style>
     </div>
   );
