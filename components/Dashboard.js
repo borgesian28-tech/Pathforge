@@ -219,8 +219,8 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
             <span style={{ color: '#6a7a6a', fontSize: 11 }}>from {currentProfile.school}</span>
           </div>
 
-          {/* Major tabs - show if multiple majors exist */}
-          {majors.length > 1 && (
+          {/* Major tabs - always show Add Major button */}
+          {true && (
             <div style={{ marginTop: 12 }}>
               <div style={{ color: '#6a6a7a', fontSize: 11, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Your Majors</div>
               <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
