@@ -68,8 +68,9 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   var overlayBg = darkMode ? '#08080fdd' : '#ffffffdd';
   var cardHov = darkMode ? '#151528' : '#f0f0f8';
   var progBg = darkMode ? '#1a1a2e' : '#d5d5e0';
-  var glassBg = darkMode ? '#ffffff0a' : '#00000006';
-  var btnBg = darkMode ? '#ffffff11' : '#00000009';
+  var glassBg = darkMode ? '#ffffff0a' : '#00000008';
+  var btnBg = darkMode ? '#ffffff11' : '#00000010';
+  var btnTx = darkMode ? accentColor : primaryColor;
 
   var dailyAction = null;
   if (outcomes && outcomes.dailyActions) {
@@ -231,14 +232,31 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
               <h1 style={{ fontFamily: "'Playfair Display', serif", color: tx, fontSize: 'clamp(20px, 4vw, 28px)', margin: '4px 0 2px' }}>{currentProfile.name}'s Roadmap</h1>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <p style={{ color: txSub, fontSize: 13, margin: 0 }}>{careerObj.icon} {currentProfile.careerLabel} • {courseData.major || currentProfile.major} @ {courseData.schoolFullName || currentProfile.school}</p>
-                <button onClick={changeSchool} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 6, color: accentColor, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>Change School</button>
+                <button onClick={changeSchool} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>Change School</button>
                 <button onClick={function() {
                   var url = prompt('Paste a link to your school\'s course catalog or club directory:\n\n(e.g. https://catalog.williams.edu/math/)');
                   if (url && url.trim()) {
                     setCatalogUrl(url.trim());
-                    alert('Catalog link saved! Next time you switch majors or regenerate, we\'ll scan this page for real courses.');
+                    // Auto-regenerate with the catalog URL
+                    setSwitchingMajor(true);
+                    fetch('/api/generate', {
+                      method: 'POST', headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: url.trim() }),
+                    }).then(function(res) { return res.json(); }).then(function(data) {
+                      if (data.semesters) {
+                        var newProfile = { ...currentProfile, courseData: data };
+                        setCurrentProfile(newProfile);
+                        setMajors([newProfile]);
+                        setActiveMajorIndex(0);
+                        setCompletedCourses({});
+                        setActiveSemester(0);
+                        setActiveTab('courses');
+                        if (user) saveRoadmap(newProfile, {});
+                      }
+                      setSwitchingMajor(false);
+                    }).catch(function() { setSwitchingMajor(false); alert('Could not scan catalog. Please try again.'); });
                   }
-                }} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 6, color: accentColor, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>{catalogUrl ? '✓ Catalog Linked' : '🔗 Link Catalog'}</button>
+                }} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>{catalogUrl ? '✓ Catalog Linked' : '🔗 Link Catalog'}</button>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -253,16 +271,16 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
                 </div>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <button onClick={login} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 8, color: '#C9A84C', fontSize: 11, padding: '6px 10px', cursor: 'pointer', fontWeight: 600 }}>Sign in to save</button>
+                  <button onClick={login} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 8, color: darkMode ? '#C9A84C' : '#92700e', fontSize: 11, padding: '6px 10px', cursor: 'pointer', fontWeight: 600 }}>Sign in to save</button>
                   <button onClick={onReset} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 8, color: txMut, fontSize: 12, padding: '6px 12px', cursor: 'pointer' }}>↻ New</button>
                 </div>
               )}
             </div>
           </div>
 
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#0A5C3622', border: '1px solid #0A5C3644', borderRadius: 20, padding: '4px 12px', marginTop: 10 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', animation: 'pulse 2s infinite' }} />
-            <span style={{ color: '#4ade80', fontSize: 11, fontWeight: 600 }}>LIVE DATA</span>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: darkMode ? '#0A5C3622' : '#0A5C3612', border: '1px solid ' + (darkMode ? '#0A5C3644' : '#0A5C3633'), borderRadius: 20, padding: '4px 12px', marginTop: 10 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#16a34a', animation: 'pulse 2s infinite' }} />
+            <span style={{ color: darkMode ? '#4ade80' : '#15803d', fontSize: 11, fontWeight: 600 }}>LIVE DATA</span>
             <span style={{ color: txMut, fontSize: 11 }}>from {currentProfile.school}</span>
           </div>
 
@@ -320,7 +338,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
           <div style={{ marginTop: 14, background: glassBg, borderRadius: 12, padding: '12px 16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
               <span style={{ color: txSub, fontSize: 12 }}>{completedCount}/{totalCourses} courses • {completedCredits}/{totalCredits} credits</span>
-              <span style={{ color: accentColor, fontSize: 13, fontWeight: 700 }}>{progress}%</span>
+              <span style={{ color: btnTx, fontSize: 13, fontWeight: 700 }}>{progress}%</span>
             </div>
             <div style={{ height: 6, background: progBg, borderRadius: 3, overflow: 'hidden' }}><div style={{ height: '100%', width: progress + '%', background: 'linear-gradient(90deg, ' + accentColor + ', ' + primaryColor + ')', borderRadius: 3, transition: 'width 0.5s ease' }} /></div>
           </div>
@@ -329,7 +347,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
             <div style={{ marginTop: 12, background: 'linear-gradient(135deg, ' + accentColor + '18, ' + primaryColor + '18)', border: '1px solid ' + accentColor + '33', borderRadius: 12, padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'center' }}>
               <div style={{ width: 36, height: 36, borderRadius: 10, background: accentColor + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>⚡</div>
               <div style={{ flex: 1 }}>
-                <div style={{ color: accentColor, fontSize: 10, fontWeight: 700, letterSpacing: 1.5, marginBottom: 2 }}>TODAY'S ACTION</div>
+                <div style={{ color: btnTx, fontSize: 10, fontWeight: 700, letterSpacing: 1.5, marginBottom: 2 }}>TODAY'S ACTION</div>
                 <div style={{ color: tx, fontSize: 13, fontWeight: 500, lineHeight: 1.4 }}>{dailyAction}</div>
               </div>
             </div>
@@ -357,13 +375,13 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
           <div style={{ marginTop: 20 }}>
             {!user && (
               <div style={{ background: 'linear-gradient(135deg, #C9A84C22, ' + bgCard + ')', border: '1px solid #C9A84C33', borderRadius: 10, padding: '10px 14px', marginBottom: 10, display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'space-between' }}>
-                <p style={{ color: '#C9A84C', fontSize: 12, margin: 0, fontWeight: 500 }}>⚠️ Sign in to save your progress — checkboxes will reset if you leave.</p>
+                <p style={{ color: darkMode ? '#C9A84C' : '#92700e', fontSize: 12, margin: 0, fontWeight: 500 }}>⚠️ Sign in to save your progress — checkboxes will reset if you leave.</p>
                 <button onClick={login} style={{ background: '#C9A84C', border: 'none', borderRadius: 6, color: '#000', fontSize: 11, fontWeight: 700, padding: '5px 12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>Sign in</button>
               </div>
             )}
             <div style={{ background: bgSec, border: '1px solid ' + bdrL, borderRadius: 10, padding: '10px 14px', marginBottom: 14, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
               <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>ℹ️</span>
-              <p style={{ color: txDim, fontSize: 12, margin: 0, lineHeight: 1.5 }}>Courses are sourced from web data and may not reflect the latest catalog. <a href={'https://www.google.com/search?q=' + encodeURIComponent(currentProfile.school + ' course catalog')} target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none', fontWeight: 600 }}>Verify on your school's registrar ↗</a></p>
+              <p style={{ color: txDim, fontSize: 12, margin: 0, lineHeight: 1.5 }}>Courses are sourced from web data and may not reflect the latest catalog. <a href={'https://www.google.com/search?q=' + encodeURIComponent(currentProfile.school + ' course catalog')} target="_blank" rel="noopener noreferrer" style={{ color: btnTx, textDecoration: 'none', fontWeight: 600 }}>Verify on your school's registrar ↗</a> or use the <strong style={{ color: btnTx }}>🔗 Link Catalog</strong> button above to scan your school's catalog directly.</p>
             </div>
             <div style={{ position: 'relative', marginBottom: 4 }}>
               <button onClick={function() { if (semRef.current) semRef.current.scrollBy({ left: -150, behavior: 'smooth' }); }} style={{ position: 'absolute', left: -4, top: '50%', transform: 'translateY(-50%)', zIndex: 2, width: 28, height: 28, borderRadius: '50%', border: '1px solid ' + bdrL, background: tabBg + 'ee', color: txSub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>‹</button>
