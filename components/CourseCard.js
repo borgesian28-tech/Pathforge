@@ -26,7 +26,7 @@ export default function CourseCard({ course, semIdx, cIdx, completed, onToggle, 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>{course.code}</span>
             <span style={{ background: tc + '33', color: tc, padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600 }}>{course.type}</span>
-            {hasProf && <span style={{ background: ratingColor(course.profRating) + '22', color: ratingColor(course.profRating), padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600 }}>★ {course.profRating.toFixed(1)}</span>}
+            {hasProf && <span style={{ background: ratingColor(course.profRating) + '22', color: ratingColor(course.profRating), padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600 }}>★ {Number(course.profRating).toFixed(1)}</span>}
           </div>
           <div style={{ color: '#ccc', fontSize: 13, marginTop: 4 }}>{course.title}</div>
           <div style={{ color: '#6a6a7a', fontSize: 12, marginTop: 4 }}>{course.desc}</div>
@@ -50,12 +50,12 @@ export default function CourseCard({ course, semIdx, cIdx, completed, onToggle, 
           </div>
           <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
             <div style={{ flex: 1, background: '#0a0a18', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
-              <div style={{ color: ratingColor(course.profRating), fontSize: 18, fontWeight: 700 }}>{course.profRating.toFixed(1)}</div>
+              <div style={{ color: ratingColor(course.profRating), fontSize: 18, fontWeight: 700 }}>{Number(course.profRating).toFixed(1)}</div>
               <div style={{ color: '#6a6a7a', fontSize: 10, fontWeight: 600, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Quality</div>
             </div>
             {course.profDifficulty && (
               <div style={{ flex: 1, background: '#0a0a18', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
-                <div style={{ color: diffColor(course.profDifficulty), fontSize: 18, fontWeight: 700 }}>{course.profDifficulty.toFixed(1)}</div>
+                <div style={{ color: diffColor(course.profDifficulty), fontSize: 18, fontWeight: 700 }}>{Number(course.profDifficulty).toFixed(1)}</div>
                 <div style={{ color: '#6a6a7a', fontSize: 10, fontWeight: 600, marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Difficulty</div>
               </div>
             )}
