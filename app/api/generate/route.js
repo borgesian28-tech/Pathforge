@@ -299,10 +299,10 @@ export async function POST(request) {
                 var normC = courseCode.toUpperCase().replace(/[\s\-\.]/g, '');
                 var spacedC = courseCode.toUpperCase().replace(/\s+/g, ' ').trim();
                 var match = profMap[normC] || profMap[spacedC];
-                if (match) {
+                if (match && match.professor && parseFloat(match.rating) > 0) {
                   roadmap.semesters[si2].courses[ci2].professor = match.professor;
-                  roadmap.semesters[si2].courses[ci2].profRating = parseFloat(match.rating) || 0;
-                  roadmap.semesters[si2].courses[ci2].profDifficulty = parseFloat(match.difficulty) || 0;
+                  roadmap.semesters[si2].courses[ci2].profRating = parseFloat(match.rating);
+                  roadmap.semesters[si2].courses[ci2].profDifficulty = parseFloat(match.difficulty) || null;
                   roadmap.semesters[si2].courses[ci2].profTags = match.tags || [];
                   matchCount++;
                 }
