@@ -5,6 +5,7 @@ import OnboardingFlow from '@/components/OnboardingFlow';
 import LoadingScreen from '@/components/LoadingScreen';
 import Dashboard from '@/components/Dashboard';
 import HSCourseAdvisor from '@/components/HSCourseAdvisor';
+import HighSchoolDashboard from '@/components/HighSchoolDashboard';
 
 export default function Home() {
   const { user, loading: authLoading, login, logout, saveRoadmap, loadRoadmap } = useAuth();
@@ -68,7 +69,11 @@ export default function Home() {
   return (
     <>
       {profile ? (
-        <Dashboard profile={profile} onReset={handleReset} savedProgress={savedProgress} />
+        profile.programLevel === 'highschool' ? (
+          <HighSchoolDashboard roadmap={profile.hsRoadmap} onReset={handleReset} />
+        ) : (
+          <Dashboard profile={profile} onReset={handleReset} savedProgress={savedProgress} />
+        )
       ) : (
         <OnboardingFlow
           onComplete={handleComplete}
