@@ -295,16 +295,31 @@ export async function POST(request) {
           if (om) outcomesText = om[1].trim();
         }
         var obs = outcomesText.indexOf('{');
-        var obe = outcomesText.lastIndexOf('}');
-        if (obs !== -1 && obe > obs) {
-          var outcomesResult = JSON.parse(outcomesText.substring(obs, obe + 1));
-          // Handle both wrapped {"outcomes":{...}} and unwrapped {...} formats
-          if (outcomesResult.outcomes) {
-            roadmap.outcomes = outcomesResult.outcomes;
-          } else if (outcomesResult.entrySalary || outcomesResult.topEmployers) {
-            roadmap.outcomes = outcomesResult;
+        if (obs !== -1) {
+          // Use depth-tracking parser to find matching closing brace
+          var oDepth = 0, oInStr = false, oEsc = false, oJe = -1;
+          var oTxt = outcomesText.substring(obs);
+          for (var oj = 0; oj < oTxt.length; oj++) {
+            var oc = oTxt[oj];
+            if (oEsc) { oEsc = false; continue; }
+            if (oc === '\\') { oEsc = true; continue; }
+            if (oc === '"') { oInStr = !oInStr; continue; }
+            if (oInStr) continue;
+            if (oc === '{') oDepth++;
+            if (oc === '}') { oDepth--; if (oDepth === 0) { oJe = oj; break; } }
           }
-          console.log('Outcomes parsed successfully:', !!roadmap.outcomes);
+          if (oJe !== -1) {
+            var outcomesResult = JSON.parse(oTxt.substring(0, oJe + 1));
+            // Handle both wrapped {"outcomes":{...}} and unwrapped {...} formats
+            if (outcomesResult.outcomes) {
+              roadmap.outcomes = outcomesResult.outcomes;
+            } else if (outcomesResult.entrySalary || outcomesResult.topEmployers) {
+              roadmap.outcomes = outcomesResult;
+            }
+            console.log('Outcomes parsed successfully:', !!roadmap.outcomes);
+          } else {
+            console.log('Outcomes: could not find matching closing brace');
+          }
         } else {
           console.log('Outcomes: no JSON found in response');
         }
