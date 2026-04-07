@@ -16,6 +16,9 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   const [currentProfile, setCurrentProfile] = useState(profile);
   const [switchingMajor, setSwitchingMajor] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
+  const [majors, setMajors] = useState([profile]); // Array of profiles for different majors
+  const [activeMajorIndex, setActiveMajorIndex] = useState(0);
+  const [addingMajor, setAddingMajor] = useState(false);
   const semRef = useRef(null);
   const saveTimer = useRef(null);
   const { courseData, careerObj } = currentProfile;
@@ -106,6 +109,51 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
     setSwitchingMajor(false);
   };
 
+  const switchToMajor = function(index) {
+    if (index >= 0 && index < majors.length) {
+      setActiveMajorIndex(index);
+      setCurrentProfile(majors[index]);
+      setActiveTab('courses');
+      setActiveSemester(0);
+    }
+  };
+
+  const addNewMajor = async function(majorName) {
+    if (!majorName.trim()) return;
+    setAddingMajor(true);
+    try {
+      var res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          schoolName: currentProfile.school,
+          careerPath: currentProfile.careerLabel,
+          majorName: majorName,
+          customGoal: null,
+          programLevel: currentProfile.programLevel || 'undergraduate',
+        }),
+      });
+      if (!res.ok) throw new Error('API error');
+      var data = await res.json();
+      if (data.semesters) {
+        var newProfile = {
+          ...currentProfile,
+          major: data.major || majorName,
+          courseData: data,
+        };
+        setMajors(function(prev) { return [...prev, newProfile]; });
+        setActiveMajorIndex(majors.length);
+        setCurrentProfile(newProfile);
+        setActiveTab('courses');
+        setActiveSemester(0);
+      }
+    } catch (err) {
+      console.error('Add major failed:', err);
+      alert('Could not add major. Please try again.');
+    }
+    setAddingMajor(false);
+  };
+
   // Save roadmap to Firebase when first loaded
   useEffect(function() {
     if (user && currentProfile && !savedProgress) {
@@ -170,6 +218,59 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
             <span style={{ color: '#4ade80', fontSize: 11, fontWeight: 600 }}>LIVE DATA</span>
             <span style={{ color: '#6a7a6a', fontSize: 11 }}>from {currentProfile.school}</span>
           </div>
+
+          {/* Major tabs - show if multiple majors exist */}
+          {majors.length > 1 && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ color: '#6a6a7a', fontSize: 11, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Your Majors</div>
+              <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+                {majors.map(function(maj, idx) {
+                  var isActive = idx === activeMajorIndex;
+                  return (
+                    <button
+                      key={idx}
+                      onClick={function() { switchToMajor(idx); }}
+                      style={{
+                        background: isActive ? accentColor : '#1a1a2e',
+                        border: '1px solid ' + (isActive ? accentColor : '#2a2a3e'),
+                        color: isActive ? '#000' : '#aaa',
+                        padding: '8px 14px',
+                        borderRadius: 8,
+                        fontSize: 13,
+                        fontWeight: isActive ? 700 : 600,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {maj.courseData.major || maj.major}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={function() {
+                    var newMajorName = prompt('Enter the name of the major you want to add (e.g., Economics, Psychology):');
+                    if (newMajorName) addNewMajor(newMajorName);
+                  }}
+                  disabled={addingMajor}
+                  style={{
+                    background: '#1a1a2e',
+                    border: '2px dashed #2a2a3e',
+                    color: accentColor,
+                    padding: '8px 14px',
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: addingMajor ? 'not-allowed' : 'pointer',
+                    whiteSpace: 'nowrap',
+                    opacity: addingMajor ? 0.5 : 1
+                  }}
+                >
+                  {addingMajor ? 'Adding...' : '+ Add Major'}
+                </button>
+              </div>
+            </div>
+          )}
           {recommendedMajors.length > 0 && (
             <div style={{ marginTop: 10 }}>
               <button onClick={function() { setShowMajors(!showMajors); }} style={{ background: '#ffffff0a', border: '1px solid #ffffff15', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
