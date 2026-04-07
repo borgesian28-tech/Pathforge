@@ -22,10 +22,21 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   const milestones = courseData.milestones || [];
   const skills = courseData.skills || [];
   const recommendedMajors = courseData.recommendedMajors || [];
+  const outcomes = courseData.outcomes || null;
   const schoolBranding = courseData.schoolBranding || null;
   const accentColor = schoolBranding ? schoolBranding.secondaryColor : careerObj.accent;
   const primaryColor = schoolBranding ? schoolBranding.primaryColor : careerObj.color;
   const logoUrl = schoolBranding ? schoolBranding.logoUrl : '';
+
+  // Daily action: pick one action from current semester's list, rotating by day
+  var dailyAction = null;
+  if (outcomes && outcomes.dailyActions) {
+    var semActions = outcomes.dailyActions.find(function(d) { return d.semester === activeSemester + 1; });
+    if (semActions && semActions.actions && semActions.actions.length > 0) {
+      var dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+      dailyAction = semActions.actions[dayOfYear % semActions.actions.length];
+    }
+  }
 
   const semesterLabels = ['Fall - Freshman','Spring - Freshman','Fall - Sophomore','Spring - Sophomore','Fall - Junior','Spring - Junior','Fall - Senior','Spring - Senior'];
 
@@ -110,6 +121,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   var tabs = [
     { id: 'courses', label: 'Courses', icon: '📚' },
     { id: 'beyond', label: 'Beyond Class', icon: '⚡' },
+    { id: 'outcomes', label: 'Outcomes', icon: '💰' },
     { id: 'timeline', label: 'Timeline', icon: '📍' },
     { id: 'clubs', label: 'Clubs', icon: '🏛️' },
     { id: 'overview', label: 'Overview', icon: '📊' },
@@ -183,6 +195,15 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
             </div>
             <div style={{ height: 6, background: '#1a1a2e', borderRadius: 3, overflow: 'hidden' }}><div style={{ height: '100%', width: progress + '%', background: 'linear-gradient(90deg, ' + accentColor + ', ' + primaryColor + ')', borderRadius: 3, transition: 'width 0.5s ease' }} /></div>
           </div>
+          {dailyAction && (
+            <div style={{ marginTop: 12, background: 'linear-gradient(135deg, ' + accentColor + '18, ' + primaryColor + '18)', border: '1px solid ' + accentColor + '33', borderRadius: 12, padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'center' }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: accentColor + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>⚡</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: accentColor, fontSize: 10, fontWeight: 700, letterSpacing: 1.5, marginBottom: 2 }}>TODAY'S ACTION</div>
+                <div style={{ color: '#fff', fontSize: 13, fontWeight: 500, lineHeight: 1.4 }}>{dailyAction}</div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -241,6 +262,116 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
         )}
 
         {activeTab === 'beyond' && <BeyondClassroom data={courseData.beyondClassroom} accent={accentColor} color={primaryColor} />}
+
+        {activeTab === 'outcomes' && (
+          <div style={{ marginTop: 20 }}>
+            {outcomes ? (<>
+              {/* Salary Ranges */}
+              <div style={{ marginBottom: 16 }}>
+                <h3 style={{ fontFamily: "'Playfair Display', serif", color: '#fff', fontSize: 20, margin: '0 0 12px' }}>💰 Salary Outlook</h3>
+                <div style={{ display: 'grid', gap: 10 }}>
+                  {[
+                    { label: 'Entry Level', data: outcomes.entrySalary, icon: '🌱' },
+                    { label: 'Mid Career (5-10 yrs)', data: outcomes.midSalary, icon: '📈' },
+                    { label: 'Senior Level (10+ yrs)', data: outcomes.seniorSalary, icon: '🏆' },
+                  ].map(function(tier, i) {
+                    if (!tier.data) return null;
+                    var low = tier.data.low || 0;
+                    var high = tier.data.high || 0;
+                    var median = tier.data.median || Math.round((low + high) / 2);
+                    var maxSalary = outcomes.seniorSalary ? outcomes.seniorSalary.high || 200000 : 200000;
+                    var barWidth = Math.min(100, Math.round((median / maxSalary) * 100));
+                    return (
+                      <div key={i} style={{ background: '#111122', border: '1px solid #1e1e32', borderRadius: 14, padding: '16px 18px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: 18 }}>{tier.icon}</span>
+                            <span style={{ color: '#aaa', fontSize: 13, fontWeight: 600 }}>{tier.label}</span>
+                          </div>
+                          <span style={{ color: accentColor, fontSize: 18, fontWeight: 700 }}>{'$' + median.toLocaleString()}</span>
+                        </div>
+                        <div style={{ height: 8, background: '#1a1a2e', borderRadius: 4, overflow: 'hidden', marginBottom: 6 }}>
+                          <div style={{ height: '100%', width: barWidth + '%', background: 'linear-gradient(90deg, ' + primaryColor + ', ' + accentColor + ')', borderRadius: 4 }} />
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: '#6a6a7a', fontSize: 11 }}>{'$' + low.toLocaleString()}</span>
+                          <span style={{ color: '#6a6a7a', fontSize: 11 }}>{'$' + high.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Quick Stats */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+                {outcomes.placementRate && (
+                  <div style={{ background: '#111122', border: '1px solid #1e1e32', borderRadius: 12, padding: '14px 16px', textAlign: 'center' }}>
+                    <div style={{ color: '#4ade80', fontSize: 24, fontWeight: 700 }}>{outcomes.placementRate}</div>
+                    <div style={{ color: '#6a6a7a', fontSize: 11, fontWeight: 600, marginTop: 4, textTransform: 'uppercase', letterSpacing: 1 }}>Placement Rate</div>
+                  </div>
+                )}
+                {outcomes.medianTimeToOffer && (
+                  <div style={{ background: '#111122', border: '1px solid #1e1e32', borderRadius: 12, padding: '14px 16px', textAlign: 'center' }}>
+                    <div style={{ color: accentColor, fontSize: 16, fontWeight: 700 }}>{outcomes.medianTimeToOffer}</div>
+                    <div style={{ color: '#6a6a7a', fontSize: 11, fontWeight: 600, marginTop: 4, textTransform: 'uppercase', letterSpacing: 1 }}>Time to Offer</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Top Cities */}
+              {outcomes.topCities && outcomes.topCities.length > 0 && (
+                <div style={{ background: '#111122', border: '1px solid #1e1e32', borderRadius: 14, padding: '16px 18px', marginBottom: 16 }}>
+                  <h4 style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: '0 0 10px' }}>📍 Top Cities</h4>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {outcomes.topCities.map(function(city, i) {
+                      return <span key={i} style={{ background: primaryColor + '33', color: accentColor, padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>{city}</span>;
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Top Employers */}
+              {outcomes.topEmployers && outcomes.topEmployers.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <h3 style={{ fontFamily: "'Playfair Display', serif", color: '#fff', fontSize: 20, margin: '0 0 12px' }}>🏢 Top Employers from {currentProfile.school}</h3>
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    {outcomes.topEmployers.map(function(emp, i) {
+                      return (
+                        <div key={i} style={{ background: '#111122', border: '1px solid #1e1e32', borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ width: 36, height: 36, borderRadius: 8, background: accentColor + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0, color: accentColor, fontWeight: 700 }}>{(i + 1)}</div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>{emp.name}</div>
+                            <div style={{ color: '#6a6a7a', fontSize: 12, marginTop: 2 }}>{emp.type}{emp.roles && emp.roles.length > 0 ? ' • ' + emp.roles.join(', ') : ''}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Growth Outlook */}
+              {outcomes.growthOutlook && (
+                <div style={{ background: 'linear-gradient(135deg, ' + primaryColor + '33, #111122)', border: '1px solid ' + accentColor + '33', borderRadius: 14, padding: '16px 18px', marginBottom: 16 }}>
+                  <h4 style={{ color: accentColor, fontSize: 12, fontWeight: 700, letterSpacing: 1.5, margin: '0 0 8px', textTransform: 'uppercase' }}>Industry Outlook</h4>
+                  <p style={{ color: '#ccc', fontSize: 14, margin: 0, lineHeight: 1.6 }}>{outcomes.growthOutlook}</p>
+                </div>
+              )}
+
+              <div style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', borderRadius: 10, padding: '10px 14px', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>ℹ️</span>
+                <p style={{ color: '#8a8a9a', fontSize: 12, margin: 0, lineHeight: 1.5 }}>Salary data is AI-estimated based on web sources and may not reflect exact figures. Verify with <a href={'https://www.google.com/search?q=' + encodeURIComponent(currentProfile.careerLabel + ' salary ' + currentProfile.school)} target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none', fontWeight: 600 }}>Glassdoor or Payscale ↗</a></p>
+              </div>
+            </>) : (
+              <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>💰</div>
+                <h3 style={{ color: '#fff', fontSize: 18, margin: '0 0 8px' }}>Outcome data unavailable</h3>
+                <p style={{ color: '#6a6a7a', fontSize: 14 }}>Try regenerating your roadmap to load salary and employer data.</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {activeTab === 'timeline' && (
           <div style={{ marginTop: 24, position: 'relative', paddingLeft: 28 }}>
