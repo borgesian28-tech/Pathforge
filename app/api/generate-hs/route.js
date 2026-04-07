@@ -57,59 +57,16 @@ export async function POST(request) {
     }
 
     // Generate high school roadmap
-    const prompt = `You are a high school guidance counselor. Create a 4-year high school roadmap for a student interested in ${career}.
-${catalogContent}
-CRITICAL: Return ONLY valid JSON with no extra text, no markdown, no backticks, no preamble.
+    var hasCatalog = catalogContent.length > 100;
 
-{
-  "careerField": "${career}",
-  "years": [
-    {
-      "year": "Freshman",
-      "courses": [
-        {"name": "Honors Biology", "type": "Honors", "why": "Foundation for life sciences"},
-        {"name": "Algebra I", "type": "Standard", "why": "Math fundamentals"},
-        {"name": "English I", "type": "Standard", "why": "Writing skills"},
-        {"name": "World History", "type": "Standard", "why": "Cultural awareness"},
-        {"name": "Physical Education", "type": "Standard", "why": "Health requirement"},
-        {"name": "Art or Music", "type": "Elective", "why": "Creative expression"}
-      ],
-      "focus": "Build strong academic foundation and explore interests",
-      "milestones": ["Join 1-2 clubs", "Maintain 3.5+ GPA", "Build study habits"]
-    }
-  ],
-  "extracurriculars": [
-    {"activity": "Science Club", "type": "Club", "relevance": "Hands-on science experience", "commitment": "2-3 hours/week"},
-    {"activity": "Debate Team", "type": "Competition", "relevance": "Critical thinking", "commitment": "4-5 hours/week"}
-  ],
-  "topColleges": [
-    {"name": "MIT", "strengths": "Top engineering programs", "selectivity": "Highly Selective"},
-    {"name": "Stanford", "strengths": "Innovation culture", "selectivity": "Highly Selective"}
-  ],
-  "standardizedTests": {
-    "sat": {"when": "Spring of Junior year", "target": "1400-1600 for top schools", "prep": "Start prep junior fall with Khan Academy"},
-    "act": {"when": "Alternative to SAT", "target": "32-36 for top schools", "prep": "Practice tests and official prep"},
-    "ap": ["AP Biology", "AP Calculus BC", "AP Chemistry", "AP English Literature"]
-  },
-  "summerActivities": [
-    {"year": "After Freshman Year", "activities": ["Summer reading", "Local internship", "Community service"]},
-    {"year": "After Sophomore Year", "activities": ["Pre-college program", "Job or internship", "Leadership role"]},
-    {"year": "After Junior Year", "activities": ["Intensive program", "Research project", "College visits"]}
-  ],
-  "collegeAppTimeline": [
-    {"when": "Junior Spring", "tasks": ["Take SAT/ACT", "Visit colleges", "Build college list"]},
-    {"when": "Summer Before Senior", "tasks": ["Draft essays", "Request recommendations", "Finalize list"]},
-    {"when": "Senior Fall", "tasks": ["Submit early apps", "Continue regular apps", "Interview prep"]},
-    {"when": "Senior Winter", "tasks": ["Submit regular apps", "Apply for aid", "Wait for decisions"]}
-  ],
-  "skills": ["Critical thinking", "Time management", "Written communication", "Research", "Leadership"]
-}
+    var courseInstruction = hasCatalog
+      ? 'CRITICAL — CATALOG PROVIDED: The student uploaded their actual school course catalog. You MUST use ONLY course names that appear in the CATALOG PAGE CONTENT below. Do NOT use generic course names like "Honors Biology" or "Algebra I" — use the EXACT course names from the catalog (e.g. if the catalog says "BIO 101 — Introduction to Biological Sciences", use that exact name). If a course type (AP/Honors/Standard) is indicated in the catalog, use it. Every single course in your response must come directly from the catalog content.\n'
+      : 'Use realistic course names typical of American high schools (AP, Honors, Standard).\n';
 
-Return 4 years (Freshman, Sophomore, Junior, Senior) with 6-8 courses each.
-8-12 colleges for ${career}.
-5-7 extracurriculars.
-JSON ONLY - no other text.`;
+    const prompt = 'You are a high school guidance counselor. Create a 4-year high school roadmap for a student interested in ' + career + '.\n\n' + courseInstruction + catalogContent + '\nCRITICAL: Return ONLY valid JSON with no extra text, no markdown, no backticks, no preamble.\n\n{\n  "careerField": "' + career + '",\n  "years": [\n    {\n      "year": "Freshman",\n      "courses": [\n        {"name": "REAL COURSE NAME FROM CATALOG", "type": "Honors", "why": "Brief reason this course helps"},\n        {"name": "REAL COURSE NAME FROM CATALOG", "type": "Standard", "why": "Brief reason"}\n      ],\n      "focus": "Focus for this year",\n      "milestones": ["milestone1", "milestone2"]\n    }\n  ],\n  "extracurriculars": [\n    {"activity": "Club Name", "type": "Club", "relevance": "Why it matters", "commitment": "2-3 hours/week"}\n  ],\n  "topColleges": [\n    {"name": "University", "strengths": "Why this school", "selectivity": "Highly Selective"}\n  ],\n  "standardizedTests": {\n    "sat": {"when": "When to take", "target": "Score range", "prep": "How to prepare"},\n    "act": {"when": "When to take", "target": "Score range", "prep": "How to prepare"},\n    "ap": ["AP Exam 1", "AP Exam 2"]\n  },\n  "summerActivities": [\n    {"year": "After Freshman Year", "activities": ["activity1", "activity2"]}\n  ],\n  "collegeAppTimeline": [\n    {"when": "Junior Spring", "tasks": ["task1", "task2"]}\n  ],\n  "skills": ["skill1", "skill2"]\n}\n\nReturn 4 years (Freshman, Sophomore, Junior, Senior) with 6-8 courses each.\n' + (hasCatalog ? 'EVERY course name MUST come from the catalog content above. Do NOT invent course names.\n' : '') + '8-12 colleges for ' + career + '.\n5-7 extracurriculars.\nJSON ONLY - no other text.';
 
+    var useSearch = hasCatalog ? false : false; // Don't use search grounding for HS since we have catalog content or generic is fine
+    
     const response = await fetch(GEMINI_API_URL, {
       method: 'POST',
       headers: {
