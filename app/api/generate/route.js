@@ -77,9 +77,15 @@ export async function POST(request) {
           try {
             var searchResult = JSON.parse(sTxt.substring(0, sJe + 1));
             if (searchResult.courses && Array.isArray(searchResult.courses)) {
-              // Filter out placeholder codes containing X
+              // Filter out placeholder codes containing X - VERY STRICT
               searchedCourses = searchResult.courses.filter(function(c) {
-                return c.code && !/X/i.test(c.code.replace(/[^A-Za-z0-9]/g, '').replace(/^[A-Za-z]+/, ''));
+                if (!c.code) return false;
+                // Reject ANY code that contains X anywhere (case insensitive)
+                if (/X/i.test(c.code)) return false;
+                // Extract only the digits
+                var numPart = c.code.replace(/[^0-9]/g, '');
+                // Must have at least one digit
+                return numPart.length > 0;
               });
             }
             if (searchResult.major) searchedMajor = searchResult.major;
@@ -244,7 +250,7 @@ export async function POST(request) {
       }
     } catch(e) { console.error('Brand parse:', e.message); }
 
- // Parse outcomes - ensure we always have valid outcomes data
+    // Parse outcomes - ensure we always have valid outcomes data
     try {
       var outText = cleanJson(extractText(results[2]));
       var outObj = parseJsonObj(outText);
