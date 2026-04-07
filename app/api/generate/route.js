@@ -244,7 +244,7 @@ export async function POST(request) {
       }
     } catch(e) { console.error('Brand parse:', e.message); }
 
-    // Parse outcomes
+ // Parse outcomes - ensure we always have valid outcomes data
     try {
       var outText = cleanJson(extractText(results[2]));
       var outObj = parseJsonObj(outText);
@@ -253,6 +253,23 @@ export async function POST(request) {
         else if (outObj.entrySalary || outObj.topEmployers) roadmap.outcomes = outObj;
       }
     } catch(e) { console.error('Outcomes parse:', e.message); }
+    
+    // Fallback if outcomes failed to parse
+    if (!roadmap.outcomes) {
+      roadmap.outcomes = {
+        entrySalary: { low: 45000, high: 65000, median: 55000 },
+        midSalary: { low: 75000, high: 110000, median: 90000 },
+        seniorSalary: { low: 110000, high: 180000, median: 140000 },
+        topEmployers: [{ name: 'Data unavailable', type: 'N/A', roles: ['See career services'] }],
+        placementRate: 'N/A',
+        medianTimeToOffer: 'N/A',
+        topCities: ['New York', 'San Francisco', 'Chicago'],
+        growthOutlook: 'Career data could not be loaded. Please regenerate your roadmap or consult your career services office.',
+        dailyActions: Array.from({length: numSemesters}, function(_, i) { 
+          return {semester: i+1, actions: ['Review course material', 'Network with peers', 'Build relevant skills']}; 
+        })
+      };
+    }
 
     return Response.json(roadmap);
   } catch (err) {
