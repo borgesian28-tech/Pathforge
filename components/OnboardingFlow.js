@@ -29,7 +29,6 @@ export default function OnboardingFlow({ onComplete, onLoading, user, onLogin })
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             careerGoal: isCustom ? customGoal : career.label,
-            customGoal: isCustom ? customGoal : null,
           }),
         });
 
