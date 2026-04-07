@@ -53,22 +53,22 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   const logoUrl = schoolBranding ? schoolBranding.logoUrl : '';
 
   // ===== THEME =====
-  var bg = darkMode ? '#08080f' : '#f2f2f7';
-  var bgCard = darkMode ? '#111122' : '#ffffff';
-  var bgSec = darkMode ? '#1a1a2e' : '#e9e9f0';
-  var bdr = darkMode ? '#1e1e32' : '#d0d0dc';
-  var bdrL = darkMode ? '#2a2a3e' : '#c0c0cc';
-  var tx = darkMode ? '#fff' : '#1a1a2a';
-  var txSub = darkMode ? '#aaa' : '#555';
-  var txMut = darkMode ? '#6a6a7a' : '#888';
-  var txDim = darkMode ? '#8a8a9a' : '#777';
-  var headerBg = darkMode ? 'linear-gradient(135deg, ' + primaryColor + 'cc, #08080f)' : 'linear-gradient(135deg, ' + primaryColor + '55, #e9e9f0)';
-  var tabBg = darkMode ? '#0c0c18' : '#f5f5fa';
-  var overlayBg = darkMode ? '#08080fdd' : '#f2f2f7dd';
-  var cardHov = darkMode ? '#151528' : '#f0f0fa';
-  var progBg = darkMode ? '#1a1a2e' : '#d0d0dc';
-  var glassBg = darkMode ? '#ffffff0a' : '#00000008';
-  var btnBg = darkMode ? '#ffffff11' : '#00000011';
+  var bg = darkMode ? '#08080f' : '#ffffff';
+  var bgCard = darkMode ? '#111122' : '#f7f7fa';
+  var bgSec = darkMode ? '#1a1a2e' : '#ededf3';
+  var bdr = darkMode ? '#1e1e32' : '#d5d5e0';
+  var bdrL = darkMode ? '#2a2a3e' : '#c5c5d0';
+  var tx = darkMode ? '#fff' : '#111111';
+  var txSub = darkMode ? '#aaa' : '#333333';
+  var txMut = darkMode ? '#6a6a7a' : '#666666';
+  var txDim = darkMode ? '#8a8a9a' : '#555555';
+  var headerBg = darkMode ? 'linear-gradient(135deg, ' + primaryColor + 'cc, #08080f)' : 'linear-gradient(135deg, ' + primaryColor + '30, #ffffff)';
+  var tabBg = darkMode ? '#0c0c18' : '#ffffff';
+  var overlayBg = darkMode ? '#08080fdd' : '#ffffffdd';
+  var cardHov = darkMode ? '#151528' : '#f0f0f8';
+  var progBg = darkMode ? '#1a1a2e' : '#d5d5e0';
+  var glassBg = darkMode ? '#ffffff0a' : '#00000006';
+  var btnBg = darkMode ? '#ffffff11' : '#00000009';
 
   var dailyAction = null;
   if (outcomes && outcomes.dailyActions) {
