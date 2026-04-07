@@ -43,6 +43,7 @@ export default function OnboardingFlow({ onComplete, onLoading, user, onLogin })
           careerLabel: data.careerTitle || career.label,
           school, major: data.major || major,
           courseData: data,
+          programLevel: programLevel,
           careerObj: isCustom ? { ...career, label: data.careerTitle || 'Custom Path' } : career,
         });
       } else {
