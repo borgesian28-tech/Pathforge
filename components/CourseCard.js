@@ -4,12 +4,12 @@ import { TYPE_COLORS } from '@/lib/constants';
 export default function CourseCard({ course, semIdx, cIdx, completed, onToggle, accent, darkMode }) {
   var dm = darkMode !== false; // default to dark
   var tc = TYPE_COLORS[course.type] || '#444';
-  var cardBg = completed ? (dm ? '#0d1a12' : '#e8f5ec') : (dm ? '#111122' : '#ffffff');
-  var cardBorder = completed ? (dm ? '1px solid #1a3a24' : '1px solid #a3d9b1') : (dm ? '1px solid #1e1e32' : '1px solid #d0d0dc');
-  var codeTx = dm ? '#fff' : '#1a1a2a';
-  var titleTx = dm ? '#ccc' : '#333';
-  var descTx = dm ? '#6a6a7a' : '#888';
-  var crTx = dm ? '#6a6a7a' : '#999';
+  var cardBg = completed ? (dm ? '#0d1a12' : '#eef7f0') : (dm ? '#111122' : '#f7f7fa');
+  var cardBorder = completed ? (dm ? '1px solid #1a3a24' : '1px solid #a3d9b1') : (dm ? '1px solid #1e1e32' : '1px solid #d5d5e0');
+  var codeTx = dm ? '#fff' : '#111111';
+  var titleTx = dm ? '#ccc' : '#222222';
+  var descTx = dm ? '#6a6a7a' : '#555555';
+  var crTx = dm ? '#6a6a7a' : '#666666';
   var checkBorder = dm ? '2px solid #3a3a4e' : '2px solid #b0b0bb';
 
   return (
