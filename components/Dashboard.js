@@ -22,24 +22,54 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   const [darkMode, setDarkMode] = useState(true);
   const [combinedView, setCombinedView] = useState(false);
   const [catalogUrl, setCatalogUrl] = useState('');
+  const [clubsUrl, setClubsUrl] = useState('');
   const semRef = useRef(null);
   const saveTimer = useRef(null);
 
-  const displayProfile = (combinedView && majors.length === 2) ? {
-    ...currentProfile,
-    courseData: {
-      ...currentProfile.courseData,
-      semesters: majors[0].courseData.semesters.map((sem, i) => ({
-        ...sem,
-        courses: [
-          ...(majors[0].courseData.semesters[i]?.courses || []),
-          ...(majors[1].courseData.semesters[i]?.courses || [])
-        ]
-      })),
-      clubs: [...(majors[0].courseData.clubs || []), ...(majors[1].courseData.clubs || [])],
-      outcomes: majors[0].courseData.outcomes
+  const displayProfile = (combinedView && majors.length === 2) ? (function() {
+    // Smart double-major combination: allow overlapping courses (like real universities)
+    // Most schools allow 2 upper-division courses to count toward both majors
+    var combined = majors[0].courseData.semesters.map(function(sem, i) {
+      var courses1 = majors[0].courseData.semesters[i]?.courses || [];
+      var courses2 = majors[1].courseData.semesters[i]?.courses || [];
+      // Find overlapping/similar courses (same department prefix or very similar title)
+      var merged = courses1.slice();
+      var overlapCount = 0;
+      var maxOverlap = 2; // universities typically allow 2 overlapping courses
+      for (var c2 = 0; c2 < courses2.length; c2++) {
+        var course2 = courses2[c2];
+        var isDuplicate = false;
+        for (var c1 = 0; c1 < merged.length; c1++) {
+          var course1 = merged[c1];
+          // Check if same course code or very similar
+          if (course1.code === course2.code) { isDuplicate = true; break; }
+          // Check if same department prefix and similar level (overlap candidate)
+          var dept1 = (course1.code || '').replace(/[0-9\s]/g, '').toUpperCase();
+          var dept2 = (course2.code || '').replace(/[0-9\s]/g, '').toUpperCase();
+          if (dept1 && dept2 && dept1 === dept2 && overlapCount < maxOverlap) {
+            // These can count as overlapping - keep the one from major 1
+            isDuplicate = true;
+            overlapCount++;
+            break;
+          }
+        }
+        if (!isDuplicate) {
+          merged.push({ ...course2, _fromMajor2: true });
+        }
+      }
+      return { ...sem, courses: merged };
+    });
+    var uniqueClubs = [];
+    var clubNames = {};
+    var allClubs = [...(majors[0].courseData.clubs || []), ...(majors[1].courseData.clubs || [])];
+    for (var ci = 0; ci < allClubs.length; ci++) {
+      if (!clubNames[allClubs[ci].name]) { clubNames[allClubs[ci].name] = true; uniqueClubs.push(allClubs[ci]); }
     }
-  } : currentProfile;
+    return {
+      ...currentProfile,
+      courseData: { ...currentProfile.courseData, semesters: combined, clubs: uniqueClubs, outcomes: majors[0].courseData.outcomes }
+    };
+  })() : currentProfile;
 
   const { courseData, careerObj } = displayProfile;
   const semesters = courseData.semesters || [];
@@ -115,7 +145,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
     try {
       var res = await fetch('/api/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: newMajor, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '' }),
+        body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: newMajor, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '', clubsUrl: clubsUrl || '' }),
       });
       if (!res.ok) throw new Error('API error');
       var data = await res.json();
@@ -147,7 +177,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
     try {
       var res = await fetch('/api/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: majorName, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '' }),
+        body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: majorName, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '', clubsUrl: clubsUrl || '' }),
       });
       if (!res.ok) throw new Error('API error');
       var data = await res.json();
@@ -171,7 +201,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
     try {
       var res = await fetch('/api/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ schoolName: newSchool, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '' }),
+        body: JSON.stringify({ schoolName: newSchool, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '', clubsUrl: clubsUrl || '' }),
       });
       if (!res.ok) throw new Error('API error');
       var data = await res.json();
@@ -241,7 +271,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
                     setSwitchingMajor(true);
                     fetch('/api/generate', {
                       method: 'POST', headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: url.trim() }),
+                      body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: url.trim(), clubsUrl: clubsUrl || '' }),
                     }).then(function(res) { return res.json(); }).then(function(data) {
                       if (data.semesters) {
                         var newProfile = { ...currentProfile, courseData: data };
@@ -257,6 +287,28 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
                     }).catch(function() { setSwitchingMajor(false); alert('Could not scan catalog. Please try again.'); });
                   }
                 }} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>{catalogUrl ? '✓ Catalog Linked' : '🔗 Link Catalog'}</button>
+                <button onClick={function() {
+                  var url = prompt('Paste a link to your school\'s student clubs or organizations directory:\n\n(e.g. https://studentorgs.emory.edu)');
+                  if (url && url.trim()) {
+                    setClubsUrl(url.trim());
+                    // Re-fetch clubs using the URL
+                    setSwitchingMajor(true);
+                    fetch('/api/generate', {
+                      method: 'POST', headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '', clubsUrl: url.trim() }),
+                    }).then(function(res) { return res.json(); }).then(function(data) {
+                      if (data.semesters) {
+                        var newProfile = { ...currentProfile, courseData: { ...currentProfile.courseData, clubs: data.clubs || currentProfile.courseData.clubs } };
+                        setCurrentProfile(newProfile);
+                        if (majors.length > 0) {
+                          setMajors(function(prev) { var n = prev.slice(); n[activeMajorIndex] = newProfile; return n; });
+                        }
+                        if (user) saveRoadmap(newProfile, completedCourses);
+                      }
+                      setSwitchingMajor(false);
+                    }).catch(function() { setSwitchingMajor(false); alert('Could not scan clubs directory. Please try again.'); });
+                  }
+                }} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>{clubsUrl ? '✓ Clubs Linked' : '🏛️ Link Clubs'}</button>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -306,7 +358,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
               })}
               {majors.length < 2 && (
                 <button onClick={function() { var n = prompt('Enter the name of the major you want to add (e.g., Economics, Psychology):'); if (n) addNewMajor(n); }} disabled={addingMajor}
-                  style={{ background: bgSec, border: '2px dashed ' + bdrL, color: accentColor, padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: addingMajor ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap', opacity: addingMajor ? 0.5 : 1 }}>
+                  style={{ background: bgSec, border: '2px dashed ' + bdrL, color: darkMode ? accentColor : '#b91c1c', padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: addingMajor ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap', opacity: addingMajor ? 0.5 : 1 }}>
                   {addingMajor ? 'Adding...' : '+ Add Major'}
                 </button>
               )}
