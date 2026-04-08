@@ -169,14 +169,16 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   var txSub = darkMode ? '#aaa' : '#333333';
   var txMut = darkMode ? '#6a6a7a' : '#666666';
   var txDim = darkMode ? '#8a8a9a' : '#555555';
-  var headerBg = darkMode ? 'linear-gradient(135deg, ' + primaryColor + 'cc, #08080f)' : 'linear-gradient(135deg, ' + primaryColor + '30, #ffffff)';
+  var headerBg = darkMode ? 'linear-gradient(135deg, ' + primaryColor + '44, #08080f)' : 'linear-gradient(135deg, ' + primaryColor + '20, #f8f8fa)';
   var tabBg = darkMode ? '#0c0c18' : '#ffffff';
   var overlayBg = darkMode ? '#08080fdd' : '#ffffffdd';
   var cardHov = darkMode ? '#151528' : '#f0f0f8';
   var progBg = darkMode ? '#1a1a2e' : '#d5d5e0';
   var glassBg = darkMode ? '#ffffff0a' : '#00000008';
-  var btnBg = darkMode ? '#ffffff11' : '#00000010';
-  var btnTx = darkMode ? accentColor : primaryColor;
+  // High-contrast button styles — always readable
+  var btnBg = darkMode ? '#1a1a2e' : '#ffffff';
+  var btnTx = darkMode ? '#ffffff' : '#111111';
+  var btnBdr = darkMode ? '#3a3a5e' : '#c5c5d0';
 
   var dailyAction = null;
   if (outcomes && outcomes.dailyActions) {
@@ -337,7 +339,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
               <h1 style={{ fontFamily: "'Playfair Display', serif", color: tx, fontSize: 'clamp(20px, 4vw, 28px)', margin: '4px 0 2px' }}>{currentProfile.name}'s Roadmap</h1>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <p style={{ color: txSub, fontSize: 13, margin: 0 }}>{careerObj.icon} {currentProfile.careerLabel} • {courseData.major || currentProfile.major} @ {courseData.schoolFullName || currentProfile.school}</p>
-                <button onClick={changeSchool} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>Change School</button>
+                <button onClick={changeSchool} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>Change School</button>
                 <button onClick={async function() {
                   var url = await showModal('Link Course Catalog', 'Paste a link to your school\'s course catalog', 'input');
                   if (url && url.trim()) {
@@ -361,7 +363,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
                       setSwitchingMajor(false);
                     }).catch(function() { setSwitchingMajor(false); alert('Could not scan catalog. Please try again.'); });
                   }
-                }} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>{catalogUrl ? '✓ Catalog Linked' : '🔗 Link Catalog'}</button>
+                }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>{catalogUrl ? '✓ Catalog Linked' : '🔗 Link Catalog'}</button>
                 <button onClick={async function() {
                   var url = await showModal('Link Clubs Directory', 'Paste a link to your school\'s student clubs directory', 'input');
                   if (url && url.trim()) {
@@ -383,12 +385,27 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
                       setSwitchingMajor(false);
                     }).catch(function() { setSwitchingMajor(false); alert('Could not scan clubs directory. Please try again.'); });
                   }
-                }} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>{clubsUrl ? '✓ Clubs Linked' : '🏛️ Link Clubs'}</button>
+                }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>{clubsUrl ? '✓ Clubs Linked' : '🏛️ Link Clubs'}</button>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               {saveStatus && <span style={{ color: '#4ade80', fontSize: 11, fontWeight: 600 }}>✓ {saveStatus}</span>}
-              <button onClick={function() { window.print(); }} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 8, color: txMut, fontSize: 11, padding: '6px 10px', cursor: 'pointer', fontWeight: 600 }} title="Export / Print">📄 Export</button>
+              <button onClick={function() {
+                var html = '<html><head><title>' + currentProfile.name + ' Roadmap - PathForge</title><style>body{font-family:system-ui,sans-serif;max-width:700px;margin:40px auto;padding:0 20px;color:#111}h1{font-size:24px;margin-bottom:4px}h2{font-size:14px;color:#666;margin-bottom:24px}h3{font-size:16px;margin:20px 0 8px;padding-top:12px;border-top:1px solid #ddd}.course{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}.code{font-weight:600}.credits{color:#888}.footer{margin-top:32px;padding-top:16px;border-top:1px solid #ddd;color:#888;font-size:11px}</style></head><body>';
+                html += '<h1>' + currentProfile.name + "'s " + currentProfile.careerLabel + ' Roadmap</h1>';
+                html += '<h2>' + (courseData.major || '') + ' @ ' + (courseData.schoolFullName || currentProfile.school) + '</h2>';
+                semesters.forEach(function(sem) {
+                  html += '<h3>' + sem.name + '</h3>';
+                  if (sem.courses) sem.courses.forEach(function(c) {
+                    html += '<div class="course"><span><span class="code">' + c.code + '</span> — ' + c.title + '</span><span class="credits">' + (c.credits || 3) + ' cr</span></div>';
+                  });
+                });
+                html += '<div class="footer">Generated by PathForge • pathforge-omega.vercel.app</div></body></html>';
+                var w = window.open('', '_blank');
+                w.document.write(html);
+                w.document.close();
+                setTimeout(function() { w.print(); }, 500);
+              }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 8, color: btnTx, fontSize: 11, padding: '6px 10px', cursor: 'pointer', fontWeight: 600 }} title="Export full roadmap as PDF">📄 Export</button>
               <button onClick={function() {
                 var text = currentProfile.name + "'s " + currentProfile.careerLabel + ' Roadmap\n';
                 text += (courseData.major || '') + ' @ ' + (courseData.schoolFullName || currentProfile.school) + '\n\n';
@@ -398,19 +415,19 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
                   text += '\n';
                 });
                 navigator.clipboard.writeText(text).then(function() { setSaveStatus('Copied!'); setTimeout(function() { setSaveStatus(''); }, 2000); });
-              }} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 8, color: txMut, fontSize: 11, padding: '6px 10px', cursor: 'pointer', fontWeight: 600 }} title="Copy roadmap to clipboard">📋 Share</button>
-              <button onClick={function() { setDarkMode(!darkMode); }} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 8, color: tx, fontSize: 18, width: 36, height: 36, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s' }} title={darkMode ? 'Light Mode' : 'Dark Mode'}>
+              }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 8, color: btnTx, fontSize: 11, padding: '6px 10px', cursor: 'pointer', fontWeight: 600 }} title="Copy roadmap to clipboard">📋 Share</button>
+              <button onClick={function() { setDarkMode(!darkMode); }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 8, color: tx, fontSize: 18, width: 36, height: 36, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s' }} title={darkMode ? 'Light Mode' : 'Dark Mode'}>
                 {darkMode ? '☀️' : '🌙'}
               </button>
               {user ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   {user.photoURL && <img src={user.photoURL} alt="" style={{ width: 24, height: 24, borderRadius: '50%' }} referrerPolicy="no-referrer" />}
-                  <button onClick={function() { onReset(); }} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 8, color: txMut, fontSize: 12, padding: '6px 12px', cursor: 'pointer' }}>↻ New</button>
+                  <button onClick={function() { onReset(); }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 8, color: btnTx, fontSize: 12, padding: '6px 12px', cursor: 'pointer' }}>↻ New</button>
                 </div>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <button onClick={login} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 8, color: darkMode ? '#C9A84C' : '#92700e', fontSize: 11, padding: '6px 10px', cursor: 'pointer', fontWeight: 600 }}>Sign in to save</button>
-                  <button onClick={onReset} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 8, color: txMut, fontSize: 12, padding: '6px 12px', cursor: 'pointer' }}>↻ New</button>
+                  <button onClick={onReset} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 8, color: btnTx, fontSize: 12, padding: '6px 12px', cursor: 'pointer' }}>↻ New</button>
                 </div>
               )}
             </div>
