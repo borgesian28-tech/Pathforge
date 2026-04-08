@@ -420,11 +420,15 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
         <div style={{ padding: sidebarOpen || isMobile ? '16px 16px 12px' : '16px 12px 12px', borderBottom: '1px solid ' + sidebarBdr, display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
           {(sidebarOpen || isMobile) ? (
             <>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, ' + accentColor + ', ' + primaryColor + ')', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>⚒</div>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, ' + accentColor + ', ' + primaryColor + ')', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                🎓
+              </div>
               <span style={{ color: tx, fontWeight: 700, fontSize: 15, letterSpacing: -0.3 }}>PathForge</span>
             </>
           ) : (
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, ' + accentColor + ', ' + primaryColor + ')', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, margin: '0 auto' }}>⚒</div>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, ' + accentColor + ', ' + primaryColor + ')', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+              🎓
+            </div>
           )}
         </div>
 
@@ -542,7 +546,6 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
                     { label: '📄 Export as PDF', action: handleExport },
                     { label: '📋 Copy to Clipboard', action: handleShare },
                     { label: '🔗 Link Course Catalog', action: async function() { setSettingsOpen(false); var url = await showModal('Link Course Catalog', "Paste a link to your school's course catalog", 'input'); if (url && url.trim()) { setCatalogUrl(url.trim()); setSwitchingMajor("Scanning course catalog..."); fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: url.trim(), clubsUrl: clubsUrl || '' }) }).then(function(r) { return r.json(); }).then(function(d) { if (d.semesters) { var np = { ...currentProfile, courseData: d }; setCurrentProfile(np); setMajors([np]); setActiveMajorIndex(0); setCompletedCourses({}); setActiveSemester(0); setActiveTab('courses'); if (user) saveRoadmap(np, {}); } setSwitchingMajor(""); }).catch(function() { setSwitchingMajor(''); }); } } },
-                    { label: '🏛️ Link Clubs Directory', action: async function() { setSettingsOpen(false); var url = await showModal('Link Clubs Directory', "Paste a link to your school's student clubs directory", 'input'); if (url && url.trim()) { setClubsUrl(url.trim()); setSwitchingMajor("Scanning clubs directory..."); fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '', clubsUrl: url.trim() }) }).then(function(r) { return r.json(); }).then(function(d) { if (d.clubs) { var np = { ...currentProfile, courseData: { ...currentProfile.courseData, clubs: d.clubs } }; setCurrentProfile(np); if (user) saveRoadmap(np, completedCourses); } setSwitchingMajor(""); }).catch(function() { setSwitchingMajor(''); }); } } },
                     { label: '🏫 Change School', action: function() { setSettingsOpen(false); changeSchool(); } },
                     { label: '↻ New Roadmap', action: function() { setSettingsOpen(false); onReset(); } },
                   ].map(function(item, i) {
@@ -578,8 +581,8 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
         <main className="thin-scrollbar" style={{ flex: 1, overflow: 'auto', padding: isMobile ? '20px 16px 40px' : '24px 32px 40px' }}>
           <div style={{ maxWidth: 820, margin: '0 auto' }}>
 
-            {/* ===== MAJORS BAR ===== */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+            {/* ===== MAJORS BAR (courses tab only) ===== */}
+            {activeTab === 'courses' && <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', gap: 6, alignItems: 'center', flex: 1, flexWrap: 'wrap' }}>
                 {majors.map(function(maj, idx) {
                   var isActive = idx === activeMajorIndex && !combinedView;
@@ -630,6 +633,8 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
                 })}
               </div>
             )}
+            {/* end courses-only majors bar */}
+            </>)}
 
             {/* ===== DAILY ACTION ===== */}
             {dailyAction && activeTab === 'courses' && (
@@ -752,7 +757,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
 
             {activeTab === 'clubs' && (
               <div style={{ marginTop: 4, display: 'grid', gap: 10 }}>
-                <div style={{ background: bgCard, border: '1px solid ' + bdr, borderRadius: 10, padding: '10px 14px', display: 'flex', gap: 8, alignItems: 'flex-start' }}><span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>ℹ️</span><p style={{ color: txDim, fontSize: 12, margin: 0, lineHeight: 1.5 }}>Club suggestions are AI-generated. <a href={'https://www.google.com/search?q=' + encodeURIComponent(currentProfile.school + ' student clubs organizations directory')} target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none', fontWeight: 600 }}>Find clubs at {currentProfile.school} ↗</a></p></div>
+                <div style={{ background: bgCard, border: '1px solid ' + bdr, borderRadius: 10, padding: '10px 14px', display: 'flex', gap: 8, alignItems: 'flex-start' }}><span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>ℹ️</span><p style={{ color: txDim, fontSize: 12, margin: 0, lineHeight: 1.5 }}>Club suggestions are AI-generated based on your career path. <a href={'https://www.google.com/search?q=' + encodeURIComponent(currentProfile.school + ' student clubs organizations')} target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none', fontWeight: 600 }}>Browse all clubs at {currentProfile.school} ↗</a></p></div>
                 {clubs.map(function(club, i) {
                   var pc = { Essential: '#ef4444', Recommended: '#C9A84C', Helpful: '#3b82f6' };
                   return (
