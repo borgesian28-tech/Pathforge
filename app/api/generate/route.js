@@ -4,7 +4,7 @@ const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/
 
 export async function POST(request) {
   try {
-    const { schoolName, careerPath, majorName, customGoal, programLevel, catalogUrl, clubsUrl } = await request.json();
+    const { schoolName, careerPath, majorName, customGoal, programLevel, catalogUrl } = await request.json();
     if (!schoolName || (!careerPath && !customGoal)) {
       return Response.json({ error: 'Missing' }, { status: 400 });
     }
@@ -260,13 +260,28 @@ export async function POST(request) {
       return JSON.parse(t.substring(0, end + 1));
     };
 
-    // Define all prompts
-    var clubsUrlContent = '';
-    if (clubsUrl && clubsUrl.trim()) {
-      clubsUrlContent = '\n\nCRITICAL — REAL CLUBS DIRECTORY:\nThe student provided their school\'s clubs/organizations directory URL: ' + clubsUrl.trim() + '\nYou MUST search and visit this URL to find REAL student clubs at this school. Only include clubs that actually exist at this school.\n';
+    // Hardcoded reliable career outcome data - used as fallback or supplement
+    var CAREER_OUTCOMES = {
+      'Investment Banking': { entrySalary: {low:85000,high:110000,median:95000}, midSalary: {low:200000,high:400000,median:300000}, seniorSalary: {low:500000,high:2000000,median:800000}, topEmployers: [{name:'Goldman Sachs',type:'Bulge Bracket',roles:['Analyst','Associate']},{name:'Morgan Stanley',type:'Bulge Bracket',roles:['Analyst','Associate']},{name:'JPMorgan Chase',type:'Bulge Bracket',roles:['Analyst','Associate']},{name:'Bank of America',type:'Bulge Bracket',roles:['Analyst']},{name:'Citi',type:'Bulge Bracket',roles:['Analyst']},{name:'Evercore',type:'Elite Boutique',roles:['Analyst']},{name:'Lazard',type:'Elite Boutique',roles:['Analyst']},{name:'Moelis & Co',type:'Elite Boutique',roles:['Analyst']}], placementRate:'85-95%', medianTimeToOffer:'Senior fall', topCities:['New York','San Francisco','Chicago','London','Houston'], growthOutlook:'Investment banking remains highly competitive with strong compensation. Dealflow is cyclical but the career path to private equity, hedge funds, or corporate development is well-established.' },
+      'Software Engineering': { entrySalary: {low:90000,high:150000,median:120000}, midSalary: {low:150000,high:300000,median:200000}, seniorSalary: {low:250000,high:600000,median:400000}, topEmployers: [{name:'Google',type:'Big Tech',roles:['SWE','SRE']},{name:'Apple',type:'Big Tech',roles:['SWE']},{name:'Microsoft',type:'Big Tech',roles:['SWE']},{name:'Meta',type:'Big Tech',roles:['SWE']},{name:'Amazon',type:'Big Tech',roles:['SDE']},{name:'Netflix',type:'Big Tech',roles:['SWE']},{name:'Stripe',type:'Fintech',roles:['SWE']},{name:'Databricks',type:'AI/Data',roles:['SWE']}], placementRate:'90-95%', medianTimeToOffer:'3-6 months before graduation', topCities:['San Francisco','Seattle','New York','Austin','Boston'], growthOutlook:'Software engineering demand continues to grow with AI/ML driving new opportunities. Remote work has expanded geographic options. Strong fundamentals in CS remain essential.' },
+      'Management Consulting': { entrySalary: {low:80000,high:105000,median:95000}, midSalary: {low:150000,high:250000,median:190000}, seniorSalary: {low:300000,high:800000,median:500000}, topEmployers: [{name:'McKinsey & Company',type:'MBB',roles:['Analyst','Associate']},{name:'Boston Consulting Group',type:'MBB',roles:['Analyst','Consultant']},{name:'Bain & Company',type:'MBB',roles:['Analyst','Consultant']},{name:'Deloitte Consulting',type:'Big 4',roles:['Analyst','Consultant']},{name:'Accenture',type:'Global',roles:['Analyst']},{name:'Oliver Wyman',type:'Tier 2',roles:['Analyst']}], placementRate:'80-90%', medianTimeToOffer:'Senior fall', topCities:['New York','Chicago','Boston','San Francisco','Washington DC'], growthOutlook:'Consulting remains a strong entry point for business careers with excellent exit opportunities to industry, private equity, and startups.' },
+      'Data Science': { entrySalary: {low:80000,high:120000,median:100000}, midSalary: {low:130000,high:200000,median:160000}, seniorSalary: {low:180000,high:350000,median:250000}, topEmployers: [{name:'Google',type:'Big Tech',roles:['Data Scientist']},{name:'Meta',type:'Big Tech',roles:['Data Scientist']},{name:'Amazon',type:'Big Tech',roles:['Data Scientist']},{name:'Netflix',type:'Big Tech',roles:['Data Scientist']},{name:'Spotify',type:'Tech',roles:['Data Scientist']},{name:'Two Sigma',type:'Quant Finance',roles:['Data Scientist']}], placementRate:'85-92%', medianTimeToOffer:'3-5 months before graduation', topCities:['San Francisco','New York','Seattle','Boston','Austin'], growthOutlook:'Data science continues to evolve rapidly with AI/ML integration. Strong demand for professionals who combine statistical rigor with engineering skills.' },
+      'Pre-Med / Medicine': { entrySalary: {low:55000,high:65000,median:60000}, midSalary: {low:200000,high:350000,median:275000}, seniorSalary: {low:300000,high:600000,median:400000}, topEmployers: [{name:'Mayo Clinic',type:'Academic Medical Center',roles:['Resident','Fellow']},{name:'Johns Hopkins Hospital',type:'Academic Medical Center',roles:['Resident']},{name:'Cleveland Clinic',type:'Academic Medical Center',roles:['Resident']},{name:'Massachusetts General Hospital',type:'Academic Medical Center',roles:['Resident']},{name:'UCSF Medical Center',type:'Academic Medical Center',roles:['Resident']}], placementRate:'93% match rate', medianTimeToOffer:'Match Day (March of senior year of med school)', topCities:['Boston','New York','Houston','Philadelphia','Chicago'], growthOutlook:'Healthcare demand is projected to grow significantly. Physician shortages in many specialties create strong job security. Medical school is a long but rewarding path.' },
+      'Pre-Law / Law': { entrySalary: {low:70000,high:215000,median:100000}, midSalary: {low:120000,high:350000,median:200000}, seniorSalary: {low:200000,high:1000000,median:400000}, topEmployers: [{name:'Cravath, Swaine & Moore',type:'BigLaw',roles:['Associate']},{name:'Wachtell, Lipton',type:'BigLaw',roles:['Associate']},{name:'Sullivan & Cromwell',type:'BigLaw',roles:['Associate']},{name:'Skadden, Arps',type:'BigLaw',roles:['Associate']},{name:'Davis Polk',type:'BigLaw',roles:['Associate']}], placementRate:'75-90% (varies by school)', medianTimeToOffer:'3L fall', topCities:['New York','Washington DC','Chicago','Los Angeles','San Francisco'], growthOutlook:'Legal industry is evolving with AI tools but demand for top lawyers remains strong. BigLaw continues to raise salaries competitively.' }
+    };
+
+    // Find matching hardcoded data
+    var hardcodedOutcomes = null;
+    var careerLower = career.toLowerCase();
+    for (var ck in CAREER_OUTCOMES) {
+      if (careerLower.indexOf(ck.toLowerCase()) !== -1 || ck.toLowerCase().indexOf(careerLower) !== -1) {
+        hardcodedOutcomes = CAREER_OUTCOMES[ck];
+        break;
+      }
     }
 
-    var clubPrompt = 'Find real student clubs at ' + schoolName + ' DIRECTLY related to ' + career + ' and ' + (searchedMajor || career) + '.' + clubsUrlContent + '\n\nRULES:\n- ONLY clubs directly relevant to ' + career + '.\n- No generic clubs unless specifically relevant.\n- If fewer than 2 relevant clubs found, return: [{"name":"Visit ' + schoolName + ' Student Organizations Directory","type":"Directory","priority":"Essential","desc":"Browse all available clubs on campus"}]\n\nReturn ONLY JSON array: [{"name":"club","type":"Professional","priority":"Essential","desc":"8 words max"}] 3-4 clubs. JSON only.';
+    // Define all prompts
+    var clubPrompt = 'Search the web for real student clubs and organizations at ' + schoolName + ' that are DIRECTLY related to ' + career + ' and ' + (searchedMajor || career) + '.\n\nSearch for: "' + schoolName + ' student organizations ' + career + '" and "' + schoolName + ' clubs ' + (searchedMajor || career) + '"\n\nRULES:\n- ONLY clubs directly relevant to ' + career + ' and ' + (searchedMajor || career) + '.\n- Use REAL club names found on the school\'s website.\n- If you find fewer than 2 real clubs, include: {"name":"Browse all ' + schoolName + ' clubs","type":"Directory","priority":"Essential","desc":"Visit your school\'s club directory to find more"}\n\nReturn ONLY JSON array: [{"name":"Real Club Name","type":"Professional/Academic/Competition","priority":"Essential/Recommended/Helpful","desc":"What this club does in 8 words max"}] Return 3-5 clubs. JSON only.';
 
     var brandPrompt = 'Official school colors and website for ' + schoolFullName + ' (' + schoolName + ')?\n\nReturn ONLY JSON:\n{"primaryColor":"#hex","secondaryColor":"#hex","domain":"school.edu"}\n\nprimaryColor = main/dark brand color. secondaryColor = accent/lighter. domain = .edu domain without https://. JSON only.';
 
@@ -307,7 +322,7 @@ export async function POST(request) {
       }
     } catch(e) { console.error('Brand parse:', e.message); }
 
-    // Parse outcomes - ensure we always have valid outcomes data
+    // Parse outcomes - use hardcoded data as supplement/fallback
     try {
       var outText = cleanJson(extractText(results[2]));
       var outObj = parseJsonObj(outText);
@@ -317,7 +332,41 @@ export async function POST(request) {
       }
     } catch(e) { console.error('Outcomes parse:', e.message); }
     
-    // Fallback if outcomes failed to parse
+    // Merge with hardcoded data — hardcoded data fills gaps
+    if (hardcodedOutcomes) {
+      if (!roadmap.outcomes) {
+        roadmap.outcomes = { ...hardcodedOutcomes };
+        // Add daily actions
+        roadmap.outcomes.dailyActions = Array.from({length: numSemesters}, function(_, i) { 
+          return {semester: i+1, actions: ['Review course material and prep for recruiting', 'Network with alumni in ' + career, 'Build relevant technical skills']}; 
+        });
+      } else {
+        // Fill in missing fields from hardcoded
+        if (!roadmap.outcomes.topEmployers || roadmap.outcomes.topEmployers.length === 0 || (roadmap.outcomes.topEmployers[0] && roadmap.outcomes.topEmployers[0].name === 'Data unavailable')) {
+          roadmap.outcomes.topEmployers = hardcodedOutcomes.topEmployers;
+        }
+        if (!roadmap.outcomes.topCities || roadmap.outcomes.topCities.length === 0) {
+          roadmap.outcomes.topCities = hardcodedOutcomes.topCities;
+        }
+        if (!roadmap.outcomes.growthOutlook || roadmap.outcomes.growthOutlook.indexOf('could not be loaded') !== -1) {
+          roadmap.outcomes.growthOutlook = hardcodedOutcomes.growthOutlook;
+        }
+        if (roadmap.outcomes.placementRate === 'N/A') {
+          roadmap.outcomes.placementRate = hardcodedOutcomes.placementRate;
+        }
+        if (roadmap.outcomes.medianTimeToOffer === 'N/A') {
+          roadmap.outcomes.medianTimeToOffer = hardcodedOutcomes.medianTimeToOffer;
+        }
+        // Use hardcoded salary if API returned zeros or very low
+        if (!roadmap.outcomes.entrySalary || roadmap.outcomes.entrySalary.median < 20000) {
+          roadmap.outcomes.entrySalary = hardcodedOutcomes.entrySalary;
+          roadmap.outcomes.midSalary = hardcodedOutcomes.midSalary;
+          roadmap.outcomes.seniorSalary = hardcodedOutcomes.seniorSalary;
+        }
+      }
+    }
+    
+    // Final fallback if still no outcomes
     if (!roadmap.outcomes) {
       roadmap.outcomes = {
         entrySalary: { low: 45000, high: 65000, median: 55000 },
