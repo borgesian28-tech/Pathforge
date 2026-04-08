@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import OnboardingFlow from '@/components/OnboardingFlow';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -13,9 +13,10 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [loadingCareer, setLoadingCareer] = useState(null);
   const [loadingStatus, setLoadingStatus] = useState('Initializing...');
+  const [loadingError, setLoadingError] = useState(false);
   const [checkingSaved, setCheckingSaved] = useState(false);
+  const lastRequest = useRef(null);
 
-  // When user logs in, check for saved roadmap
   useEffect(function() {
     if (user && !profile) {
       setCheckingSaved(true);
@@ -33,21 +34,34 @@ export default function Home() {
     setLoading(isLoading);
     setLoadingCareer(career || null);
     setLoadingStatus(status || 'Initializing...');
+    if (isLoading) setLoadingError(false);
   };
 
   const handleComplete = function(p) {
     setLoading(false);
+    setLoadingError(false);
     setProfile(p);
     setSavedProgress(null);
-    // Save to Firebase if logged in
-    if (user) {
-      saveRoadmap(p, {});
+    if (user) saveRoadmap(p, {});
+  };
+
+  const handleError = function() {
+    setLoadingError(true);
+  };
+
+  const handleRetry = function() {
+    if (lastRequest.current) {
+      setLoadingError(false);
+      setLoading(true);
+      setLoadingStatus('Retrying — searching course catalog...');
+      lastRequest.current();
     }
   };
 
   const handleReset = function() {
     setProfile(null);
     setSavedProgress(null);
+    setLoadingError(false);
   };
 
   if (authLoading || checkingSaved) {
@@ -60,8 +74,8 @@ export default function Home() {
     );
   }
 
-  if (loading) {
-    return <LoadingScreen status={loadingStatus} career={loadingCareer} />;
+  if (loading || loadingError) {
+    return <LoadingScreen status={loadingStatus} career={loadingCareer} error={loadingError} onRetry={handleRetry} />;
   }
 
   return (
@@ -76,6 +90,8 @@ export default function Home() {
         <OnboardingFlow
           onComplete={handleComplete}
           onLoading={handleLoading}
+          onError={handleError}
+          onSaveRetry={function(fn) { lastRequest.current = fn; }}
           user={user}
           onLogin={login}
         />
