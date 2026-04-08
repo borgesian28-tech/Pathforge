@@ -14,7 +14,8 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   const [expandedMilestone, setExpandedMilestone] = useState(null);
   const [showMajors, setShowMajors] = useState(false);
   const [currentProfile, setCurrentProfile] = useState(profile);
-  const [switchingMajor, setSwitchingMajor] = useState(false);
+  const [switchingMajor, setSwitchingMajor] = useState('');
+  // setSwitchingMajor('') = not loading, setSwitchingMajor('some text') = loading with message
   const [saveStatus, setSaveStatus] = useState('');
   const [majors, setMajors] = useState([profile]);
   const [activeMajorIndex, setActiveMajorIndex] = useState(0);
@@ -219,7 +220,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
 
   const handleMajorSwitch = async function(newMajor) {
     if (newMajor === (courseData.major || currentProfile.major)) return;
-    setSwitchingMajor(true);
+    setSwitchingMajor("Switching major...");
     try {
       var res = await fetch('/api/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -236,7 +237,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
         if (user) saveRoadmap(newProfile, {});
       }
     } catch (err) { console.error('Major switch failed:', err); alert('Could not switch major. Please try again.'); }
-    setSwitchingMajor(false);
+    setSwitchingMajor("");
   };
 
   const switchToMajor = function(index) {
@@ -274,7 +275,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   const changeSchool = async function() {
     var newSchool = await showModal('Change School', 'Enter the name of the new school (e.g., Stanford, MIT)', 'input');
     if (!newSchool || !newSchool.trim()) return;
-    setSwitchingMajor(true);
+    setSwitchingMajor("Changing school...");
     try {
       var res = await fetch('/api/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -293,7 +294,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
         if (user) saveRoadmap(newProfile, {});
       }
     } catch (err) { console.error('Change school failed:', err); }
-    setSwitchingMajor(false);
+    setSwitchingMajor("");
   };
 
   useEffect(function() {
@@ -322,8 +323,8 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
       {switchingMajor && (
         <div style={{ position: 'fixed', inset: 0, background: overlayBg, zIndex: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ width: 48, height: 48, borderRadius: '50%', border: '3px solid transparent', borderTopColor: accentColor, animation: 'spin 1s linear infinite', marginBottom: 16 }} />
-          <p style={{ color: tx, fontSize: 16, fontWeight: 600 }}>Switching major...</p>
-          <p style={{ color: txMut, fontSize: 13, marginTop: 4 }}>Rebuilding your course roadmap</p>
+          <p style={{ color: tx, fontSize: 16, fontWeight: 600 }}>{switchingMajor}</p>
+          <p style={{ color: txMut, fontSize: 13, marginTop: 4 }}>This may take a moment</p>
         </div>
       )}
 
@@ -345,7 +346,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
                   if (url && url.trim()) {
                     setCatalogUrl(url.trim());
                     // Auto-regenerate with the catalog URL
-                    setSwitchingMajor(true);
+                    setSwitchingMajor("Scanning course catalog...");
                     fetch('/api/generate', {
                       method: 'POST', headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: url.trim(), clubsUrl: clubsUrl || '' }),
@@ -360,8 +361,8 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
                         setActiveTab('courses');
                         if (user) saveRoadmap(newProfile, {});
                       }
-                      setSwitchingMajor(false);
-                    }).catch(function() { setSwitchingMajor(false); alert('Could not scan catalog. Please try again.'); });
+                      setSwitchingMajor("");
+                    }).catch(function() { setSwitchingMajor(''); alert('Could not scan catalog. Please try again.'); });
                   }
                 }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>{catalogUrl ? '✓ Catalog Linked' : '🔗 Link Catalog'}</button>
                 <button onClick={async function() {
@@ -369,7 +370,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
                   if (url && url.trim()) {
                     setClubsUrl(url.trim());
                     // Re-fetch clubs using the URL
-                    setSwitchingMajor(true);
+                    setSwitchingMajor("Scanning clubs directory...");
                     fetch('/api/generate', {
                       method: 'POST', headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '', clubsUrl: url.trim() }),
@@ -382,8 +383,8 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
                         }
                         if (user) saveRoadmap(newProfile, completedCourses);
                       }
-                      setSwitchingMajor(false);
-                    }).catch(function() { setSwitchingMajor(false); alert('Could not scan clubs directory. Please try again.'); });
+                      setSwitchingMajor("");
+                    }).catch(function() { setSwitchingMajor(''); alert('Could not scan clubs directory. Please try again.'); });
                   }
                 }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>{clubsUrl ? '✓ Clubs Linked' : '🏛️ Link Clubs'}</button>
               </div>
