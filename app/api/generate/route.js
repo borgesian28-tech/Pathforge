@@ -281,18 +281,23 @@ export async function POST(request) {
     }
 
     // Define all prompts
-    var clubPrompt = 'Search the web for real student clubs and organizations at ' + schoolName + ' that are DIRECTLY related to ' + career + ' and ' + (searchedMajor || career) + '.\n\nSearch for: "' + schoolName + ' student organizations ' + career + '" and "' + schoolName + ' clubs ' + (searchedMajor || career) + '"\n\nRULES:\n- ONLY clubs directly relevant to ' + career + ' and ' + (searchedMajor || career) + '.\n- Use REAL club names found on the school\'s website.\n- If you find fewer than 2 real clubs, include: {"name":"Browse all ' + schoolName + ' clubs","type":"Directory","priority":"Essential","desc":"Visit your school\'s club directory to find more"}\n\nReturn ONLY JSON array: [{"name":"Real Club Name","type":"Professional/Academic/Competition","priority":"Essential/Recommended/Helpful","desc":"What this club does in 8 words max"}] Return 3-5 clubs. JSON only.';
+    var clubPrompt = 'List 3-5 real student clubs at ' + schoolName + ' that are DIRECTLY related to ' + career + ' and ' + (searchedMajor || career) + '.\n\nRULES:\n- ONLY clubs directly relevant to ' + career + '.\n- Use realistic club names that would exist at a college (e.g. Finance Club, Investment Club, Women in Business, Mock Trial, Pre-Med Society).\n- If unsure, use common club names for ' + career + ' students.\n\nReturn ONLY JSON array: [{"name":"Club Name","type":"Professional/Academic/Competition","priority":"Essential/Recommended/Helpful","desc":"What this club does in 8 words max"}] JSON only.';
 
     var brandPrompt = 'Official school colors and website for ' + schoolFullName + ' (' + schoolName + ')?\n\nReturn ONLY JSON:\n{"primaryColor":"#hex","secondaryColor":"#hex","domain":"school.edu"}\n\nprimaryColor = main/dark brand color. secondaryColor = accent/lighter. domain = .edu domain without https://. JSON only.';
 
-    var outcomesPrompt = 'Salary and career data specifically for ' + career + ' roles.\n\nCRITICAL RULES:\n- topEmployers MUST be companies that actually hire for ' + career + ' roles specifically. For Investment Banking, only list investment banks (Goldman Sachs, Morgan Stanley, JPMorgan, etc.) — NOT consulting firms, NOT tech companies. For Software Engineering, list tech companies. Match employers to the EXACT career path.\n- topCities MUST be major job market cities where ' + career + ' jobs are concentrated (e.g. New York, London, San Francisco) — NOT the city where ' + schoolName + ' is located unless it is genuinely a major hub for ' + career + '.\n- Salary data should reflect ' + career + ' compensation specifically, not general graduate salaries.\n\nReturn ONLY JSON (no wrapper):\n{"entrySalary":{"low":50000,"high":70000,"median":60000},"midSalary":{"low":80000,"high":120000,"median":100000},"seniorSalary":{"low":120000,"high":200000,"median":160000},"topEmployers":[{"name":"Company","type":"Industry","roles":["Role"]}],"placementRate":"95%","medianTimeToOffer":"3 months before graduation","topCities":["City1","City2","City3"],"growthOutlook":"2-3 sentence outlook","dailyActions":[' + Array.from({length: numSemesters}, function(_, i) { return '{"semester":' + (i+1) + ',"actions":["action1","action2","action3"]}'; }).join(',') + ']}\n\n5-8 real employers that specifically hire ' + career + ' professionals. ' + numSemesters + ' semester entries with 3-5 specific tactical daily habits each.\n\nCRITICAL FOR dailyActions: These actions are for a CURRENT COLLEGE STUDENT who is STILL IN SCHOOL, NOT a working professional. Do NOT include actions like "manage analysts", "oversee work product", "take on client interaction", "lead deal teams", or anything about being an analyst/associate/employee. Instead, focus on what a STUDENT should do each day/week: study habits, networking with alumni, attending info sessions, practicing for interviews, joining clubs, reading industry news, building technical skills, applying for internships, etc. The student has NOT graduated yet.';
+    // Only call outcomes API if we DON'T have hardcoded data
+    var needsOutcomesCall = !hardcodedOutcomes;
 
-    // Fire all calls in parallel — all at temperature 0.1 for consistency
-    var results = await Promise.all([
-      geminiCall(clubPrompt, true, 2048, 0.1),
+    var outcomesPrompt = needsOutcomesCall ? ('Salary and career data specifically for ' + career + ' roles.\n\nReturn ONLY JSON (no wrapper):\n{"entrySalary":{"low":50000,"high":70000,"median":60000},"midSalary":{"low":80000,"high":120000,"median":100000},"seniorSalary":{"low":120000,"high":200000,"median":160000},"topEmployers":[{"name":"Company","type":"Industry","roles":["Role"]}],"placementRate":"95%","medianTimeToOffer":"3 months before graduation","topCities":["City1","City2","City3"],"growthOutlook":"2-3 sentence outlook","dailyActions":[' + Array.from({length: numSemesters}, function(_, i) { return '{"semester":' + (i+1) + ',"actions":["action1","action2","action3"]}'; }).join(',') + ']}\n\n5-8 real employers. ' + numSemesters + ' semester entries with 3 specific student daily habits each. Actions must be for a CURRENT STUDENT, not a working professional. JSON only.') : null;
+
+    // Fire calls in parallel — skip outcomes if we have hardcoded data
+    var callList = [
+      geminiCall(clubPrompt, false, 1024, 0.2),
       geminiCall(brandPrompt, true, 512, 0.1),
-      geminiCall(outcomesPrompt, true, 4096, 0.1),
-    ]);
+    ];
+    if (needsOutcomesCall) callList.push(geminiCall(outcomesPrompt, true, 4096, 0.1));
+    
+    var results = await Promise.all(callList);
 
     // Parse clubs
     try {
@@ -323,14 +328,16 @@ export async function POST(request) {
     } catch(e) { console.error('Brand parse:', e.message); }
 
     // Parse outcomes - use hardcoded data as supplement/fallback
-    try {
-      var outText = cleanJson(extractText(results[2]));
-      var outObj = parseJsonObj(outText);
-      if (outObj) {
-        if (outObj.outcomes) roadmap.outcomes = outObj.outcomes;
-        else if (outObj.entrySalary || outObj.topEmployers) roadmap.outcomes = outObj;
-      }
-    } catch(e) { console.error('Outcomes parse:', e.message); }
+    if (needsOutcomesCall) {
+      try {
+        var outText = cleanJson(extractText(results[2]));
+        var outObj = parseJsonObj(outText);
+        if (outObj) {
+          if (outObj.outcomes) roadmap.outcomes = outObj.outcomes;
+          else if (outObj.entrySalary || outObj.topEmployers) roadmap.outcomes = outObj;
+        }
+      } catch(e) { console.error('Outcomes parse:', e.message); }
+    }
     
     // Merge with hardcoded data — hardcoded data fills gaps
     if (hardcodedOutcomes) {
