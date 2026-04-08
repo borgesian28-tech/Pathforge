@@ -85,8 +85,8 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
       <div style={{ maxWidth: 520, textAlign: 'center' }} className="fade-in">
         <div style={{ fontSize: 48, marginBottom: 16 }}>🎓</div>
         <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(28px, 5vw, 42px)', color: '#fff', margin: '0 0 6px' }}>PathForge</h1>
-        <p style={{ color: '#C9A84C', fontSize: 13, fontWeight: 600, letterSpacing: 2, marginBottom: 6 }}>AI-POWERED COLLEGE ADVISING</p>
-        <p style={{ color: '#8a8a9a', fontSize: 'clamp(14px, 2.5vw, 16px)', lineHeight: 1.6, marginBottom: 32 }}>Real courses. Real clubs. Career prep college won't teach you.<br />Personalized to your school.</p>
+        <p style={{ color: '#C9A84C', fontSize: 13, fontWeight: 600, letterSpacing: 2, marginBottom: 6 }}>AI-POWERED ACADEMIC ADVISING</p>
+        <p style={{ color: '#8a8a9a', fontSize: 'clamp(14px, 2.5vw, 16px)', lineHeight: 1.6, marginBottom: 32 }}>Real courses. Real clubs. Career prep school won't teach you.<br />From high school to master's — personalized to you.</p>
         {user ? (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 20, background: '#111122', border: '1px solid #2a2a3e', borderRadius: 12, padding: '10px 16px' }}>
@@ -244,7 +244,7 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
             )}
             <input type="text" placeholder="e.g. Williams College, NYU, Stanford..." value={school} onChange={(e) => setSchool(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && school.trim() && handleBuild()} style={{ ...inp, marginBottom: 16 }} />
             {isCustom && <div style={{ background: '#111122', border: '1px solid #fbbf2433', borderRadius: 12, padding: '12px 16px', marginBottom: 16 }}><div style={{ color: '#fbbf24', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>YOUR CUSTOM GOAL</div><p style={{ color: '#ccc', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{customGoal}</p></div>}
-            <div style={{ background: '#0A5C3615', border: '1px solid #0A5C3633', borderRadius: 12, padding: '12px 16px', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}><span style={{ fontSize: 16, marginTop: 1 }}>🚀</span><p style={{ color: '#8a8a9a', fontSize: 13, margin: 0, lineHeight: 1.5 }}>Your roadmap includes <strong style={{ color: '#4ade80' }}>what college won't teach you</strong> — technical skills, networking playbooks, interview prep, and insider tips.</p></div>
+            <div style={{ background: '#0A5C3615', border: '1px solid #0A5C3633', borderRadius: 12, padding: '12px 16px', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}><span style={{ fontSize: 16, marginTop: 1 }}>🚀</span><p style={{ color: '#8a8a9a', fontSize: 13, margin: 0, lineHeight: 1.5 }}>Your roadmap includes <strong style={{ color: '#4ade80' }}>what school won't teach you</strong> — technical skills, networking playbooks, interview prep, and insider tips.</p></div>
             <button onClick={handleBuild} disabled={!school.trim()} style={btn(!!school.trim(), accent, clr)}>🚀 Search & Build My Roadmap</button>
           </>
         )}
