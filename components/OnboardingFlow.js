@@ -58,7 +58,12 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: bg, padding: 20 }}>
       <div style={{ maxWidth: 560, width: '100%', textAlign: 'center' }} className="fade-in">
         {/* Logo */}
-        <div style={{ width: 56, height: 56, borderRadius: 16, background: 'linear-gradient(135deg, #C9A84C, #8B6914)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, margin: '0 auto 20px', boxShadow: '0 8px 32px #C9A84C33' }}>⚒</div>
+        <div style={{ width: 56, height: 56, borderRadius: 16, background: 'linear-gradient(135deg, #C9A84C, #8B6914)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 8px 32px #C9A84C33' }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14.5 3L10.5 7H13V11L9 7L5 11V7.5L2 10.5V17L5 14V17.5L9 13.5L13 17.5V14L16 17V10.5L19.5 7L22 9.5V4L18.5 7.5L14.5 3Z" fill="white" opacity="0.9"/>
+            <path d="M7 18L4 21H20L17 18H7Z" fill="white" opacity="0.7"/>
+          </svg>
+        </div>
 
         <h1 style={{ fontSize: 'clamp(32px, 6vw, 48px)', color: '#f0f0f2', margin: '0 0 8px', fontWeight: 800, letterSpacing: -1 }}>PathForge</h1>
         <p style={{ color: '#C9A84C', fontSize: 13, fontWeight: 600, letterSpacing: 3, marginBottom: 8, textTransform: 'uppercase' }}>AI-Powered Academic Advising</p>
