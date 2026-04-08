@@ -160,6 +160,8 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
   const [catalogUrl, setCatalogUrl] = useState('');
   const [currentRoadmap, setCurrentRoadmap] = useState(roadmap);
   const [regenerating, setRegenerating] = useState(false);
+  const [hsModal, setHsModal] = useState(null);
+  const [hsModalInput, setHsModalInput] = useState('');
 
   const years = currentRoadmap.years || [];
   const extracurriculars = currentRoadmap.extracurriculars || [];
@@ -210,22 +212,8 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={onReset} style={{ background: btnBg, backdropFilter: 'blur(10px)', border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>← New Roadmap</button>
               <button onClick={function() {
-                var url = prompt('Paste a link to your high school\'s course catalog:\n\n(e.g. https://yourschool.edu/course-catalog)');
-                if (url && url.trim()) {
-                  setCatalogUrl(url.trim());
-                  setRegenerating(true);
-                  fetch('/api/generate-hs', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ careerGoal: currentRoadmap.careerField, catalogUrl: url.trim() }),
-                  }).then(function(res) { return res.json(); }).then(function(data) {
-                    if (data.years) {
-                      setCurrentRoadmap(data);
-                      setActiveYear(0);
-                      setActiveTab('courses');
-                    }
-                    setRegenerating(false);
-                  }).catch(function() { setRegenerating(false); alert('Could not scan catalog. Please try again.'); });
-                }
+                setHsModalInput('');
+                setHsModal({ title: 'Link Course Catalog', placeholder: 'Paste your school\'s course catalog URL' });
               }} style={{ background: btnBg, backdropFilter: 'blur(10px)', border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                 {catalogUrl ? '✓ Catalog Linked' : '🔗 Link Catalog'}
               </button>
@@ -345,6 +333,9 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
                         {college.whyGood && <p style={{ color: txSub, fontSize: 13, margin: '0 0 8px', lineHeight: 1.5 }}>{college.whyGood}</p>}
                         {college.notablePrograms && <div style={{ color: txDim, fontSize: 12, marginBottom: 4 }}>Notable: {Array.isArray(college.notablePrograms) ? college.notablePrograms.join(', ') : college.notablePrograms}</div>}
                         {college.admissionTip && <div style={{ color: accent, fontSize: 12, fontWeight: 600, marginTop: 4 }}>Tip: {college.admissionTip}</div>}
+                        {!college.whyGood && !college.notablePrograms && !college.admissionTip && (
+                          <p style={{ color: txDim, fontSize: 13, margin: 0, lineHeight: 1.5 }}>A strong option for {currentRoadmap.careerField}. Visit their admissions website to learn about specific programs, requirements, and campus culture.</p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -486,6 +477,56 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
       </div>
 
       <HSChatbot careerField={currentRoadmap.careerField} accent={accent} primaryColor={primaryColor} darkMode={darkMode} />
+
+      {/* INLINE MODAL */}
+      {hsModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={function() { setHsModal(null); setHsModalInput(''); }}>
+          <div onClick={function(e) { e.stopPropagation(); }} style={{ background: darkMode ? '#111122' : '#ffffff', border: '1px solid ' + bdr, borderRadius: 16, padding: '24px 28px', maxWidth: 420, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
+            <h3 style={{ color: tx, fontSize: 18, fontWeight: 700, margin: '0 0 16px', fontFamily: "'Playfair Display', serif" }}>{hsModal.title}</h3>
+            <input
+              type="text"
+              placeholder={hsModal.placeholder}
+              value={hsModalInput}
+              onChange={function(e) { setHsModalInput(e.target.value); }}
+              onKeyDown={function(e) {
+                if (e.key === 'Enter' && hsModalInput.trim()) {
+                  var url = hsModalInput.trim();
+                  setCatalogUrl(url);
+                  setHsModal(null); setHsModalInput('');
+                  setRegenerating(true);
+                  fetch('/api/generate-hs', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ careerGoal: currentRoadmap.careerField, catalogUrl: url }),
+                  }).then(function(res) { return res.json(); }).then(function(data) {
+                    if (data.years) { setCurrentRoadmap(data); setActiveYear(0); setActiveTab('courses'); }
+                    setRegenerating(false);
+                  }).catch(function() { setRegenerating(false); });
+                }
+              }}
+              autoFocus
+              style={{ width: '100%', padding: '12px 16px', borderRadius: 10, border: '1px solid ' + bdrL, background: darkMode ? '#0a0a18' : '#f5f5f8', color: tx, fontSize: 15, outline: 'none', boxSizing: 'border-box', marginBottom: 16 }}
+            />
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button onClick={function() { setHsModal(null); setHsModalInput(''); }} style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid ' + bdrL, background: 'transparent', color: txSub, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={function() {
+                if (!hsModalInput.trim()) return;
+                var url = hsModalInput.trim();
+                setCatalogUrl(url);
+                setHsModal(null); setHsModalInput('');
+                setRegenerating(true);
+                fetch('/api/generate-hs', {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ careerGoal: currentRoadmap.careerField, catalogUrl: url }),
+                }).then(function(res) { return res.json(); }).then(function(data) {
+                  if (data.years) { setCurrentRoadmap(data); setActiveYear(0); setActiveTab('courses'); }
+                  setRegenerating(false);
+                }).catch(function() { setRegenerating(false); });
+              }} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg, ' + accent + ', ' + primaryColor + ')', color: '#fff', fontSize: 14, fontWeight: 700, cursor: hsModalInput.trim() ? 'pointer' : 'default', opacity: hsModalInput.trim() ? 1 : 0.5 }}>Confirm</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{'@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}} @keyframes spin{to{transform:rotate(360deg)}}'}</style>
     </div>
   );
