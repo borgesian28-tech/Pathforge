@@ -22,7 +22,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   const [darkMode, setDarkMode] = useState(true);
   const [combinedView, setCombinedView] = useState(false);
   const [catalogUrl, setCatalogUrl] = useState('');
-  const [clubsUrl, setClubsUrl] = useState('');
+  
   const [hoveredMajor, setHoveredMajor] = useState(-1);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -237,7 +237,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
     try {
       var res = await fetch('/api/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: newMajor, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '', clubsUrl: clubsUrl || '' }),
+        body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: newMajor, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '' }),
       });
       if (!res.ok) throw new Error('API error');
       var data = await res.json();
@@ -269,7 +269,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
     try {
       var res = await fetch('/api/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: majorName, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '', clubsUrl: clubsUrl || '' }),
+        body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: majorName, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '' }),
       });
       if (!res.ok) throw new Error('API error');
       var data = await res.json();
@@ -292,7 +292,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
     try {
       var res = await fetch('/api/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ schoolName: newSchool, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '', clubsUrl: clubsUrl || '' }),
+        body: JSON.stringify({ schoolName: newSchool, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '' }),
       });
       if (!res.ok) throw new Error('API error');
       var data = await res.json();
@@ -545,7 +545,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
                   {[
                     { label: '📄 Export as PDF', action: handleExport },
                     { label: '📋 Copy to Clipboard', action: handleShare },
-                    { label: '🔗 Link Course Catalog', action: async function() { setSettingsOpen(false); var url = await showModal('Link Course Catalog', "Paste a link to your school's course catalog", 'input'); if (url && url.trim()) { setCatalogUrl(url.trim()); setSwitchingMajor("Scanning course catalog..."); fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: url.trim(), clubsUrl: clubsUrl || '' }) }).then(function(r) { return r.json(); }).then(function(d) { if (d.semesters) { var np = { ...currentProfile, courseData: d }; setCurrentProfile(np); setMajors([np]); setActiveMajorIndex(0); setCompletedCourses({}); setActiveSemester(0); setActiveTab('courses'); if (user) saveRoadmap(np, {}); } setSwitchingMajor(""); }).catch(function() { setSwitchingMajor(''); }); } } },
+                    { label: '🔗 Link Course Catalog', action: async function() { setSettingsOpen(false); var url = await showModal('Link Course Catalog', "Paste a link to your school's course catalog", 'input'); if (url && url.trim()) { setCatalogUrl(url.trim()); setSwitchingMajor("Scanning course catalog..."); fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: url.trim() }) }).then(function(r) { return r.json(); }).then(function(d) { if (d.semesters) { var np = { ...currentProfile, courseData: d }; setCurrentProfile(np); setMajors([np]); setActiveMajorIndex(0); setCompletedCourses({}); setActiveSemester(0); setActiveTab('courses'); if (user) saveRoadmap(np, {}); } setSwitchingMajor(""); }).catch(function() { setSwitchingMajor(''); }); } } },
                     { label: '🏫 Change School', action: function() { setSettingsOpen(false); changeSchool(); } },
                     { label: '↻ New Roadmap', action: function() { setSettingsOpen(false); onReset(); } },
                   ].map(function(item, i) {
