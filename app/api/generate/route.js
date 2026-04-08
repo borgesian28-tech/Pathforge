@@ -175,6 +175,21 @@ export async function POST(request) {
     var roadmap = JSON.parse(roadmapText.substring(0, je + 1));
     if (!roadmap || !roadmap.semesters) return Response.json({ error: 'Bad data' }, { status: 500 });
 
+    // STRICT: Filter out any XXX/placeholder course codes from the roadmap itself
+    for (var fi = 0; fi < roadmap.semesters.length; fi++) {
+      if (roadmap.semesters[fi].courses) {
+        roadmap.semesters[fi].courses = roadmap.semesters[fi].courses.filter(function(c) {
+          if (!c.code) return true;
+          // Remove codes with XX, XXX, or any X placeholder pattern
+          if (/[Xx]{2,}/.test(c.code)) return false;
+          // Remove codes where the number part contains X
+          var numPart = c.code.replace(/^[A-Za-z\s]+/, '');
+          if (/[Xx]/.test(numPart)) return false;
+          return true;
+        });
+      }
+    }
+
     if (!roadmap.recommendedMajors || roadmap.recommendedMajors.length === 0) {
       roadmap.recommendedMajors = searchedMajors.length > 0 ? searchedMajors : [roadmap.major || searchedMajor];
     }
