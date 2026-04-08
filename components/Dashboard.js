@@ -128,8 +128,35 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   const recommendedMajors = courseData.recommendedMajors || [];
   const outcomes = courseData.outcomes || null;
   const schoolBranding = courseData.schoolBranding || null;
-  const accentColor = schoolBranding ? schoolBranding.secondaryColor : careerObj.accent;
-  const primaryColor = schoolBranding ? schoolBranding.primaryColor : careerObj.color;
+  // Ensure colors are always readable against dark/light backgrounds
+  var ensureReadable = function(hex, isDark) {
+    if (!hex || hex.length < 4) return isDark ? '#C9A84C' : '#0A5C36';
+    // Parse hex
+    var r, g, b;
+    var h = hex.replace('#', '');
+    if (h.length === 3) { r = parseInt(h[0]+h[0],16); g = parseInt(h[1]+h[1],16); b = parseInt(h[2]+h[2],16); }
+    else { r = parseInt(h.substring(0,2),16); g = parseInt(h.substring(2,4),16); b = parseInt(h.substring(4,6),16); }
+    if (isNaN(r)) return isDark ? '#C9A84C' : '#0A5C36';
+    var luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    if (isDark && luminance < 0.35) {
+      // Too dark for dark mode — lighten it
+      var factor = 1.8;
+      r = Math.min(255, Math.round(r * factor + 60));
+      g = Math.min(255, Math.round(g * factor + 60));
+      b = Math.min(255, Math.round(b * factor + 60));
+      return '#' + r.toString(16).padStart(2,'0') + g.toString(16).padStart(2,'0') + b.toString(16).padStart(2,'0');
+    }
+    if (!isDark && luminance > 0.7) {
+      // Too light for light mode — darken it
+      r = Math.round(r * 0.5); g = Math.round(g * 0.5); b = Math.round(b * 0.5);
+      return '#' + r.toString(16).padStart(2,'0') + g.toString(16).padStart(2,'0') + b.toString(16).padStart(2,'0');
+    }
+    return hex;
+  };
+  const rawAccent = schoolBranding ? schoolBranding.secondaryColor : careerObj.accent;
+  const rawPrimary = schoolBranding ? schoolBranding.primaryColor : careerObj.color;
+  const accentColor = ensureReadable(rawAccent, darkMode);
+  const primaryColor = ensureReadable(rawPrimary, darkMode);
   const logoUrl = schoolBranding ? schoolBranding.logoUrl : '';
 
   // ===== THEME =====
