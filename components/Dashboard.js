@@ -386,8 +386,19 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
                 }} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>{clubsUrl ? '✓ Clubs Linked' : '🏛️ Link Clubs'}</button>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               {saveStatus && <span style={{ color: '#4ade80', fontSize: 11, fontWeight: 600 }}>✓ {saveStatus}</span>}
+              <button onClick={function() { window.print(); }} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 8, color: txMut, fontSize: 11, padding: '6px 10px', cursor: 'pointer', fontWeight: 600 }} title="Export / Print">📄 Export</button>
+              <button onClick={function() {
+                var text = currentProfile.name + "'s " + currentProfile.careerLabel + ' Roadmap\n';
+                text += (courseData.major || '') + ' @ ' + (courseData.schoolFullName || currentProfile.school) + '\n\n';
+                semesters.forEach(function(sem) {
+                  text += '--- ' + sem.name + ' ---\n';
+                  if (sem.courses) sem.courses.forEach(function(c) { text += c.code + ' - ' + c.title + ' (' + (c.credits || 3) + ' cr)\n'; });
+                  text += '\n';
+                });
+                navigator.clipboard.writeText(text).then(function() { setSaveStatus('Copied!'); setTimeout(function() { setSaveStatus(''); }, 2000); });
+              }} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 8, color: txMut, fontSize: 11, padding: '6px 10px', cursor: 'pointer', fontWeight: 600 }} title="Copy roadmap to clipboard">📋 Share</button>
               <button onClick={function() { setDarkMode(!darkMode); }} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 8, color: tx, fontSize: 18, width: 36, height: 36, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s' }} title={darkMode ? 'Light Mode' : 'Dark Mode'}>
                 {darkMode ? '☀️' : '🌙'}
               </button>
