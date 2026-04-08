@@ -4,7 +4,7 @@ const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/
 
 export async function POST(request) {
   try {
-    const { schoolName, careerPath, majorName, customGoal, programLevel, catalogUrl } = await request.json();
+    const { schoolName, careerPath, majorName, customGoal, programLevel, catalogUrl, clubsUrl } = await request.json();
     if (!schoolName || (!careerPath && !customGoal)) {
       return Response.json({ error: 'Missing' }, { status: 400 });
     }
@@ -218,7 +218,12 @@ export async function POST(request) {
     };
 
     // Define all prompts
-    var clubPrompt = 'Find real student clubs at ' + schoolName + ' DIRECTLY related to ' + career + ' and ' + (searchedMajor || career) + '.\n\nRULES:\n- ONLY clubs directly relevant to ' + career + '.\n- No generic clubs unless specifically relevant.\n- If fewer than 2 relevant clubs found, return: [{"name":"Visit ' + schoolName + ' Student Organizations Directory","type":"Directory","priority":"Essential","desc":"Browse all available clubs on campus"}]\n\nReturn ONLY JSON array: [{"name":"club","type":"Professional","priority":"Essential","desc":"8 words max"}] 3-4 clubs. JSON only.';
+    var clubsUrlContent = '';
+    if (clubsUrl && clubsUrl.trim()) {
+      clubsUrlContent = '\n\nCRITICAL — REAL CLUBS DIRECTORY:\nThe student provided their school\'s clubs/organizations directory URL: ' + clubsUrl.trim() + '\nYou MUST search and visit this URL to find REAL student clubs at this school. Only include clubs that actually exist at this school.\n';
+    }
+
+    var clubPrompt = 'Find real student clubs at ' + schoolName + ' DIRECTLY related to ' + career + ' and ' + (searchedMajor || career) + '.' + clubsUrlContent + '\n\nRULES:\n- ONLY clubs directly relevant to ' + career + '.\n- No generic clubs unless specifically relevant.\n- If fewer than 2 relevant clubs found, return: [{"name":"Visit ' + schoolName + ' Student Organizations Directory","type":"Directory","priority":"Essential","desc":"Browse all available clubs on campus"}]\n\nReturn ONLY JSON array: [{"name":"club","type":"Professional","priority":"Essential","desc":"8 words max"}] 3-4 clubs. JSON only.';
 
     var brandPrompt = 'Official school colors and website for ' + schoolFullName + ' (' + schoolName + ')?\n\nReturn ONLY JSON:\n{"primaryColor":"#hex","secondaryColor":"#hex","domain":"school.edu"}\n\nprimaryColor = main/dark brand color. secondaryColor = accent/lighter. domain = .edu domain without https://. JSON only.';
 
