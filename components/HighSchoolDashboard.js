@@ -264,6 +264,10 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
 
         {activeTab === 'courses' && (
           <div>
+            <div style={{ background: bgSec, border: '1px solid ' + bdrL, borderRadius: 10, padding: '10px 14px', marginBottom: 14, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>ℹ️</span>
+              <p style={{ color: txDim, fontSize: 12, margin: 0, lineHeight: 1.5 }}>These recommendations may not exactly match what your school offers. Use the <strong style={{ color: accent }}>🔗 Link Catalog</strong> button above to scan your school's course catalog, or chat with the <strong style={{ color: accent }}>AI advisor</strong> below for personalized help.</p>
+            </div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 20, overflowX: 'auto', paddingBottom: 8 }}>
               {years.map(function(y, i) {
                 var isActive = activeYear === i;
@@ -395,7 +399,23 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
                 <h3 style={{ color: tx, fontSize: 16, fontWeight: 700, marginBottom: 10 }}>SAT</h3>
                 <div style={{ marginBottom: 10 }}><div style={{ color: accent, fontSize: 12, fontWeight: 700, marginBottom: 4 }}>WHEN TO TAKE</div><div style={{ color: txSub, fontSize: 14 }}>{standardizedTests.sat.when}</div></div>
                 <div style={{ marginBottom: 10 }}><div style={{ color: accent, fontSize: 12, fontWeight: 700, marginBottom: 4 }}>TARGET SCORE</div><div style={{ color: txSub, fontSize: 14 }}>{standardizedTests.sat.target}</div></div>
-                <div><div style={{ color: accent, fontSize: 12, fontWeight: 700, marginBottom: 4 }}>PREPARATION</div><div style={{ color: txDim, fontSize: 13, lineHeight: 1.6 }}>{standardizedTests.sat.prep}</div></div>
+                <div style={{ marginBottom: 14 }}><div style={{ color: accent, fontSize: 12, fontWeight: 700, marginBottom: 4 }}>PREPARATION</div><div style={{ color: txDim, fontSize: 13, lineHeight: 1.6 }}>{standardizedTests.sat.prep}</div></div>
+                <div><div style={{ color: accent, fontSize: 12, fontWeight: 700, marginBottom: 8 }}>STUDY RESOURCES</div>
+                  <div style={{ display: 'grid', gap: 6 }}>
+                    {[
+                      { name: 'Khan Academy SAT Prep', desc: 'Free official College Board partner — personalized practice', url: 'https://www.khanacademy.org/SAT' },
+                      { name: 'College Board Official Practice', desc: 'Free full-length practice tests from the test maker', url: 'https://satsuite.collegeboard.org/sat/practice-preparation' },
+                      { name: 'Bluebook App', desc: 'Official digital SAT practice app from College Board', url: 'https://bluebook.collegeboard.org/' },
+                    ].map(function(r, i) {
+                      return (
+                        <a key={i} href={r.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: bgSec, borderRadius: 8, border: '1px solid ' + bdrL, textDecoration: 'none' }}>
+                          <div><div style={{ color: tx, fontSize: 13, fontWeight: 600 }}>{r.name}</div><div style={{ color: txMut, fontSize: 11, marginTop: 2 }}>{r.desc}</div></div>
+                          <span style={{ color: accent, fontSize: 14, flexShrink: 0, marginLeft: 8 }}>↗</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             )}
             {standardizedTests.act && (
@@ -403,7 +423,23 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
                 <h3 style={{ color: tx, fontSize: 16, fontWeight: 700, marginBottom: 10 }}>ACT</h3>
                 <div style={{ marginBottom: 10 }}><div style={{ color: accent, fontSize: 12, fontWeight: 700, marginBottom: 4 }}>WHEN TO TAKE</div><div style={{ color: txSub, fontSize: 14 }}>{standardizedTests.act.when}</div></div>
                 <div style={{ marginBottom: 10 }}><div style={{ color: accent, fontSize: 12, fontWeight: 700, marginBottom: 4 }}>TARGET SCORE</div><div style={{ color: txSub, fontSize: 14 }}>{standardizedTests.act.target}</div></div>
-                <div><div style={{ color: accent, fontSize: 12, fontWeight: 700, marginBottom: 4 }}>PREPARATION</div><div style={{ color: txDim, fontSize: 13, lineHeight: 1.6 }}>{standardizedTests.act.prep}</div></div>
+                <div style={{ marginBottom: 14 }}><div style={{ color: accent, fontSize: 12, fontWeight: 700, marginBottom: 4 }}>PREPARATION</div><div style={{ color: txDim, fontSize: 13, lineHeight: 1.6 }}>{standardizedTests.act.prep}</div></div>
+                <div><div style={{ color: accent, fontSize: 12, fontWeight: 700, marginBottom: 8 }}>STUDY RESOURCES</div>
+                  <div style={{ display: 'grid', gap: 6 }}>
+                    {[
+                      { name: 'ACT Academy', desc: 'Free official ACT practice — personalized study plan', url: 'https://academy.act.org/' },
+                      { name: 'ACT Official Practice Tests', desc: 'Full-length practice tests from the test maker', url: 'https://www.act.org/content/act/en/products-and-services/the-act/test-preparation.html' },
+                      { name: 'CrackACT', desc: 'Free real past ACT tests with answer explanations', url: 'https://www.crackact.com/' },
+                    ].map(function(r, i) {
+                      return (
+                        <a key={i} href={r.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: bgSec, borderRadius: 8, border: '1px solid ' + bdrL, textDecoration: 'none' }}>
+                          <div><div style={{ color: tx, fontSize: 13, fontWeight: 600 }}>{r.name}</div><div style={{ color: txMut, fontSize: 11, marginTop: 2 }}>{r.desc}</div></div>
+                          <span style={{ color: accent, fontSize: 14, flexShrink: 0, marginLeft: 8 }}>↗</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             )}
             {standardizedTests.ap && standardizedTests.ap.length > 0 && (
