@@ -32,80 +32,108 @@ export async function POST(request) {
       catalogContent = '\n\nCRITICAL — REAL SCHOOL CATALOG:\nThe student provided their school\'s course catalog URL: ' + cleanUrl + '\n\nYou MUST:\n1. Search and visit this URL: ' + cleanUrl + '\n2. Look for any linked PDF documents (often "Course Catalog", "Curriculum Pathways", "Course of Studies", "Bulletin")\n3. Search for and read those PDFs to find REAL course codes and titles\n4. Use ONLY course codes and titles that actually exist at this school\n5. Do NOT use placeholder codes like "ECON 3XX" or generic names like "Elective Course"\n6. Match exact course codes (e.g. ECON 111, MATH 205, CS 201) and exact titles from the catalog\n\nEvery course in your response must be a real course from this specific school\'s catalog. Search thoroughly.\n';
     }
 
-    // Step 1: Search for real courses using Google Search grounding
-    var searchPrompt = 'Search the web for the ' + levelLabel + ' course catalog at ' + schoolName + ' for students pursuing ' + career + '. ' + majorLine + catalogContent + '\n\nFind REAL ' + levelLabel + ' courses with actual course codes, titles, and credit hours from the official ' + schoolName + ' course catalog.' + (isMasters ? ' IMPORTANT: Only find GRADUATE-level courses (500+ or 600+ level). Do NOT include undergraduate courses (100-400 level). Look for the master\'s/graduate school catalog specifically, NOT the undergraduate catalog. The major should be a master\'s degree program (M.A., M.S., M.Ed., MBA, etc.), NOT a Ph.D. program.' : '') + '\n\nCRITICAL RULES FOR COURSE CODES:\n- Every course code MUST have a real number (e.g. ECON 101, CS 201, MATH 350). \n- NEVER use placeholder codes like "4XX", "3XX", "XXX", or any code with X in it.\n- If you cannot find the exact course number, use a specific real number from the catalog.\n- Each course must have a unique, specific code — no duplicates, no placeholders.\n\nAlso find 3 real ' + levelLabel + ' majors/concentrations at ' + schoolName + ' relevant to ' + career + '.\n\nReturn ONLY valid JSON:\n{"schoolFullName":"","major":"","recommendedMajors":["m1","m2","m3"],"courses":[{"code":"REAL CODE WITH NUMBER","title":"Real Title","credits":3}]}\n\nFind at least ' + (isMasters ? '12' : '20') + ' real courses. Use only courses found in search results. JSON only.';
+    // Step 1: Search for real courses using TWO parallel searches — one for intro/core, one for advanced/upper-division
+    var commonRules = '\n\nCRITICAL RULES FOR COURSE CODES:\n- Every course code MUST have a real number (e.g. ECON 101, CS 201, MATH 350).\n- NEVER use placeholder codes like "4XX", "3XX", "XXX", or any code with X in it.\n- If you cannot find the exact course number, pick a specific real number you found in the catalog.\n- Each course must have a unique, specific code — no duplicates, no placeholders.\n\nReturn ONLY valid JSON:\n{"courses":[{"code":"REAL CODE WITH NUMBER","title":"Real Title","credits":3}]}\n\nUse only courses found in search results. JSON only.';
 
-    var searchResponse = await fetch(GEMINI_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey,
-      },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: searchPrompt }] }],
+    var mastersNote = isMasters ? ' IMPORTANT: Only find GRADUATE-level courses (500+ or 600+ level). Do NOT include undergraduate courses (100-400 level). Look for the master\'s/graduate school catalog specifically.' : '';
+
+    var searchPrompt1 = 'Search the web for the ' + levelLabel + ' course catalog at ' + schoolName + ' for students pursuing ' + career + '. ' + majorLine + catalogContent + '\n\nFind REAL ' + (isMasters ? 'introductory graduate' : 'introductory and foundational (100-200 level)') + ' courses — prerequisites, core requirements, and general education courses from the official ' + schoolName + ' course catalog.' + mastersNote + '\n\nAlso find 3 real ' + levelLabel + ' majors/concentrations at ' + schoolName + ' relevant to ' + career + ' and the school\'s full official name.\n\nReturn ONLY valid JSON:\n{"schoolFullName":"","major":"","recommendedMajors":["m1","m2","m3"],"courses":[{"code":"REAL CODE WITH NUMBER","title":"Real Title","credits":3}]}\n\nFind at least ' + (isMasters ? '8' : '12') + ' real courses.' + commonRules;
+
+    var searchPrompt2 = 'Search the web for ADVANCED and UPPER-DIVISION courses at ' + schoolName + ' for ' + (searchedMajor || major || career) + ' majors. ' + catalogContent + '\n\nFind REAL ' + (isMasters ? 'advanced graduate (600+ or 700+ level)' : 'upper-division (300-400 level)') + ' courses — advanced electives, seminars, capstone courses, senior thesis courses, specialized topics, and concentration-specific courses from the official ' + schoolName + ' course catalog.' + mastersNote + '\n\nFocus specifically on:\n- Advanced electives and specialization courses\n- Seminar courses\n- Capstone or senior project courses\n- Research methods courses\n- Courses typically taken in junior/senior year\n\nFind at least ' + (isMasters ? '8' : '12') + ' real UPPER-DIVISION courses.' + commonRules;
+
+    // Fire both searches in parallel
+    var searchBody = function(prompt) {
+      return {
+        contents: [{ parts: [{ text: prompt }] }],
         tools: [{ google_search: {} }],
         generationConfig: { maxOutputTokens: 4096, temperature: 0.2 },
-      }),
-    });
+      };
+    };
+
+    var [searchResponse1, searchResponse2] = await Promise.all([
+      fetch(GEMINI_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey }, body: JSON.stringify(searchBody(searchPrompt1)) }),
+      fetch(GEMINI_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey }, body: JSON.stringify(searchBody(searchPrompt2)) }),
+    ]);
 
     var searchedCourses = [];
     var searchedMajor = major;
     var searchedMajors = [];
     var schoolFullName = schoolName;
 
-    if (searchResponse.ok) {
-      var searchData = await searchResponse.json();
-      var searchText = '';
-      var searchCandidates = searchData.candidates || [];
-      if (searchCandidates.length > 0 && searchCandidates[0].content && searchCandidates[0].content.parts) {
-        for (var s = 0; s < searchCandidates[0].content.parts.length; s++) {
-          if (searchCandidates[0].content.parts[s].text) {
-            searchText += searchCandidates[0].content.parts[s].text;
-          }
+    // Helper to extract text from Gemini response
+    var extractSearchText = function(response) {
+      var text = '';
+      var cands = response.candidates || [];
+      if (cands.length > 0 && cands[0].content && cands[0].content.parts) {
+        for (var p = 0; p < cands[0].content.parts.length; p++) {
+          if (cands[0].content.parts[p].text) text += cands[0].content.parts[p].text;
         }
       }
-      searchText = searchText.trim();
-      if (searchText.indexOf('```') !== -1) {
-        var sm = searchText.match(/```(?:json)?\s*([\s\S]*?)```/);
-        if (sm) searchText = sm[1].trim();
+      return text.trim();
+    };
+
+    // Helper to parse JSON from response text
+    var extractJsonObj = function(text) {
+      if (!text) return null;
+      if (text.indexOf('```') !== -1) { var m = text.match(/```(?:json)?\s*([\s\S]*?)```/); if (m) text = m[1].trim(); }
+      var start = text.indexOf('{');
+      if (start === -1) return null;
+      var d = 0, inS = false, esc = false, end = -1, t = text.substring(start);
+      for (var i = 0; i < t.length; i++) {
+        var c = t[i];
+        if (esc) { esc = false; continue; }
+        if (c === '\\') { esc = true; continue; }
+        if (c === '"') { inS = !inS; continue; }
+        if (inS) continue;
+        if (c === '{') d++; if (c === '}') { d--; if (d === 0) { end = i; break; } }
       }
-      var sbs = searchText.indexOf('{');
-      if (sbs !== -1) {
-        var sDepth = 0, sInStr = false, sEsc = false, sJe = -1;
-        var sTxt = searchText.substring(sbs);
-        for (var sj = 0; sj < sTxt.length; sj++) {
-          var sc = sTxt[sj];
-          if (sEsc) { sEsc = false; continue; }
-          if (sc === '\\') { sEsc = true; continue; }
-          if (sc === '"') { sInStr = !sInStr; continue; }
-          if (sInStr) continue;
-          if (sc === '{') sDepth++;
-          if (sc === '}') { sDepth--; if (sDepth === 0) { sJe = sj; break; } }
+      if (end === -1) return null;
+      try { return JSON.parse(t.substring(0, end + 1)); } catch(e) { return null; }
+    };
+
+    // Filter function for valid course codes
+    var isValidCode = function(c) {
+      if (!c.code) return false;
+      if (/X/i.test(c.code)) return false;
+      var numPart = c.code.replace(/[^0-9]/g, '');
+      return numPart.length > 0;
+    };
+
+    // Parse search 1 (intro/core courses + metadata)
+    if (searchResponse1.ok) {
+      var data1 = await searchResponse1.json();
+      var result1 = extractJsonObj(extractSearchText(data1));
+      if (result1) {
+        if (result1.courses && Array.isArray(result1.courses)) {
+          searchedCourses = result1.courses.filter(isValidCode);
         }
-        if (sJe !== -1) {
-          try {
-            var searchResult = JSON.parse(sTxt.substring(0, sJe + 1));
-            if (searchResult.courses && Array.isArray(searchResult.courses)) {
-              // Filter out placeholder codes containing X - VERY STRICT
-              searchedCourses = searchResult.courses.filter(function(c) {
-                if (!c.code) return false;
-                // Reject ANY code that contains X anywhere (case insensitive)
-                if (/X/i.test(c.code)) return false;
-                // Extract only the digits
-                var numPart = c.code.replace(/[^0-9]/g, '');
-                // Must have at least one digit
-                return numPart.length > 0;
-              });
-            }
-            if (searchResult.major) searchedMajor = searchResult.major;
-            if (searchResult.recommendedMajors) searchedMajors = searchResult.recommendedMajors;
-            if (searchResult.schoolFullName) schoolFullName = searchResult.schoolFullName;
-          } catch(pe) {
-            console.error('Search parse error:', pe.message);
+        if (result1.major) searchedMajor = result1.major;
+        if (result1.recommendedMajors) searchedMajors = result1.recommendedMajors;
+        if (result1.schoolFullName) schoolFullName = result1.schoolFullName;
+      }
+    }
+
+    // Parse search 2 (advanced/upper-division courses) and merge
+    if (searchResponse2.ok) {
+      var data2 = await searchResponse2.json();
+      var result2 = extractJsonObj(extractSearchText(data2));
+      if (result2 && result2.courses && Array.isArray(result2.courses)) {
+        var advancedCourses = result2.courses.filter(isValidCode);
+        // Deduplicate — don't add courses we already have
+        var existingCodes = {};
+        for (var ec = 0; ec < searchedCourses.length; ec++) {
+          existingCodes[searchedCourses[ec].code.toUpperCase()] = true;
+        }
+        for (var ac = 0; ac < advancedCourses.length; ac++) {
+          if (!existingCodes[advancedCourses[ac].code.toUpperCase()]) {
+            searchedCourses.push(advancedCourses[ac]);
+            existingCodes[advancedCourses[ac].code.toUpperCase()] = true;
           }
         }
       }
     }
+
+    console.log('Found ' + searchedCourses.length + ' verified courses (' + searchedCourses.filter(function(c) { var n = parseInt(c.code.replace(/[^0-9]/g, '')); return n >= 300; }).length + ' upper-division)');
 
     // Step 2: Build roadmap with proper internship/recruitment timelines
     var courseList = '';
@@ -114,7 +142,7 @@ export async function POST(request) {
       for (var cl = 0; cl < searchedCourses.length; cl++) {
         courseList += searchedCourses[cl].code + ' - ' + searchedCourses[cl].title + ' (' + (searchedCourses[cl].credits || 3) + ' cr)\n';
       }
-      courseList += '\nDo NOT invent any course codes. Only pick from this list. NEVER use placeholder codes like "4XX" or "3XX" — every code must have real numbers.';
+      courseList += '\nDo NOT invent any course codes. Only pick from this list. NEVER use placeholder codes like "4XX" or "3XX" — every code must have real numbers. If you run out of courses from this list, DO NOT make up new ones — instead reuse an elective slot with a course from this list.';
     }
 
     var roadmapPrompt = 'You are an expert college career advisor. Return ONLY valid JSON.\n\nBuild a ' + numSemesters + '-semester ' + levelLabel + ' roadmap at ' + schoolName + ' for ' + career + ' as a ' + (searchedMajor || 'recommended') + ' major.' + courseList + '\n\nCRITICAL — RECRUITMENT & INTERNSHIP TIMELINES:\nYou must include accurate recruitment and internship application timelines in the milestones. These are industry-specific and extremely important:\n- Investment Banking / Finance: Sophomore fall — network and prep. Sophomore winter/spring — apply for junior summer internships. Junior summer — IB summer analyst internship. Senior fall — full-time recruiting.\n- Management Consulting: Junior fall — apply for summer internships. Junior summer — consulting internship. Senior fall — full-time apps.\n- Software Engineering: Sophomore summer — first internship. Junior fall — apply to top companies. Junior summer — SWE internship at target company. Senior fall — full-time recruiting.\n- Data Science: Junior year — internship recruiting. Junior summer — DS internship.\n- Pre-Med: Sophomore/Junior summers — research and clinical experience. Junior spring — MCAT prep. Senior — med school applications.\n- Pre-Law: Junior year — LSAT prep. Senior fall — law school applications.\n- Sales & Trading: Sophomore fall — network with traders. Sophomore winter — apply for S&T summer analyst programs. Junior summer — S&T internship. Senior fall — full-time offers.\n- For ALL careers: include when to start networking, when applications open, when interviews happen, and when internships occur. These milestones are the most important part of the roadmap.\n' + (isMasters ? '\nCRITICAL — This is a MASTER\'S DEGREE student (NOT a PhD, NOT undergraduate).\nYou MUST follow these rules for master\'s programs:\n- ONLY include graduate-level courses (typically 500+, 600+, or 700+ level course codes). Do NOT include any introductory or undergraduate-level courses (100-400 level).\n- The major name should say "M.A.", "M.S.", "M.Ed.", "MBA", or equivalent — NOT "Ph.D." unless the user specifically said PhD.\n- This is a 2-year professional master\'s program with 4 semesters total.\n- Internships and job search happen during the program (summer between Year 1 and Year 2).\n- Networking and recruiting starts immediately in Year 1.\n- Capstone/thesis/practicum in Year 2.\n- All milestones should reflect a 2-year graduate timeline, not a 4-year undergrad one.\n- recommendedMajors should list master\'s-level programs/concentrations available at this school, not undergrad majors.\n' : '') + '\n\n{"schoolFullName":"' + schoolFullName + '","major":"' + (searchedMajor || '') + '","careerTitle":"","departmentUrl":"","recommendedMajors":' + JSON.stringify(searchedMajors.length > 0 ? searchedMajors : [searchedMajor]) + ',"semesters":[{"name":"' + (isMasters ? 'Fall - Year 1' : 'Fall - Freshman') + '","courses":[{"code":"CODE","title":"Title","credits":3,"type":"Core","desc":"5-8 words"}]}],"clubs":[],"milestones":[{"sem":1,"label":"milestone"}],"skills":["s1","s2","s3","s4","s5"],"beyondClassroom":{"intro":"Why beyond classroom matters","technicalSkills":[{"skill":"name","why":"reason","semester":"when","resources":[{"name":"resource","type":"Online Course","url":"https://url","cost":"Free","time":"10 hours"}]},{"skill":"name2","why":"reason2","semester":"when2","resources":[{"name":"resource2","type":"Book","url":"https://url","cost":"Free","time":"5 hours"}]}],"networkingPlaybook":[{"phase":"Build Foundation","semester":"' + (isMasters ? 'Fall - Year 1' : 'Fall - Freshman') + '","actions":["a1","a2"]},{"phase":"Expand Network","semester":"' + (isMasters ? 'Spring - Year 1' : 'Fall - Sophomore') + '","actions":["a1","a2"]}],"interviewPrep":[{"category":"type","timeline":"when to start","resources":[{"name":"resource","url":"https://url","desc":"description"}]}],"weeklyHabits":["h1","h2","h3"],"careerInsiderTips":["t1","t2","t3"]}}\n\n' + numSemesters + ' semesters ' + semesterNames + '. ' + (isMasters ? '3' : '4') + ' courses each. ' + numSemesters + ' milestones that reflect real recruitment timelines. Types: Core/Prerequisite/Elective/Gen Ed. Desc under 8 words. clubs must be []. For beyondClassroom resources, use real website names and URLs where possible. JSON only.';
