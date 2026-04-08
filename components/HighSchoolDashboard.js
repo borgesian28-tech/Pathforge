@@ -226,13 +226,13 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
           {(sidebarOpen || isMobile) ? (
             <>
               <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, ' + accent + ', ' + primaryColor + ')', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M14.5 3L10.5 7H13V11L9 7L5 11V7.5L2 10.5V17L5 14V17.5L9 13.5L13 17.5V14L16 17V10.5L19.5 7L22 9.5V4L18.5 7.5L14.5 3Z" fill="white" opacity="0.9"/><path d="M7 18L4 21H20L17 18H7Z" fill="white" opacity="0.7"/></svg>
+                🎓
               </div>
               <span style={{ color: tx, fontWeight: 700, fontSize: 15, letterSpacing: -0.3 }}>PathForge</span>
             </>
           ) : (
             <div style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, ' + accent + ', ' + primaryColor + ')', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14.5 3L10.5 7H13V11L9 7L5 11V7.5L2 10.5V17L5 14V17.5L9 13.5L13 17.5V14L16 17V10.5L19.5 7L22 9.5V4L18.5 7.5L14.5 3Z" fill="white" opacity="0.9"/><path d="M7 18L4 21H20L17 18H7Z" fill="white" opacity="0.7"/></svg>
+              🎓
             </div>
           )}
         </div>
