@@ -70,24 +70,41 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   };
 
   const displayProfile = (combinedView && majors.length === 2) ? (function() {
-    // Smart double-major combination: allow overlapping courses (like real universities)
-    // Most schools allow 2 upper-division courses to count toward both majors
+    // Real double-major logic:
+    // - A typical semester has 4-5 courses (12-15 credits)
+    // - Double major students take ~5 courses per semester
+    // - Some courses from major 1, some from major 2, some shared
+    // - Universities allow 2 courses to overlap (count for both)
     var sem1 = filterXxxCourses(majors[0].courseData.semesters);
     var sem2 = filterXxxCourses(majors[1].courseData.semesters);
+    var maxPerSemester = 5;
     var combined = sem1.map(function(sem, i) {
       var courses1 = sem.courses || [];
       var courses2 = (sem2[i] && sem2[i].courses) || [];
-      var merged = courses1.slice();
+      // Start with major 1's core/prerequisite courses (these are non-negotiable)
+      var core1 = courses1.filter(function(c) { return c.type === 'Core' || c.type === 'Prerequisite'; });
+      var elective1 = courses1.filter(function(c) { return c.type !== 'Core' && c.type !== 'Prerequisite'; });
+      var core2 = courses2.filter(function(c) { return c.type === 'Core' || c.type === 'Prerequisite'; });
+      var elective2 = courses2.filter(function(c) { return c.type !== 'Core' && c.type !== 'Prerequisite'; });
+      // Build merged list: prioritize cores from both, then fill with electives
+      var merged = [];
       var usedCodes = {};
-      for (var c1 = 0; c1 < courses1.length; c1++) { if (courses1[c1].code) usedCodes[courses1[c1].code.toUpperCase()] = true; }
-      for (var c2 = 0; c2 < courses2.length; c2++) {
-        var course2 = courses2[c2];
-        if (!course2.code) continue;
-        var upperCode = course2.code.toUpperCase();
-        // Skip exact duplicates
-        if (usedCodes[upperCode]) continue;
-        usedCodes[upperCode] = true;
-        merged.push(course2);
+      var addCourse = function(c) {
+        if (!c.code) return;
+        var key = c.code.toUpperCase();
+        if (usedCodes[key]) return;
+        if (merged.length >= maxPerSemester) return;
+        usedCodes[key] = true;
+        merged.push(c);
+      };
+      // Add core courses from both majors first (these are required)
+      for (var a = 0; a < core1.length; a++) addCourse(core1[a]);
+      for (var b = 0; b < core2.length; b++) addCourse(core2[b]);
+      // Then alternate electives from each major to fill remaining slots
+      var maxElectives = Math.max(elective1.length, elective2.length);
+      for (var e = 0; e < maxElectives; e++) {
+        if (e < elective1.length) addCourse(elective1[e]);
+        if (e < elective2.length) addCourse(elective2[e]);
       }
       return { ...sem, courses: merged };
     });
