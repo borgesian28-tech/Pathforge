@@ -398,7 +398,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
                   style={{ background: bgSec, border: '2px dashed ' + bdrL, color: darkMode ? accentColor : '#b91c1c', padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: addingMajor ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap', opacity: addingMajor ? 0.5 : 1 }}>
                   {addingMajor ? 'Adding...' : '+ Add Major'}
                 </button>
-              )}}
+              )}
             </div>
           </div>
 
