@@ -65,3 +65,15 @@ input, textarea {
 .fade-in {
   animation: fadeIn 0.5s ease forwards;
 }
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  h1 { font-size: 22px !important; }
+  h2 { font-size: 20px !important; }
+}
+
+/* Print styles for export */
+@media print {
+  body { background: #fff !important; color: #000 !important; }
+  button, .hide-scrollbar, [style*="position: fixed"] { display: none !important; }
+}
