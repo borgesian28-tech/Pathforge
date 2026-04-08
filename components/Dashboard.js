@@ -23,39 +23,71 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   const [combinedView, setCombinedView] = useState(false);
   const [catalogUrl, setCatalogUrl] = useState('');
   const [clubsUrl, setClubsUrl] = useState('');
+  const [hoveredMajor, setHoveredMajor] = useState(-1);
+  // Modal state
+  const [modal, setModal] = useState(null);
+  const [modalInput, setModalInput] = useState('');
   const semRef = useRef(null);
   const saveTimer = useRef(null);
+
+  // Helper: show modal, returns promise resolving to input value or null
+  var showModal = function(title, placeholder, type) {
+    return new Promise(function(resolve) {
+      setModalInput('');
+      setModal({ title: title, placeholder: placeholder, type: type || 'input', resolve: resolve });
+    });
+  };
+
+  var closeModal = function(val) {
+    if (modal && modal.resolve) modal.resolve(val);
+    setModal(null);
+    setModalInput('');
+  };
+
+  // Remove major
+  var removeMajor = function(idx) {
+    if (majors.length <= 1) return;
+    var newMajors = majors.filter(function(_, i) { return i !== idx; });
+    setMajors(newMajors);
+    var newIdx = idx === 0 ? 0 : idx - 1;
+    setActiveMajorIndex(newIdx);
+    setCurrentProfile(newMajors[newIdx]);
+    setCombinedView(false);
+    setActiveTab('courses');
+    setActiveSemester(0);
+  };
+
+  // Filter out XXX placeholder courses from any semester data
+  var filterXxxCourses = function(semesters) {
+    if (!semesters) return semesters;
+    return semesters.map(function(sem) {
+      if (!sem.courses) return sem;
+      return { ...sem, courses: sem.courses.filter(function(c) {
+        if (!c.code) return true;
+        return !/[Xx]{2,}/.test(c.code);
+      })};
+    });
+  };
 
   const displayProfile = (combinedView && majors.length === 2) ? (function() {
     // Smart double-major combination: allow overlapping courses (like real universities)
     // Most schools allow 2 upper-division courses to count toward both majors
-    var combined = majors[0].courseData.semesters.map(function(sem, i) {
-      var courses1 = majors[0].courseData.semesters[i]?.courses || [];
-      var courses2 = majors[1].courseData.semesters[i]?.courses || [];
-      // Find overlapping/similar courses (same department prefix or very similar title)
+    var sem1 = filterXxxCourses(majors[0].courseData.semesters);
+    var sem2 = filterXxxCourses(majors[1].courseData.semesters);
+    var combined = sem1.map(function(sem, i) {
+      var courses1 = sem.courses || [];
+      var courses2 = (sem2[i] && sem2[i].courses) || [];
       var merged = courses1.slice();
-      var overlapCount = 0;
-      var maxOverlap = 2; // universities typically allow 2 overlapping courses
+      var usedCodes = {};
+      for (var c1 = 0; c1 < courses1.length; c1++) { if (courses1[c1].code) usedCodes[courses1[c1].code.toUpperCase()] = true; }
       for (var c2 = 0; c2 < courses2.length; c2++) {
         var course2 = courses2[c2];
-        var isDuplicate = false;
-        for (var c1 = 0; c1 < merged.length; c1++) {
-          var course1 = merged[c1];
-          // Check if same course code or very similar
-          if (course1.code === course2.code) { isDuplicate = true; break; }
-          // Check if same department prefix and similar level (overlap candidate)
-          var dept1 = (course1.code || '').replace(/[0-9\s]/g, '').toUpperCase();
-          var dept2 = (course2.code || '').replace(/[0-9\s]/g, '').toUpperCase();
-          if (dept1 && dept2 && dept1 === dept2 && overlapCount < maxOverlap) {
-            // These can count as overlapping - keep the one from major 1
-            isDuplicate = true;
-            overlapCount++;
-            break;
-          }
-        }
-        if (!isDuplicate) {
-          merged.push({ ...course2, _fromMajor2: true });
-        }
+        if (!course2.code) continue;
+        var upperCode = course2.code.toUpperCase();
+        // Skip exact duplicates
+        if (usedCodes[upperCode]) continue;
+        usedCodes[upperCode] = true;
+        merged.push(course2);
       }
       return { ...sem, courses: merged };
     });
@@ -72,7 +104,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   })() : currentProfile;
 
   const { courseData, careerObj } = displayProfile;
-  const semesters = courseData.semesters || [];
+  const semesters = filterXxxCourses(courseData.semesters || []);
   const clubs = courseData.clubs || [];
   const milestones = courseData.milestones || [];
   const skills = courseData.skills || [];
@@ -194,9 +226,8 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   };
 
   const changeSchool = async function() {
-    var newSchool = prompt('Enter the name of the new school (e.g., Stanford, MIT):');
+    var newSchool = await showModal('Change School', 'Enter the name of the new school (e.g., Stanford, MIT)', 'input');
     if (!newSchool || !newSchool.trim()) return;
-    if (!confirm('This will regenerate your entire roadmap for ' + newSchool + '. Continue?')) return;
     setSwitchingMajor(true);
     try {
       var res = await fetch('/api/generate', {
@@ -215,7 +246,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
         setActiveTab('courses');
         if (user) saveRoadmap(newProfile, {});
       }
-    } catch (err) { console.error('Change school failed:', err); alert('Could not change school.'); }
+    } catch (err) { console.error('Change school failed:', err); }
     setSwitchingMajor(false);
   };
 
@@ -263,8 +294,8 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <p style={{ color: txSub, fontSize: 13, margin: 0 }}>{careerObj.icon} {currentProfile.careerLabel} • {courseData.major || currentProfile.major} @ {courseData.schoolFullName || currentProfile.school}</p>
                 <button onClick={changeSchool} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>Change School</button>
-                <button onClick={function() {
-                  var url = prompt('Paste a link to your school\'s course catalog or club directory:\n\n(e.g. https://catalog.williams.edu/math/)');
+                <button onClick={async function() {
+                  var url = await showModal('Link Course Catalog', 'Paste a link to your school\'s course catalog', 'input');
                   if (url && url.trim()) {
                     setCatalogUrl(url.trim());
                     // Auto-regenerate with the catalog URL
@@ -287,8 +318,8 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
                     }).catch(function() { setSwitchingMajor(false); alert('Could not scan catalog. Please try again.'); });
                   }
                 }} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>{catalogUrl ? '✓ Catalog Linked' : '🔗 Link Catalog'}</button>
-                <button onClick={function() {
-                  var url = prompt('Paste a link to your school\'s student clubs or organizations directory:\n\n(e.g. https://studentorgs.emory.edu)');
+                <button onClick={async function() {
+                  var url = await showModal('Link Clubs Directory', 'Paste a link to your school\'s student clubs directory', 'input');
                   if (url && url.trim()) {
                     setClubsUrl(url.trim());
                     // Re-fetch clubs using the URL
@@ -319,7 +350,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
               {user ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   {user.photoURL && <img src={user.photoURL} alt="" style={{ width: 24, height: 24, borderRadius: '50%' }} referrerPolicy="no-referrer" />}
-                  <button onClick={function() { if (confirm('Start a new roadmap?')) onReset(); }} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 8, color: txMut, fontSize: 12, padding: '6px 12px', cursor: 'pointer' }}>↻ New</button>
+                  <button onClick={function() { onReset(); }} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 8, color: txMut, fontSize: 12, padding: '6px 12px', cursor: 'pointer' }}>↻ New</button>
                 </div>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -350,18 +381,24 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
               {majors.length > 1 && majors.map(function(maj, idx) {
                 var isActive = idx === activeMajorIndex;
                 return (
-                  <button key={idx} onClick={function() { switchToMajor(idx); }}
-                    style={{ background: isActive ? accentColor : bgSec, border: '1px solid ' + (isActive ? accentColor : bdrL), color: isActive ? '#000' : txSub, padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: isActive ? 700 : 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s' }}>
-                    {maj.courseData.major || maj.major}
-                  </button>
+                  <div key={idx} style={{ position: 'relative', display: 'inline-flex' }} onMouseEnter={function() { setHoveredMajor(idx); }} onMouseLeave={function() { setHoveredMajor(-1); }}>
+                    <button onClick={function() { switchToMajor(idx); }}
+                      style={{ background: isActive ? accentColor : bgSec, border: '1px solid ' + (isActive ? accentColor : bdrL), color: isActive ? '#000' : txSub, padding: '8px 24px 8px 14px', borderRadius: 8, fontSize: 13, fontWeight: isActive ? 700 : 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s' }}>
+                      {maj.courseData.major || maj.major}
+                    </button>
+                    {hoveredMajor === idx && (
+                      <button onClick={function(e) { e.stopPropagation(); removeMajor(idx); }}
+                        style={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', width: 18, height: 18, borderRadius: '50%', border: 'none', background: isActive ? '#00000044' : '#ff444488', color: isActive ? '#000' : '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0 }}>×</button>
+                    )}
+                  </div>
                 );
               })}
               {majors.length < 2 && (
-                <button onClick={function() { var n = prompt('Enter the name of the major you want to add (e.g., Economics, Psychology):'); if (n) addNewMajor(n); }} disabled={addingMajor}
+                <button onClick={async function() { var n = await showModal('Add Major', 'e.g. Economics, Psychology, Biology...', 'input'); if (n) addNewMajor(n); }} disabled={addingMajor}
                   style={{ background: bgSec, border: '2px dashed ' + bdrL, color: darkMode ? accentColor : '#b91c1c', padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: addingMajor ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap', opacity: addingMajor ? 0.5 : 1 }}>
                   {addingMajor ? 'Adding...' : '+ Add Major'}
                 </button>
-              )}
+              )}}
             </div>
           </div>
 
@@ -569,6 +606,29 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
         )}
       </div>
       <AiAdvisor profile={currentProfile} accent={accentColor} primaryColor={primaryColor} darkMode={darkMode} />
+
+      {/* INLINE MODAL */}
+      {modal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={function() { closeModal(null); }}>
+          <div onClick={function(e) { e.stopPropagation(); }} style={{ background: darkMode ? '#111122' : '#ffffff', border: '1px solid ' + bdr, borderRadius: 16, padding: '24px 28px', maxWidth: 420, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
+            <h3 style={{ color: tx, fontSize: 18, fontWeight: 700, margin: '0 0 16px', fontFamily: "'Playfair Display', serif" }}>{modal.title}</h3>
+            <input
+              type="text"
+              placeholder={modal.placeholder}
+              value={modalInput}
+              onChange={function(e) { setModalInput(e.target.value); }}
+              onKeyDown={function(e) { if (e.key === 'Enter' && modalInput.trim()) closeModal(modalInput.trim()); }}
+              autoFocus
+              style={{ width: '100%', padding: '12px 16px', borderRadius: 10, border: '1px solid ' + bdrL, background: darkMode ? '#0a0a18' : '#f5f5f8', color: tx, fontSize: 15, outline: 'none', boxSizing: 'border-box', marginBottom: 16 }}
+            />
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button onClick={function() { closeModal(null); }} style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid ' + bdrL, background: 'transparent', color: txSub, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={function() { if (modalInput.trim()) closeModal(modalInput.trim()); }} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg, ' + accentColor + ', ' + primaryColor + ')', color: '#000', fontSize: 14, fontWeight: 700, cursor: modalInput.trim() ? 'pointer' : 'default', opacity: modalInput.trim() ? 1 : 0.5 }}>Confirm</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{'@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}} @keyframes spin{to{transform:rotate(360deg)}}'}</style>
     </div>
   );
