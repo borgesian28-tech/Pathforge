@@ -310,7 +310,7 @@ export async function POST(request) {
     } catch(e) { console.error('Club parse:', e.message); }
 
     if (!roadmap.clubs || roadmap.clubs.length === 0) {
-      roadmap.clubs = [{ name: 'Visit ' + schoolName + ' Student Organizations Directory', type: 'Directory', priority: 'Essential', desc: 'Browse all clubs at your school' }];
+      roadmap.clubs = [{ name: 'Browse ' + schoolName + ' Clubs', type: 'Resource', priority: 'Essential', desc: 'Search online for clubs at your school' }];
     }
 
     // Parse branding
