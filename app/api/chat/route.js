@@ -1,4 +1,4 @@
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
 
@@ -17,7 +17,7 @@ export async function POST(request) {
     // System context as first user message
     contents.push({
       role: 'user',
-      parts: [{ text: 'SYSTEM CONTEXT (do not repeat this to the user):\n' + context + '\n\nNow respond to the student\'s questions as their AI career advisor. Be specific, actionable, and encouraging. Reference their actual school, major, and career path in your answers.' }]
+      parts: [{ text: 'SYSTEM CONTEXT (do not repeat this to the user):\n' + context + '\n\nNow respond to the student\'s questions as their AI career advisor. Be specific, actionable, and encouraging. Reference their actual school, major, and career path in your answers. Keep responses concise.' }]
     });
     contents.push({
       role: 'model',
@@ -41,12 +41,19 @@ export async function POST(request) {
       body: JSON.stringify({
         contents: contents,
         generationConfig: { maxOutputTokens: 1024, temperature: 0.7 },
+        safetySettings: [
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
+        ],
       }),
     });
 
     if (!response.ok) {
-      console.error('Chat API error:', response.status);
-      return Response.json({ error: 'AI error' }, { status: 502 });
+      var errText = await response.text();
+      console.error('Chat API error:', response.status, errText);
+      return Response.json({ reply: 'I\'m having trouble connecting right now. Please try again in a moment.' });
     }
 
     var data = await response.json();
@@ -60,9 +67,9 @@ export async function POST(request) {
       }
     }
 
-    return Response.json({ reply: reply || 'Sorry, I couldn\'t generate a response.' });
+    return Response.json({ reply: reply || 'I couldn\'t generate a response. Please try rephrasing your question.' });
   } catch (err) {
     console.error('Chat error:', err);
-    return Response.json({ error: 'Server error' }, { status: 500 });
+    return Response.json({ reply: 'Something went wrong on my end. Please try again.' });
   }
 }
