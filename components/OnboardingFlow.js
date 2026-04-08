@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { CAREER_OPTIONS } from '@/lib/constants';
 
-export default function OnboardingFlow({ onComplete, onLoading, user, onLogin }) {
+export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveRetry, user, onLogin }) {
   const [step, setStep] = useState(0);
   const [name, setName] = useState(user ? (user.displayName || '').split(' ')[0] : '');
   const [selectedCareer, setSelectedCareer] = useState(null);
@@ -38,36 +38,42 @@ export default function OnboardingFlow({ onComplete, onLoading, user, onLogin })
             careerObj: isCustom ? { ...career, label: data.careerField || 'Custom Path' } : career,
           });
         } else { throw new Error('Invalid data'); }
-      } catch (err) { console.error(err); onLoading(false); alert("Couldn't fetch data. Please try again."); }
+      } catch (err) { console.error(err); if (onError) onError(); else { onLoading(false); } }
       return;
     }
 
     onLoading(true, selectedCareer, 'Searching ' + school + "'s course catalog...");
-    try {
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          schoolName: school,
-          careerPath: isCustom ? customGoal : career.label,
-          majorName: major,
-          customGoal: isCustom ? customGoal : null,
-          programLevel: programLevel,
-        }),
-      });
-      if (!res.ok) throw new Error('API error');
-      onLoading(true, selectedCareer, 'Building your roadmap...');
-      const data = await res.json();
-      if (data.semesters) {
-        onComplete({
-          name, career: selectedCareer,
-          careerLabel: data.careerTitle || career.label,
-          school, major: data.major || major,
-          courseData: data, programLevel: programLevel,
-          careerObj: isCustom ? { ...career, label: data.careerTitle || 'Custom Path' } : career,
+    
+    var doFetch = async function() {
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            schoolName: school,
+            careerPath: isCustom ? customGoal : career.label,
+            majorName: major,
+            customGoal: isCustom ? customGoal : null,
+            programLevel: programLevel,
+          }),
         });
-      } else { throw new Error('Invalid data'); }
-    } catch (err) { console.error(err); onLoading(false); alert("Couldn't fetch data. Please try again."); }
+        if (!res.ok) throw new Error('API error');
+        onLoading(true, selectedCareer, 'Building your roadmap...');
+        const data = await res.json();
+        if (data.semesters) {
+          onComplete({
+            name, career: selectedCareer,
+            careerLabel: data.careerTitle || career.label,
+            school, major: data.major || major,
+            courseData: data, programLevel: programLevel,
+            careerObj: isCustom ? { ...career, label: data.careerTitle || 'Custom Path' } : career,
+          });
+        } else { throw new Error('Invalid data'); }
+      } catch (err) { console.error(err); if (onError) onError(); else { onLoading(false); } }
+    };
+    
+    if (onSaveRetry) onSaveRetry(doFetch);
+    doFetch();
   };
 
   const inp = { width: '100%', padding: '14px 20px', borderRadius: 12, border: '1px solid #2a2a3e', background: '#111122', color: '#fff', fontSize: 16, outline: 'none', boxSizing: 'border-box' };
