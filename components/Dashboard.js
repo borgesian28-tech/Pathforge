@@ -582,7 +582,9 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
           <div style={{ maxWidth: 820, margin: '0 auto' }}>
 
             {/* ===== MAJORS BAR (courses tab only) ===== */}
-            {activeTab === 'courses' && <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+            {activeTab === 'courses' && (
+            <div style={{ marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: showMajors ? 8 : 0, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', gap: 6, alignItems: 'center', flex: 1, flexWrap: 'wrap' }}>
                 {majors.map(function(maj, idx) {
                   var isActive = idx === activeMajorIndex && !combinedView;
@@ -634,7 +636,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
               </div>
             )}
             {/* end courses-only majors bar */}
-            </>)}
+            </div>)}
 
             {/* ===== DAILY ACTION ===== */}
             {dailyAction && activeTab === 'courses' && (
