@@ -114,6 +114,7 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
   const [catalogUrl, setCatalogUrl] = useState('');
   const [currentRoadmap, setCurrentRoadmap] = useState(roadmap);
   const [regenerating, setRegenerating] = useState(false);
+  const [currentYearIdx, setCurrentYearIdx] = useState(-1);
   const [hsModal, setHsModal] = useState(null);
   const [hsModalInput, setHsModalInput] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -207,7 +208,7 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
   var sidebarW = sidebarOpen ? 240 : 64;
 
   return (
-    <div style={{ minHeight: '100vh', background: bg, display: 'flex', transition: 'background 0.3s' }}>
+    <div style={{ minHeight: '100vh', background: bg, display: 'flex', transition: 'background 0.3s', overflow: 'hidden', height: '100vh' }}>
       {regenerating && (
         <div style={{ position: 'fixed', inset: 0, background: overlayBg, zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
           <div style={{ width: 40, height: 40, borderRadius: '50%', border: '2px solid transparent', borderTopColor: accent, animation: 'spin 1s linear infinite', marginBottom: 16 }} />
@@ -314,10 +315,25 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
                 <div style={{ display: 'flex', gap: 6, marginBottom: 20, overflowX: 'auto', paddingBottom: 8 }}>
                   {years.map(function(y, i) {
                     var isActive = activeYear === i;
-                    return (<button key={i} onClick={function() { setActiveYear(i); }} style={{ padding: '6px 16px', borderRadius: 20, border: isActive ? '1px solid ' + accent + '44' : '1px solid ' + bdr, background: isActive ? accent + '15' : bgCard, color: isActive ? accent : txSub, fontSize: 13, fontWeight: isActive ? 600 : 400, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.15s' }}>{y.year}</button>);
+                    var isCurrent = currentYearIdx === i;
+                    return (<button key={i} onClick={function() { setActiveYear(i); }} onDoubleClick={function() { setCurrentYearIdx(i); }} title={isCurrent ? 'Current year' : 'Double-click to set as current'} style={{ padding: '6px 16px', borderRadius: 20, border: isCurrent ? '2px solid ' + accent : (isActive ? '1px solid ' + accent + '44' : '1px solid ' + bdr), background: isActive ? accent + '15' : bgCard, color: isActive ? accent : txSub, fontSize: 13, fontWeight: isActive ? 600 : 400, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.15s' }}>{isCurrent ? '📍 ' : ''}{y.year}</button>);
                   })}
                 </div>
                 {years[activeYear] && (<>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {currentYearIdx === activeYear && <span style={{ background: accent + '22', color: accent, padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700 }}>📍 CURRENT YEAR</span>}
+                      {currentYearIdx !== activeYear && <button onClick={function() { setCurrentYearIdx(activeYear); }} style={{ background: 'none', border: '1px solid ' + bdr, borderRadius: 10, color: txMut, padding: '2px 8px', fontSize: 10, fontWeight: 600, cursor: 'pointer' }}>Set as current</button>}
+                    </div>
+                    {(function() {
+                      var numCourses = years[activeYear].courses ? years[activeYear].courses.length : 0;
+                      var apCount = years[activeYear].courses ? years[activeYear].courses.filter(function(c) { return c.type === 'AP'; }).length : 0;
+                      var intensity = apCount >= 4 || numCourses >= 8 ? 'Heavy' : apCount >= 2 || numCourses >= 6 ? 'Moderate' : 'Light';
+                      var iColors = { Heavy: '#ef4444', Moderate: '#f59e0b', Light: '#4ade80' };
+                      var iIcons = { Heavy: '🔥', Moderate: '⚡', Light: '🌿' };
+                      return (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: iColors[intensity] + '18', border: '1px solid ' + iColors[intensity] + '33', color: iColors[intensity], padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>{iIcons[intensity]} {intensity} Load</span>);
+                    })()}
+                  </div>
                   <div style={{ background: accent + '0a', border: '1px solid ' + accent + '22', borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
                     <h3 style={{ color: accent, fontSize: 11, fontWeight: 700, margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: 1 }}>Focus This Year</h3>
                     <p style={{ color: txSub, fontSize: 13, margin: 0, lineHeight: 1.6 }}>{years[activeYear].focus}</p>
