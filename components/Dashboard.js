@@ -315,13 +315,29 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
 
   var [isMobileState, setIsMobileState] = useState(false);
   useEffect(function() {
-    function checkMobile() { setIsMobileState(window.innerWidth < 768); }
+    function checkMobile() { setIsMobileState(window.innerWidth < 768); if (window.innerWidth < 768) setSidebarOpen(false); }
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return function() { window.removeEventListener('resize', checkMobile); };
   }, []);
+  useEffect(function() {
+    function handleClick(e) { if (settingsRef.current && !settingsRef.current.contains(e.target)) setSettingsOpen(false); }
+    document.addEventListener('mousedown', handleClick);
+    return function() { document.removeEventListener('mousedown', handleClick); };
+  }, []);
+  useEffect(function() { setMobileMenuOpen(false); }, [activeTab]);
+
   var isMobile = isMobileState;
   var sidebarW = sidebarOpen ? 240 : 64;
+
+  var tabs = [
+    { id: 'courses', label: 'Courses', icon: '📚' },
+    { id: 'beyond', label: 'Beyond Class', icon: '⚡' },
+    { id: 'interview', label: 'Interview', icon: '🎯' },
+    { id: 'outcomes', label: 'Outcomes', icon: '💰' },
+    { id: 'timeline', label: 'Timeline', icon: '📍' },
+    { id: 'overview', label: 'Overview', icon: '📊' },
+  ];
   var sidebarBg = darkMode ? '#0c0c0f' : '#ffffff';
   var sidebarBdr = darkMode ? '#1a1a22' : '#e8e8ee';
 
