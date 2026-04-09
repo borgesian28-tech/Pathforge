@@ -166,6 +166,7 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
 
   const tabs = [
     { id: 'courses', label: 'Course Plan', icon: '📚' },
+    { id: 'progress', label: 'Progress', icon: '📈' },
     { id: 'colleges', label: 'Top Colleges', icon: '🎓' },
     { id: 'activities', label: 'Activities', icon: '⚡' },
     { id: 'testing', label: 'Testing', icon: '📝' },
@@ -370,6 +371,91 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
                     </div>
                   </>)}
                 </>)}
+              </div>
+            )}
+
+            {activeTab === 'progress' && (
+              <div>
+                <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 20 }}>
+                  {/* Progress Ring */}
+                  <div style={{ background: bgCard, border: '1px solid ' + bdr, borderRadius: 16, padding: '24px 28px', flex: '1 1 200px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', width: 120, height: 120, marginBottom: 12 }}>
+                      <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
+                        <circle cx="60" cy="60" r="52" fill="none" stroke={dm ? '#1e1e28' : '#e2e2e8'} strokeWidth="8" />
+                        <circle cx="60" cy="60" r="52" fill="none" stroke={accent} strokeWidth="8" strokeLinecap="round" strokeDasharray={2 * Math.PI * 52} strokeDashoffset={2 * Math.PI * 52 * (1 - (activeYear + 1) / years.length)} style={{ transition: 'stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+                      </svg>
+                      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ fontSize: 28, fontWeight: 800, color: tx }}>{Math.round(((activeYear + 1) / years.length) * 100)}%</div>
+                        <div style={{ fontSize: 10, color: txMut, fontWeight: 600 }}>YEAR {activeYear + 1} OF {years.length}</div>
+                      </div>
+                    </div>
+                    <div style={{ color: txSub, fontSize: 13, textAlign: 'center' }}>{years[activeYear] ? years[activeYear].year : ''}</div>
+                  </div>
+
+                  {/* Course Breakdown */}
+                  <div style={{ background: bgCard, border: '1px solid ' + bdr, borderRadius: 16, padding: '20px 24px', flex: '1 1 260px' }}>
+                    <h3 style={{ color: tx, fontSize: 15, fontWeight: 700, margin: '0 0 14px' }}>Course Breakdown</h3>
+                    {(function() {
+                      var types = { AP: 0, Honors: 0, Standard: 0 };
+                      years.forEach(function(y) {
+                        if (y.courses) y.courses.forEach(function(c) {
+                          var t = c.type || 'Standard';
+                          types[t] = (types[t] || 0) + 1;
+                        });
+                      });
+                      var total = Object.values(types).reduce(function(a, b) { return a + b; }, 0);
+                      var typeColors = { AP: '#ef4444', Honors: '#f59e0b', Standard: '#3b82f6' };
+                      return Object.keys(types).filter(function(t) { return types[t] > 0; }).map(function(t) {
+                        var pct = total > 0 ? Math.round((types[t] / total) * 100) : 0;
+                        return (
+                          <div key={t} style={{ marginBottom: 12 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                              <span style={{ color: txSub, fontSize: 12, fontWeight: 600 }}>{t}</span>
+                              <span style={{ color: txMut, fontSize: 11 }}>{types[t]} courses ({pct}%)</span>
+                            </div>
+                            <div style={{ height: 6, background: dm ? '#1e1e28' : '#e2e2e8', borderRadius: 3, overflow: 'hidden' }}>
+                              <div style={{ height: '100%', width: pct + '%', background: typeColors[t] || '#6b7280', borderRadius: 3, transition: 'width 0.8s ease' }} />
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
+                    <div style={{ color: txDim, fontSize: 12, marginTop: 8 }}>
+                      {(function() {
+                        var totalCourses = 0;
+                        years.forEach(function(y) { if (y.courses) totalCourses += y.courses.length; });
+                        return totalCourses + ' total courses across ' + years.length + ' years';
+                      })()}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Year-by-Year Summary */}
+                <div style={{ background: bgCard, border: '1px solid ' + bdr, borderRadius: 16, padding: '20px 24px' }}>
+                  <h3 style={{ color: tx, fontSize: 15, fontWeight: 700, margin: '0 0 14px' }}>Year-by-Year Summary</h3>
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {years.map(function(y, i) {
+                      var apCount = y.courses ? y.courses.filter(function(c) { return c.type === 'AP'; }).length : 0;
+                      var honorsCount = y.courses ? y.courses.filter(function(c) { return c.type === 'Honors'; }).length : 0;
+                      var total = y.courses ? y.courses.length : 0;
+                      var isCurrent = currentYearIdx === i;
+                      return (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: dm ? '#0c0c14' : '#f8f8fa', borderRadius: 10, border: isCurrent ? '2px solid ' + accent : '1px solid ' + bdr }}>
+                          <div style={{ position: 'relative', width: 40, height: 40, flexShrink: 0 }}>
+                            <svg width="40" height="40" viewBox="0 0 40 40" style={{ transform: 'rotate(-90deg)' }}>
+                              <circle cx="20" cy="20" r="16" fill="none" stroke={dm ? '#1e1e28' : '#e2e2e8'} strokeWidth="3" />
+                              <circle cx="20" cy="20" r="16" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" strokeDasharray={2 * Math.PI * 16} strokeDashoffset={2 * Math.PI * 16 * (1 - (i + 1) / years.length)} />
+                            </svg>
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ color: tx, fontSize: 13, fontWeight: 600 }}>{isCurrent ? '📍 ' : ''}{y.year}</div>
+                            <div style={{ color: txMut, fontSize: 11 }}>{total} courses{apCount > 0 ? ' • ' + apCount + ' AP' : ''}{honorsCount > 0 ? ' • ' + honorsCount + ' Honors' : ''}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             )}
 
