@@ -420,7 +420,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
           </div>
         </header>
 
-        <main className="hide-scrollbar" style={{ flex: 1, overflow: 'auto', padding: isMobile ? '20px 16px 40px' : '24px 32px 40px' }}>
+        <main className="hide-scrollbar" style={{ flex: 1, overflow: 'auto', WebkitOverflowScrolling: 'touch', padding: isMobile ? '20px 16px 40px' : '24px 32px 40px' }}>
           <div style={{ maxWidth: 820, margin: '0 auto' }}>
 
         {showWelcome && (
