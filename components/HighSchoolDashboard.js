@@ -239,11 +239,19 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
         </div>
         {(sidebarOpen || isMobile) && (
           <div style={{ padding: '12px 16px', borderBottom: '1px solid ' + sidebarBdr, flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-              <span style={{ fontSize: 16 }}>🎓</span>
-              <span style={{ color: txSub, fontSize: 12, fontWeight: 500 }}>High School Roadmap</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ position: 'relative', width: 44, height: 44, flexShrink: 0 }}>
+                <svg width="44" height="44" viewBox="0 0 44 44" style={{ transform: 'rotate(-90deg)' }}>
+                  <circle cx="22" cy="22" r="18" fill="none" stroke={dm ? '#1e1e28' : '#e2e2e8'} strokeWidth="4" />
+                  <circle cx="22" cy="22" r="18" fill="none" stroke={accent} strokeWidth="4" strokeLinecap="round" strokeDasharray={2 * Math.PI * 18} strokeDashoffset={2 * Math.PI * 18 * (1 - (activeYear + 1) / years.length)} style={{ transition: 'stroke-dashoffset 1s ease' }} />
+                </svg>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: tx }}>{Math.round(((activeYear + 1) / years.length) * 100)}%</div>
+              </div>
+              <div>
+                <div style={{ color: txSub, fontSize: 12, fontWeight: 600 }}>High School Roadmap</div>
+                <div style={{ color: txMut, fontSize: 10 }}>Preparing for {currentRoadmap.careerField}</div>
+              </div>
             </div>
-            <div style={{ color: txMut, fontSize: 11 }}>Preparing for {currentRoadmap.careerField}</div>
           </div>
         )}
         <nav className="thin-scrollbar" style={{ flex: 1, overflow: 'auto', padding: '8px' }}>
