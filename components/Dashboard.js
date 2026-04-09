@@ -32,6 +32,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [currentSemesterIdx, setCurrentSemesterIdx] = useState(-1);
   const semRef = useRef(null);
   const saveTimer = useRef(null);
   const settingsRef = useRef(null);
@@ -337,6 +338,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
     { id: 'outcomes', label: 'Outcomes', icon: '💰' },
     { id: 'timeline', label: 'Timeline', icon: '📍' },
     { id: 'overview', label: 'Overview', icon: '📊' },
+    { id: 'advisor', label: 'AI Advisor', icon: '💬' },
   ];
   var sidebarBg = darkMode ? '#0c0c0f' : '#ffffff';
   var sidebarBdr = darkMode ? '#1a1a22' : '#e8e8ee';
@@ -356,7 +358,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: bg, display: 'flex', transition: 'background 0.3s' }}>
+    <div style={{ minHeight: '100vh', background: bg, display: 'flex', transition: 'background 0.3s', overflow: 'hidden', height: '100vh' }}>
       {switchingMajor && (
         <div style={{ position: 'fixed', inset: 0, background: overlayBg, zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
           <div style={{ width: 40, height: 40, borderRadius: '50%', border: '2px solid transparent', borderTopColor: accentColor, animation: 'spin 1s linear infinite', marginBottom: 16 }} />
@@ -460,7 +462,8 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
               <div ref={semRef} className="hide-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '4px 32px 12px', scrollBehavior: 'smooth' }}>
                 {semesters.map(function(sem, i) {
                   var done = sem.courses && sem.courses.every(function(_, ci) { return completedCourses[i + '-' + ci]; });
-                  return (<button key={i} onClick={function() { setActiveSemester(i); }} style={{ padding: '8px 14px', borderRadius: 20, border: 'none', background: activeSemester === i ? accentColor : done ? '#1a3a24' : bgSec, color: activeSemester === i ? '#000' : done ? '#4ade80' : txSub, fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>{done ? '✓ ' : ''}{sem.name}</button>);
+                  var isCurrent = currentSemesterIdx === i;
+                  return (<button key={i} onClick={function() { setActiveSemester(i); }} onDoubleClick={function() { setCurrentSemesterIdx(i); }} title={isCurrent ? 'Current semester' : 'Double-click to set as current'} style={{ padding: '8px 14px', borderRadius: 20, border: isCurrent ? '2px solid ' + accentColor : 'none', background: activeSemester === i ? accentColor : done ? '#1a3a24' : bgSec, color: activeSemester === i ? '#000' : done ? '#4ade80' : txSub, fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, position: 'relative' }}>{done ? '✓ ' : ''}{isCurrent ? '📍 ' : ''}{sem.name}</button>);
                 })}
               </div>
               <button onClick={function() { if (semRef.current) semRef.current.scrollBy({ left: 150, behavior: 'smooth' }); }} style={{ position: 'absolute', right: -4, top: '50%', transform: 'translateY(-50%)', zIndex: 2, width: 28, height: 28, borderRadius: '50%', border: '1px solid ' + bdrL, background: tabBg + 'ee', color: txSub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>›</button>
@@ -468,7 +471,11 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
             {semesters[activeSemester] && (<>
               <div style={{ marginBottom: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-                  <h3 style={{ color: tx, fontSize: 18, fontFamily: "'Playfair Display', serif", margin: '8px 0 4px' }}>{semesters[activeSemester].name}</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <h3 style={{ color: tx, fontSize: 18, fontFamily: "'Playfair Display', serif", margin: '8px 0 4px' }}>{semesters[activeSemester].name}</h3>
+                    {currentSemesterIdx === activeSemester && <span style={{ background: accentColor + '22', color: accentColor, padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700 }}>📍 CURRENT</span>}
+                    {currentSemesterIdx !== activeSemester && <button onClick={function() { setCurrentSemesterIdx(activeSemester); }} style={{ background: 'none', border: '1px solid ' + bdrL, borderRadius: 10, color: txMut, padding: '2px 8px', fontSize: 10, fontWeight: 600, cursor: 'pointer' }}>Set as current</button>}
+                  </div>
                   {(function() {
                     var semCredits = semesters[activeSemester].courses ? semesters[activeSemester].courses.reduce(function(a, c) { return a + (c.credits || 3); }, 0) : 0;
                     var numCourses = semesters[activeSemester].courses ? semesters[activeSemester].courses.length : 0;
@@ -498,8 +505,32 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
           </div>
         )}
 
-        {activeTab === 'beyond' && <BeyondClassroom data={courseData.beyondClassroom} accent={accentColor} color={primaryColor} darkMode={darkMode} />}
-        {activeTab === 'interview' && <InterviewSimulator profile={currentProfile} accent={accentColor} primaryColor={primaryColor} darkMode={darkMode} />}
+        {activeTab === 'beyond' && (
+          <div>
+            <div style={{ background: 'linear-gradient(135deg, #ff640012, ' + bgCard + ')', border: '1px solid #ff640033', borderRadius: 14, padding: '16px 18px', marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: '#ff640022', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>⚡</div>
+              <div>
+                <h2 style={{ color: tx, fontSize: 17, fontWeight: 700, margin: '0 0 3px' }}>Beyond the Classroom</h2>
+                <p style={{ color: txDim, fontSize: 12, margin: 0, lineHeight: 1.4 }}>The skills, habits, and connections that separate top candidates. This is what {currentProfile.school} won't teach you.</p>
+              </div>
+            </div>
+            <BeyondClassroom data={courseData.beyondClassroom} accent={accentColor} color={primaryColor} darkMode={darkMode} />
+          </div>
+        )}
+        {activeTab === 'interview' && (
+          <div>
+            <div style={{ background: 'linear-gradient(135deg, ' + accentColor + '12, ' + bgCard + ')', border: '1px solid ' + accentColor + '33', borderRadius: 14, padding: '16px 18px', marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: accentColor + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>🎯</div>
+              <div>
+                <h2 style={{ color: tx, fontSize: 17, fontWeight: 700, margin: '0 0 3px' }}>Interview Simulator</h2>
+                <p style={{ color: txDim, fontSize: 12, margin: 0, lineHeight: 1.4 }}>Practice real {currentProfile.careerLabel} interview questions. Technical, behavioral, and case — with AI feedback.</p>
+              </div>
+            </div>
+            <InterviewSimulator profile={currentProfile} accent={accentColor} primaryColor={primaryColor} darkMode={darkMode} />
+          </div>
+        )}
+
+        {activeTab === 'advisor' && <AiAdvisor profile={currentProfile} accent={accentColor} primaryColor={primaryColor} darkMode={darkMode} inline={true} />}
 
         {activeTab === 'outcomes' && (
           <div style={{ marginTop: 20 }}>
@@ -586,7 +617,6 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
           </div>
         </main>
       </div>
-      <AiAdvisor profile={currentProfile} accent={accentColor} primaryColor={primaryColor} darkMode={darkMode} />
 
       {/* INLINE MODAL */}
       {modal && (
