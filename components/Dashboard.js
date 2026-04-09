@@ -394,9 +394,6 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
             }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '5px 10px', cursor: 'pointer', fontWeight: 600 }}>📋 Share</button>
           </div>
 
-            </div>
-          </div>
-
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: darkMode ? '#0A5C3622' : '#0A5C3612', border: '1px solid ' + (darkMode ? '#0A5C3644' : '#0A5C3633'), borderRadius: 20, padding: '4px 12px', marginTop: 10 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#16a34a', animation: 'pulse 2s infinite' }} />
             <span style={{ color: darkMode ? '#4ade80' : '#15803d', fontSize: 11, fontWeight: 600 }}>LIVE DATA</span>
