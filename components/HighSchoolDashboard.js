@@ -208,7 +208,7 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
   var sidebarW = sidebarOpen ? 240 : 64;
 
   return (
-    <div style={{ minHeight: '100vh', background: bg, display: 'flex', transition: 'background 0.3s', overflow: 'hidden', height: '100vh' }}>
+    <div style={{ minHeight: '100vh', background: bg, display: 'flex', transition: 'background 0.3s', overflow: 'hidden', height: '100dvh' }}>
       {regenerating && (
         <div style={{ position: 'fixed', inset: 0, background: overlayBg, zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
           <div style={{ width: 40, height: 40, borderRadius: '50%', border: '2px solid transparent', borderTopColor: accent, animation: 'spin 1s linear infinite', marginBottom: 16 }} />
@@ -220,7 +220,7 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
       {mobileMenuOpen && <div onClick={function() { setMobileMenuOpen(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 89, backdropFilter: 'blur(4px)' }} />}
       <aside style={{
         position: isMobile ? 'fixed' : 'sticky', top: 0, left: isMobile ? (mobileMenuOpen ? 0 : -260) : 0,
-        width: isMobile ? 240 : sidebarW, height: '100vh', background: sidebarBg, borderRight: '1px solid ' + sidebarBdr,
+        width: isMobile ? 240 : sidebarW, height: '100dvh', background: sidebarBg, borderRight: '1px solid ' + sidebarBdr,
         display: 'flex', flexDirection: 'column', transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', zIndex: 90, flexShrink: 0, overflow: 'hidden',
       }}>
         <div style={{ padding: sidebarOpen || isMobile ? '16px 16px 12px' : '16px 12px 12px', borderBottom: '1px solid ' + sidebarBdr, display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
