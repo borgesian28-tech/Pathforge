@@ -1,8 +1,8 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 
-export default function AiAdvisor({ profile, accent, primaryColor, darkMode }) {
-  var [open, setOpen] = useState(false);
+export default function AiAdvisor({ profile, accent, primaryColor, darkMode, inline }) {
+  var [open, setOpen] = useState(inline ? true : false);
   var [messages, setMessages] = useState([]);
   var [input, setInput] = useState('');
   var [loading, setLoading] = useState(false);
@@ -73,7 +73,7 @@ export default function AiAdvisor({ profile, accent, primaryColor, darkMode }) {
     'Am I on track for recruiting?',
   ];
 
-  if (!open) {
+  if (!open && !inline) {
     return (
       <button onClick={function() { setOpen(true); }}
         style={{ position: 'fixed', bottom: 20, right: 20, width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg, ' + accent + ', ' + primaryColor + ')', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer', boxShadow: '0 4px 20px ' + accent + '44', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -82,8 +82,11 @@ export default function AiAdvisor({ profile, accent, primaryColor, darkMode }) {
     );
   }
 
+  var containerStyle = inline ? { display: 'flex', flexDirection: 'column', minHeight: 500, maxHeight: 'calc(100vh - 140px)' } : { position: 'fixed', bottom: 20, right: 20, width: 'min(400px, calc(100vw - 32px))', height: 'min(560px, calc(100vh - 40px))', background: chatBg, border: '1px solid ' + chatBdr, borderRadius: 20, zIndex: 50, display: 'flex', flexDirection: 'column', boxShadow: '0 8px 40px rgba(0,0,0,0.3)', overflow: 'hidden' };
+
   return (
-    <div style={{ position: 'fixed', bottom: 20, right: 20, width: 'min(400px, calc(100vw - 32px))', height: 'min(560px, calc(100vh - 40px))', background: chatBg, border: '1px solid ' + chatBdr, borderRadius: 20, zIndex: 50, display: 'flex', flexDirection: 'column', boxShadow: '0 8px 40px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
+    <div style={containerStyle}>
+      {!inline && (
       <div style={{ padding: '14px 16px', background: 'linear-gradient(135deg, ' + primaryColor + (dm ? '88' : '33') + ', ' + chatBg + ')', borderBottom: '1px solid ' + chatBdr, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 32, height: 32, borderRadius: 10, background: accent + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🤖</div>
@@ -94,6 +97,7 @@ export default function AiAdvisor({ profile, accent, primaryColor, darkMode }) {
         </div>
         <button onClick={function() { setOpen(false); }} style={{ background: 'none', border: 'none', color: txMut, fontSize: 18, cursor: 'pointer', padding: '4px 8px', lineHeight: 1 }}>✕</button>
       </div>
+      )}
       <div style={{ flex: 1, overflow: 'auto', padding: '14px' }}>
         {messages.length === 0 && (
           <div>
