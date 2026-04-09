@@ -33,6 +33,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [currentSemesterIdx, setCurrentSemesterIdx] = useState(-1);
+  const [courseGrades, setCourseGrades] = useState({});
   const semRef = useRef(null);
   const saveTimer = useRef(null);
   const settingsRef = useRef(null);
@@ -333,6 +334,7 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
 
   var tabs = [
     { id: 'courses', label: 'Courses', icon: '📚' },
+    { id: 'progress', label: 'Progress', icon: '📈' },
     { id: 'beyond', label: 'Beyond Class', icon: '⚡' },
     { id: 'interview', label: 'Interview', icon: '🎯' },
     { id: 'outcomes', label: 'Outcomes', icon: '💰' },
@@ -373,10 +375,20 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
         </div>
         {(sidebarOpen || isMobile) && (
           <div style={{ padding: '12px 16px', borderBottom: '1px solid ' + sidebarBdr, flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}><span style={{ fontSize: 16 }}>{careerObj.icon}</span><span style={{ color: txSub, fontSize: 12, fontWeight: 500 }}>{currentProfile.name}'s Roadmap</span></div>
-            <div style={{ color: txMut, fontSize: 11 }}>{courseData.major || currentProfile.major} @ {currentProfile.school}</div>
-            <div style={{ marginTop: 8, background: progBg, borderRadius: 3, height: 4, overflow: 'hidden' }}><div style={{ height: '100%', width: progress + '%', background: accentColor, borderRadius: 3, transition: 'width 0.5s' }} /></div>
-            <div style={{ color: txMut, fontSize: 10, marginTop: 4 }}>{progress}% complete</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ position: 'relative', width: 48, height: 48, flexShrink: 0 }}>
+                <svg width="48" height="48" viewBox="0 0 48 48" style={{ transform: 'rotate(-90deg)' }}>
+                  <circle cx="24" cy="24" r="20" fill="none" stroke={darkMode ? '#1e1e28' : '#e2e2e8'} strokeWidth="4" />
+                  <circle cx="24" cy="24" r="20" fill="none" stroke={accentColor} strokeWidth="4" strokeLinecap="round" strokeDasharray={2 * Math.PI * 20} strokeDashoffset={2 * Math.PI * 20 * (1 - progress / 100)} style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+                </svg>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: tx }}>{progress}%</div>
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ color: txSub, fontSize: 12, fontWeight: 600 }}>{currentProfile.name}'s Roadmap</div>
+                <div style={{ color: txMut, fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{courseData.major || currentProfile.major}</div>
+                <div style={{ color: txMut, fontSize: 10, marginTop: 2 }}>{completedCount}/{totalCourses} courses • {completedCredits}/{totalCredits} cr</div>
+              </div>
+            </div>
           </div>
         )}
         <nav className="hide-scrollbar" style={{ flex: 1, overflow: 'auto', padding: '8px' }}>
@@ -502,6 +514,129 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
                 </div>
               )}
             </>)}
+          </div>
+        )}
+
+        {activeTab === 'progress' && (
+          <div>
+            {/* Animated Progress Ring */}
+            <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 20 }}>
+              <div style={{ background: bgCard, border: '1px solid ' + bdr, borderRadius: 16, padding: '24px 28px', flex: '1 1 200px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ position: 'relative', width: 120, height: 120, marginBottom: 12 }}>
+                  <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
+                    <circle cx="60" cy="60" r="52" fill="none" stroke={darkMode ? '#1e1e28' : '#e2e2e8'} strokeWidth="8" />
+                    <circle cx="60" cy="60" r="52" fill="none" stroke={accentColor} strokeWidth="8" strokeLinecap="round" strokeDasharray={2 * Math.PI * 52} strokeDashoffset={2 * Math.PI * 52 * (1 - progress / 100)} style={{ transition: 'stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+                  </svg>
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ fontSize: 28, fontWeight: 800, color: tx }}>{progress}%</div>
+                    <div style={{ fontSize: 10, color: txMut, fontWeight: 600 }}>COMPLETE</div>
+                  </div>
+                </div>
+                <div style={{ color: txSub, fontSize: 13, textAlign: 'center' }}>{completedCount} of {totalCourses} courses</div>
+                <div style={{ color: txMut, fontSize: 12 }}>{completedCredits} of {totalCredits} credits</div>
+              </div>
+
+              {/* Course Type Breakdown */}
+              <div style={{ background: bgCard, border: '1px solid ' + bdr, borderRadius: 16, padding: '20px 24px', flex: '1 1 260px' }}>
+                <h3 style={{ color: tx, fontSize: 15, fontWeight: 700, margin: '0 0 14px' }}>Degree Audit</h3>
+                {(function() {
+                  var types = {};
+                  var typesCompleted = {};
+                  semesters.forEach(function(sem, si) {
+                    if (sem.courses) sem.courses.forEach(function(c, ci) {
+                      var t = c.type || 'Other';
+                      types[t] = (types[t] || 0) + 1;
+                      if (completedCourses[si + '-' + ci]) typesCompleted[t] = (typesCompleted[t] || 0) + 1;
+                    });
+                  });
+                  var typeColors = { Core: accentColor, Prerequisite: '#f59e0b', Elective: '#3b82f6', 'Gen Ed': '#8b5cf6', Other: '#6b7280' };
+                  return Object.keys(types).map(function(t) {
+                    var total = types[t];
+                    var done = typesCompleted[t] || 0;
+                    var pct = Math.round((done / total) * 100);
+                    return (
+                      <div key={t} style={{ marginBottom: 12 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                          <span style={{ color: txSub, fontSize: 12, fontWeight: 600 }}>{t}</span>
+                          <span style={{ color: txMut, fontSize: 11 }}>{done}/{total}</span>
+                        </div>
+                        <div style={{ height: 6, background: darkMode ? '#1e1e28' : '#e2e2e8', borderRadius: 3, overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: pct + '%', background: typeColors[t] || '#6b7280', borderRadius: 3, transition: 'width 0.8s ease' }} />
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+                {(function() {
+                  var remaining = totalCourses - completedCount;
+                  if (remaining > 0) return <div style={{ color: txDim, fontSize: 12, marginTop: 8 }}>{remaining} course{remaining !== 1 ? 's' : ''} remaining to complete your degree</div>;
+                  return <div style={{ color: '#4ade80', fontSize: 13, fontWeight: 600, marginTop: 8 }}>🎉 All courses complete!</div>;
+                })()}
+              </div>
+            </div>
+
+            {/* GPA Calculator */}
+            <div style={{ background: bgCard, border: '1px solid ' + bdr, borderRadius: 16, padding: '20px 24px' }}>
+              <h3 style={{ color: tx, fontSize: 15, fontWeight: 700, margin: '0 0 4px' }}>GPA Calculator</h3>
+              <p style={{ color: txMut, fontSize: 12, margin: '0 0 14px' }}>Select grades for your completed courses to calculate your GPA.</p>
+              {(function() {
+                var gradePoints = { 'A+': 4.0, 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0.0 };
+                var gradeOptions = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F'];
+                var totalPoints = 0;
+                var totalGradedCredits = 0;
+                var gradedCourses = [];
+                semesters.forEach(function(sem, si) {
+                  if (sem.courses) sem.courses.forEach(function(c, ci) {
+                    var key = si + '-' + ci;
+                    if (completedCourses[key]) {
+                      var grade = courseGrades[key];
+                      var credits = c.credits || 3;
+                      if (grade && gradePoints[grade] !== undefined) {
+                        totalPoints += gradePoints[grade] * credits;
+                        totalGradedCredits += credits;
+                      }
+                      gradedCourses.push({ sem: sem.name, code: c.code, title: c.title, credits: credits, key: key, grade: grade });
+                    }
+                  });
+                });
+                var gpa = totalGradedCredits > 0 ? (totalPoints / totalGradedCredits).toFixed(2) : '—';
+                return (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, padding: '14px 18px', background: darkMode ? '#0c0c14' : '#f5f5f8', borderRadius: 12 }}>
+                      <div style={{ position: 'relative', width: 64, height: 64, flexShrink: 0 }}>
+                        <svg width="64" height="64" viewBox="0 0 64 64" style={{ transform: 'rotate(-90deg)' }}>
+                          <circle cx="32" cy="32" r="28" fill="none" stroke={darkMode ? '#1e1e28' : '#e2e2e8'} strokeWidth="5" />
+                          <circle cx="32" cy="32" r="28" fill="none" stroke={gpa === '—' ? (darkMode ? '#2a2a38' : '#d5d5dd') : parseFloat(gpa) >= 3.5 ? '#4ade80' : parseFloat(gpa) >= 3.0 ? '#f59e0b' : parseFloat(gpa) >= 2.0 ? '#f97316' : '#ef4444'} strokeWidth="5" strokeLinecap="round" strokeDasharray={2 * Math.PI * 28} strokeDashoffset={gpa === '—' ? 2 * Math.PI * 28 : 2 * Math.PI * 28 * (1 - Math.min(parseFloat(gpa), 4.0) / 4.0)} style={{ transition: 'stroke-dashoffset 1s ease' }} />
+                        </svg>
+                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: tx }}>{gpa}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: tx, fontSize: 14, fontWeight: 700 }}>Cumulative GPA</div>
+                        <div style={{ color: txMut, fontSize: 12 }}>{totalGradedCredits} credits graded</div>
+                      </div>
+                    </div>
+                    {gradedCourses.length === 0 && <div style={{ color: txDim, fontSize: 13, textAlign: 'center', padding: 20 }}>Complete and grade courses in the Courses tab to see your GPA here.</div>}
+                    <div style={{ display: 'grid', gap: 6 }}>
+                      {gradedCourses.map(function(gc) {
+                        return (
+                          <div key={gc.key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: darkMode ? '#0c0c14' : '#f8f8fa', borderRadius: 8, border: '1px solid ' + bdr }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ color: tx, fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{gc.code} — {gc.title}</div>
+                              <div style={{ color: txMut, fontSize: 10 }}>{gc.credits} credits</div>
+                            </div>
+                            <select value={gc.grade || ''} onChange={function(e) { var v = e.target.value; setCourseGrades(function(p) { var n = {}; for (var k in p) n[k] = p[k]; n[gc.key] = v || undefined; return n; }); }}
+                              style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid ' + bdr, background: darkMode ? '#1a1a28' : '#fff', color: tx, fontSize: 12, fontWeight: 600, cursor: 'pointer', width: 60 }}>
+                              <option value="">—</option>
+                              {gradeOptions.map(function(g) { return <option key={g} value={g}>{g}</option>; })}
+                            </select>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
           </div>
         )}
 
