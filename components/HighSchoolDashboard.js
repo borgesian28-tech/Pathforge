@@ -303,7 +303,7 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
         </header>
 
         {/* CONTENT */}
-        <main className="thin-scrollbar" style={{ flex: 1, overflow: 'auto', padding: isMobile ? '20px 16px 40px' : '24px 32px 40px' }}>
+        <main className="thin-scrollbar" style={{ flex: 1, overflow: 'auto', WebkitOverflowScrolling: 'touch', padding: isMobile ? '20px 16px 40px' : '24px 32px 40px' }}>
           <div style={{ maxWidth: 820, margin: '0 auto' }}>
 
             {activeTab === 'courses' && (
