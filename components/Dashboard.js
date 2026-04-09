@@ -330,108 +330,70 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
       )}
 
       {/* HEADER */}
-      <div style={{ background: headerBg, padding: '24px 20px 20px', borderBottom: '1px solid ' + bdr, transition: 'all 0.3s' }}>
+      <div style={{ background: headerBg, padding: '20px 20px 16px', borderBottom: '1px solid ' + bdr, transition: 'all 0.3s' }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                {logoUrl ? <img src={logoUrl} alt="" style={{ width: 24, height: 24, borderRadius: 4, background: '#fff' }} onError={function(e) { e.target.style.display = 'none'; }} /> : <span style={{ fontSize: 22 }}>🎓</span>}
-                <span style={{ color: accentColor, fontWeight: 700, fontSize: 14, letterSpacing: 1 }}>PATHFORGE</span>
-              </div>
-              <h1 style={{ fontFamily: "'Playfair Display', serif", color: tx, fontSize: 'clamp(20px, 4vw, 28px)', margin: '4px 0 2px' }}>{currentProfile.name}'s Roadmap</h1>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <p style={{ color: txSub, fontSize: 13, margin: 0 }}>{careerObj.icon} {currentProfile.careerLabel} • {courseData.major || currentProfile.major} @ {courseData.schoolFullName || currentProfile.school}</p>
-                <button onClick={changeSchool} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>Change School</button>
-                <button onClick={async function() {
-                  var url = await showModal('Link Course Catalog', 'Paste a link to your school\'s course catalog', 'input');
-                  if (url && url.trim()) {
-                    setCatalogUrl(url.trim());
-                    // Auto-regenerate with the catalog URL
-                    setSwitchingMajor("Scanning course catalog...");
-                    fetch('/api/generate', {
-                      method: 'POST', headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: url.trim(), clubsUrl: clubsUrl || '' }),
-                    }).then(function(res) { return res.json(); }).then(function(data) {
-                      if (data.semesters) {
-                        var newProfile = { ...currentProfile, courseData: data };
-                        setCurrentProfile(newProfile);
-                        setMajors([newProfile]);
-                        setActiveMajorIndex(0);
-                        setCompletedCourses({});
-                        setActiveSemester(0);
-                        setActiveTab('courses');
-                        if (user) saveRoadmap(newProfile, {});
-                      }
-                      setSwitchingMajor("");
-                    }).catch(function() { setSwitchingMajor(''); alert('Could not scan catalog. Please try again.'); });
-                  }
-                }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>{catalogUrl ? '✓ Catalog Linked' : '🔗 Link Catalog'}</button>
-                <button onClick={async function() {
-                  var url = await showModal('Link Clubs Directory', 'Paste a link to your school\'s student clubs directory', 'input');
-                  if (url && url.trim()) {
-                    setClubsUrl(url.trim());
-                    // Re-fetch clubs using the URL
-                    setSwitchingMajor("Scanning clubs directory...");
-                    fetch('/api/generate', {
-                      method: 'POST', headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '', clubsUrl: url.trim() }),
-                    }).then(function(res) { return res.json(); }).then(function(data) {
-                      if (data.semesters) {
-                        var newProfile = { ...currentProfile, courseData: { ...currentProfile.courseData, clubs: data.clubs || currentProfile.courseData.clubs } };
-                        setCurrentProfile(newProfile);
-                        if (majors.length > 0) {
-                          setMajors(function(prev) { var n = prev.slice(); n[activeMajorIndex] = newProfile; return n; });
-                        }
-                        if (user) saveRoadmap(newProfile, completedCourses);
-                      }
-                      setSwitchingMajor("");
-                    }).catch(function() { setSwitchingMajor(''); alert('Could not scan clubs directory. Please try again.'); });
-                  }
-                }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontWeight: 600 }}>{clubsUrl ? '✓ Clubs Linked' : '🏛️ Link Clubs'}</button>
-              </div>
+          {/* Top bar: brand + user controls */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {logoUrl ? <img src={logoUrl} alt="" style={{ width: 22, height: 22, borderRadius: 4, background: '#fff' }} onError={function(e) { e.target.style.display = 'none'; }} /> : <span style={{ fontSize: 20 }}>🎓</span>}
+              <span style={{ color: accentColor, fontWeight: 700, fontSize: 13, letterSpacing: 1 }}>PATHFORGE</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               {saveStatus && <span style={{ color: '#4ade80', fontSize: 11, fontWeight: 600 }}>✓ {saveStatus}</span>}
-              <button onClick={function() {
-                var html = '<html><head><title>' + currentProfile.name + ' Roadmap - PathForge</title><style>body{font-family:system-ui,sans-serif;max-width:700px;margin:40px auto;padding:0 20px;color:#111}h1{font-size:24px;margin-bottom:4px}h2{font-size:14px;color:#666;margin-bottom:24px}h3{font-size:16px;margin:20px 0 8px;padding-top:12px;border-top:1px solid #ddd}.course{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}.code{font-weight:600}.credits{color:#888}.footer{margin-top:32px;padding-top:16px;border-top:1px solid #ddd;color:#888;font-size:11px}</style></head><body>';
-                html += '<h1>' + currentProfile.name + "'s " + currentProfile.careerLabel + ' Roadmap</h1>';
-                html += '<h2>' + (courseData.major || '') + ' @ ' + (courseData.schoolFullName || currentProfile.school) + '</h2>';
-                semesters.forEach(function(sem) {
-                  html += '<h3>' + sem.name + '</h3>';
-                  if (sem.courses) sem.courses.forEach(function(c) {
-                    html += '<div class="course"><span><span class="code">' + c.code + '</span> — ' + c.title + '</span><span class="credits">' + (c.credits || 3) + ' cr</span></div>';
-                  });
-                });
-                html += '<div class="footer">Generated by PathForge • pathforge-omega.vercel.app</div></body></html>';
-                var w = window.open('', '_blank');
-                w.document.write(html);
-                w.document.close();
-                setTimeout(function() { w.print(); }, 500);
-              }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 8, color: btnTx, fontSize: 11, padding: '6px 10px', cursor: 'pointer', fontWeight: 600 }} title="Export full roadmap as PDF">📄 Export</button>
-              <button onClick={function() {
-                var text = currentProfile.name + "'s " + currentProfile.careerLabel + ' Roadmap\n';
-                text += (courseData.major || '') + ' @ ' + (courseData.schoolFullName || currentProfile.school) + '\n\n';
-                semesters.forEach(function(sem) {
-                  text += '--- ' + sem.name + ' ---\n';
-                  if (sem.courses) sem.courses.forEach(function(c) { text += c.code + ' - ' + c.title + ' (' + (c.credits || 3) + ' cr)\n'; });
-                  text += '\n';
-                });
-                navigator.clipboard.writeText(text).then(function() { setSaveStatus('Copied!'); setTimeout(function() { setSaveStatus(''); }, 2000); });
-              }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 8, color: btnTx, fontSize: 11, padding: '6px 10px', cursor: 'pointer', fontWeight: 600 }} title="Copy roadmap to clipboard">📋 Share</button>
-              <button onClick={function() { setDarkMode(!darkMode); }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 8, color: tx, fontSize: 18, width: 36, height: 36, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s' }} title={darkMode ? 'Light Mode' : 'Dark Mode'}>
+              <button onClick={function() { setDarkMode(!darkMode); }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 8, color: tx, fontSize: 16, width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={darkMode ? 'Light Mode' : 'Dark Mode'}>
                 {darkMode ? '☀️' : '🌙'}
               </button>
               {user ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {user.photoURL && <img src={user.photoURL} alt="" style={{ width: 24, height: 24, borderRadius: '50%' }} referrerPolicy="no-referrer" />}
-                  <button onClick={function() { onReset(); }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 8, color: btnTx, fontSize: 12, padding: '6px 12px', cursor: 'pointer' }}>↻ New</button>
+                  {user.photoURL && <img src={user.photoURL} alt="" style={{ width: 26, height: 26, borderRadius: '50%' }} referrerPolicy="no-referrer" />}
+                  <button onClick={function() { onReset(); }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '5px 10px', cursor: 'pointer', fontWeight: 600 }}>↻ New</button>
                 </div>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <button onClick={login} style={{ background: btnBg, border: '1px solid ' + bdr, borderRadius: 8, color: darkMode ? '#C9A84C' : '#92700e', fontSize: 11, padding: '6px 10px', cursor: 'pointer', fontWeight: 600 }}>Sign in to save</button>
-                  <button onClick={onReset} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 8, color: btnTx, fontSize: 12, padding: '6px 12px', cursor: 'pointer' }}>↻ New</button>
+                  <button onClick={login} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: darkMode ? '#C9A84C' : '#92700e', fontSize: 11, padding: '5px 10px', cursor: 'pointer', fontWeight: 600 }}>Sign in</button>
+                  <button onClick={onReset} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '5px 10px', cursor: 'pointer', fontWeight: 600 }}>↻ New</button>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Title + subtitle */}
+          <h1 style={{ fontFamily: "'Playfair Display', serif", color: tx, fontSize: 'clamp(20px, 4vw, 28px)', margin: '0 0 2px' }}>{currentProfile.name}'s Roadmap</h1>
+          <p style={{ color: txSub, fontSize: 13, margin: '0 0 10px' }}>{careerObj.icon} {currentProfile.careerLabel} • {courseData.major || currentProfile.major} @ {courseData.schoolFullName || currentProfile.school}</p>
+
+          {/* All action buttons in one clean row */}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+            <button onClick={changeSchool} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '5px 10px', cursor: 'pointer', fontWeight: 600 }}>Change School</button>
+            <button onClick={async function() {
+              var url = await showModal('Link Course Catalog', "Paste a link to your school's course catalog", 'input');
+              if (url && url.trim()) {
+                setCatalogUrl(url.trim());
+                setSwitchingMajor("Scanning course catalog...");
+                fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: url.trim(), clubsUrl: clubsUrl || '' }) }).then(function(res) { return res.json(); }).then(function(data) { if (data.semesters) { var np = { ...currentProfile, courseData: data }; setCurrentProfile(np); setMajors([np]); setActiveMajorIndex(0); setCompletedCourses({}); setActiveSemester(0); setActiveTab('courses'); if (user) saveRoadmap(np, {}); } setSwitchingMajor(""); }).catch(function() { setSwitchingMajor(''); });
+              }
+            }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '5px 10px', cursor: 'pointer', fontWeight: 600 }}>{catalogUrl ? '✓ Catalog' : '🔗 Catalog'}</button>
+            <button onClick={async function() {
+              var url = await showModal('Link Clubs Directory', "Paste a link to your school's student clubs directory", 'input');
+              if (url && url.trim()) {
+                setClubsUrl(url.trim());
+                setSwitchingMajor("Scanning clubs directory...");
+                fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '', clubsUrl: url.trim() }) }).then(function(res) { return res.json(); }).then(function(data) { if (data.semesters) { var np = { ...currentProfile, courseData: { ...currentProfile.courseData, clubs: data.clubs || currentProfile.courseData.clubs } }; setCurrentProfile(np); if (majors.length > 0) { setMajors(function(prev) { var n = prev.slice(); n[activeMajorIndex] = np; return n; }); } if (user) saveRoadmap(np, completedCourses); } setSwitchingMajor(""); }).catch(function() { setSwitchingMajor(''); });
+              }
+            }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '5px 10px', cursor: 'pointer', fontWeight: 600 }}>{clubsUrl ? '✓ Clubs' : '🏛️ Clubs'}</button>
+            <button onClick={function() {
+              var html = '<html><head><title>' + currentProfile.name + ' Roadmap</title><style>body{font-family:system-ui,sans-serif;max-width:700px;margin:40px auto;padding:0 20px;color:#111}h1{font-size:22px;margin-bottom:4px}h2{font-size:13px;color:#666;margin-bottom:20px}h3{font-size:15px;margin:18px 0 6px;padding-top:10px;border-top:1px solid #ddd}.c{display:flex;justify-content:space-between;padding:3px 0;font-size:12px}.b{font-weight:600}.cr{color:#888}.f{margin-top:24px;padding-top:12px;border-top:1px solid #ddd;color:#888;font-size:10px}</style></head><body>';
+              html += '<h1>' + currentProfile.name + "'s " + currentProfile.careerLabel + ' Roadmap</h1><h2>' + (courseData.major || '') + ' @ ' + (courseData.schoolFullName || currentProfile.school) + '</h2>';
+              semesters.forEach(function(sem) { html += '<h3>' + sem.name + '</h3>'; if (sem.courses) sem.courses.forEach(function(c) { html += '<div class="c"><span><span class="b">' + c.code + '</span> — ' + c.title + '</span><span class="cr">' + (c.credits||3) + ' cr</span></div>'; }); });
+              html += '<div class="f">Generated by PathForge</div></body></html>';
+              var w = window.open('','_blank'); w.document.write(html); w.document.close(); setTimeout(function(){ w.print(); }, 500);
+            }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '5px 10px', cursor: 'pointer', fontWeight: 600 }}>📄 Export</button>
+            <button onClick={function() {
+              var t = currentProfile.name + "'s " + currentProfile.careerLabel + ' Roadmap\n' + (courseData.major||'') + ' @ ' + (courseData.schoolFullName||currentProfile.school) + '\n\n';
+              semesters.forEach(function(s){ t += '--- '+s.name+' ---\n'; if(s.courses) s.courses.forEach(function(c){ t += c.code+' - '+c.title+' ('+( c.credits||3)+' cr)\n'; }); t+='\n'; });
+              navigator.clipboard.writeText(t).then(function(){ setSaveStatus('Copied!'); setTimeout(function(){ setSaveStatus(''); },2000); });
+            }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '5px 10px', cursor: 'pointer', fontWeight: 600 }}>📋 Share</button>
+          </div>
+
             </div>
           </div>
 
