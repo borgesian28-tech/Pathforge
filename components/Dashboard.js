@@ -29,8 +29,12 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
   const [modal, setModal] = useState(null);
   const [modalInput, setModalInput] = useState('');
   const [showWelcome, setShowWelcome] = useState(!!savedProgress && Object.keys(savedProgress).length > 0);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const semRef = useRef(null);
   const saveTimer = useRef(null);
+  const settingsRef = useRef(null);
 
   // Helper: show modal, returns promise resolving to input value or null
   var showModal = function(title, placeholder, type) {
@@ -309,206 +313,94 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
     }
   }, [activeSemester]);
 
-  var tabs = [
-    { id: 'courses', label: 'Courses', icon: '📚' },
-    { id: 'beyond', label: 'Beyond Class', icon: '⚡' },
-    { id: 'interview', label: 'Interview', icon: '🎯' },
-    { id: 'outcomes', label: 'Outcomes', icon: '💰' },
-    { id: 'timeline', label: 'Timeline', icon: '📍' },
-    { id: 'clubs', label: 'Clubs', icon: '🏛️' },
-    { id: 'overview', label: 'Overview', icon: '📊' },
-  ];
-
   return (
-    <div style={{ minHeight: '100vh', background: bg, transition: 'background 0.3s' }}>
+    <div style={{ minHeight: '100vh', background: bg, display: 'flex', transition: 'background 0.3s' }}>
       {switchingMajor && (
-        <div style={{ position: 'fixed', inset: 0, background: overlayBg, zIndex: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ width: 48, height: 48, borderRadius: '50%', border: '3px solid transparent', borderTopColor: accentColor, animation: 'spin 1s linear infinite', marginBottom: 16 }} />
-          <p style={{ color: tx, fontSize: 16, fontWeight: 600 }}>{switchingMajor}</p>
-          <p style={{ color: txMut, fontSize: 13, marginTop: 4 }}>This may take a moment</p>
+        <div style={{ position: 'fixed', inset: 0, background: overlayBg, zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
+          <div style={{ width: 40, height: 40, borderRadius: '50%', border: '2px solid transparent', borderTopColor: accentColor, animation: 'spin 1s linear infinite', marginBottom: 16 }} />
+          <p style={{ color: tx, fontSize: 15, fontWeight: 600 }}>{switchingMajor}</p>
         </div>
       )}
 
-      {/* HEADER */}
-      <div style={{ background: headerBg, padding: '20px 20px 16px', borderBottom: '1px solid ' + bdr, transition: 'all 0.3s' }}>
-        <div style={{ maxWidth: 800, margin: '0 auto' }}>
-          {/* Top bar: brand + user controls */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {logoUrl ? <img src={logoUrl} alt="" style={{ width: 22, height: 22, borderRadius: 4, background: '#fff' }} onError={function(e) { e.target.style.display = 'none'; }} /> : <span style={{ fontSize: 20 }}>🎓</span>}
-              <span style={{ color: accentColor, fontWeight: 700, fontSize: 13, letterSpacing: 1 }}>PATHFORGE</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              {saveStatus && <span style={{ color: '#4ade80', fontSize: 11, fontWeight: 600 }}>✓ {saveStatus}</span>}
-              <button onClick={function() { setDarkMode(!darkMode); }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 8, color: tx, fontSize: 16, width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={darkMode ? 'Light Mode' : 'Dark Mode'}>
-                {darkMode ? '☀️' : '🌙'}
-              </button>
-              {user ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {user.photoURL && <img src={user.photoURL} alt="" style={{ width: 26, height: 26, borderRadius: '50%' }} referrerPolicy="no-referrer" />}
-                  <button onClick={function() { onReset(); }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '5px 10px', cursor: 'pointer', fontWeight: 600 }}>↻ New</button>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <button onClick={login} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: darkMode ? '#C9A84C' : '#92700e', fontSize: 11, padding: '5px 10px', cursor: 'pointer', fontWeight: 600 }}>Sign in</button>
-                  <button onClick={onReset} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '5px 10px', cursor: 'pointer', fontWeight: 600 }}>↻ New</button>
-                </div>
-              )}
-            </div>
+      {mobileMenuOpen && <div onClick={function() { setMobileMenuOpen(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 89, backdropFilter: 'blur(4px)' }} />}
+      <aside style={{ position: isMobile ? 'fixed' : 'sticky', top: 0, left: isMobile ? (mobileMenuOpen ? 0 : -260) : 0, width: isMobile ? 240 : sidebarW, height: '100vh', background: sidebarBg, borderRight: '1px solid ' + sidebarBdr, display: 'flex', flexDirection: 'column', transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', zIndex: 90, flexShrink: 0, overflow: 'hidden' }}>
+        <div style={{ padding: sidebarOpen || isMobile ? '16px 16px 12px' : '16px 12px 12px', borderBottom: '1px solid ' + sidebarBdr, display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          {(sidebarOpen || isMobile) ? (<>{logoUrl ? <img src={logoUrl} alt="" style={{ width: 28, height: 28, borderRadius: 8, background: '#fff' }} onError={function(e){e.target.style.display='none';}} /> : <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, ' + accentColor + ', ' + primaryColor + ')', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>🎓</div>}<span style={{ color: tx, fontWeight: 700, fontSize: 15 }}>PathForge</span></>) : (<div style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, ' + accentColor + ', ' + primaryColor + ')', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>🎓</div>)}
+        </div>
+        {(sidebarOpen || isMobile) && (
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid ' + sidebarBdr, flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}><span style={{ fontSize: 16 }}>{careerObj.icon}</span><span style={{ color: txSub, fontSize: 12, fontWeight: 500 }}>{currentProfile.name}'s Roadmap</span></div>
+            <div style={{ color: txMut, fontSize: 11 }}>{courseData.major || currentProfile.major} @ {currentProfile.school}</div>
+            <div style={{ marginTop: 8, background: progBg, borderRadius: 3, height: 4, overflow: 'hidden' }}><div style={{ height: '100%', width: progress + '%', background: accentColor, borderRadius: 3, transition: 'width 0.5s' }} /></div>
+            <div style={{ color: txMut, fontSize: 10, marginTop: 4 }}>{progress}% complete</div>
           </div>
+        )}
+        <nav className="hide-scrollbar" style={{ flex: 1, overflow: 'auto', padding: '8px' }}>
+          {tabs.map(function(tab) {
+            var isActive = activeTab === tab.id;
+            return (<button key={tab.id} onClick={function() { setActiveTab(tab.id); if (isMobile) setMobileMenuOpen(false); }} title={!sidebarOpen && !isMobile ? tab.label : undefined} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: sidebarOpen || isMobile ? '9px 12px' : '10px 0', justifyContent: sidebarOpen || isMobile ? 'flex-start' : 'center', borderRadius: 8, border: 'none', background: isActive ? accentColor + '15' : 'transparent', color: isActive ? accentColor : txMut, fontSize: 13, fontWeight: isActive ? 600 : 400, cursor: 'pointer', transition: 'all 0.15s', marginBottom: 2, position: 'relative' }}><span style={{ fontSize: 16, width: 22, textAlign: 'center', flexShrink: 0 }}>{tab.icon}</span>{(sidebarOpen || isMobile) && <span>{tab.label}</span>}{isActive && <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', width: 3, height: 20, borderRadius: 2, background: accentColor }} />}</button>);
+          })}
+        </nav>
+        <div style={{ padding: '8px', borderTop: '1px solid ' + sidebarBdr, flexShrink: 0 }}>
+          {!isMobile && (<button onClick={function() { setSidebarOpen(!sidebarOpen); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', justifyContent: sidebarOpen ? 'flex-start' : 'center', borderRadius: 8, border: 'none', background: 'transparent', color: txMut, fontSize: 13, cursor: 'pointer' }}><span style={{ fontSize: 14 }}>{sidebarOpen ? '◀' : '▶'}</span>{sidebarOpen && <span>Collapse</span>}</button>)}
+        </div>
+      </aside>
 
-          {/* Title + subtitle */}
-          <h1 style={{ fontFamily: "'Playfair Display', serif", color: tx, fontSize: 'clamp(20px, 4vw, 28px)', margin: '0 0 2px' }}>{currentProfile.name}'s Roadmap</h1>
-          <p style={{ color: txSub, fontSize: 13, margin: '0 0 10px' }}>{careerObj.icon} {currentProfile.careerLabel} • {courseData.major || currentProfile.major} @ {courseData.schoolFullName || currentProfile.school}</p>
-
-          {/* All action buttons in one clean row */}
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-            <button onClick={changeSchool} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '5px 10px', cursor: 'pointer', fontWeight: 600 }}>Change School</button>
-            <button onClick={async function() {
-              var url = await showModal('Link Course Catalog', "Paste a link to your school's course catalog", 'input');
-              if (url && url.trim()) {
-                setCatalogUrl(url.trim());
-                setSwitchingMajor("Scanning course catalog...");
-                fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: url.trim(), clubsUrl: clubsUrl || '' }) }).then(function(res) { return res.json(); }).then(function(data) { if (data.semesters) { var np = { ...currentProfile, courseData: data }; setCurrentProfile(np); setMajors([np]); setActiveMajorIndex(0); setCompletedCourses({}); setActiveSemester(0); setActiveTab('courses'); if (user) saveRoadmap(np, {}); } setSwitchingMajor(""); }).catch(function() { setSwitchingMajor(''); });
-              }
-            }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '5px 10px', cursor: 'pointer', fontWeight: 600 }}>{catalogUrl ? '✓ Catalog' : '🔗 Catalog'}</button>
-            <button onClick={async function() {
-              var url = await showModal('Link Clubs Directory', "Paste a link to your school's student clubs directory", 'input');
-              if (url && url.trim()) {
-                setClubsUrl(url.trim());
-                setSwitchingMajor("Scanning clubs directory...");
-                fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: catalogUrl || '', clubsUrl: url.trim() }) }).then(function(res) { return res.json(); }).then(function(data) { if (data.semesters) { var np = { ...currentProfile, courseData: { ...currentProfile.courseData, clubs: data.clubs || currentProfile.courseData.clubs } }; setCurrentProfile(np); if (majors.length > 0) { setMajors(function(prev) { var n = prev.slice(); n[activeMajorIndex] = np; return n; }); } if (user) saveRoadmap(np, completedCourses); } setSwitchingMajor(""); }).catch(function() { setSwitchingMajor(''); });
-              }
-            }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '5px 10px', cursor: 'pointer', fontWeight: 600 }}>{clubsUrl ? '✓ Clubs' : '🏛️ Clubs'}</button>
-            <button onClick={function() {
-              var html = '<html><head><title>' + currentProfile.name + ' Roadmap</title><style>body{font-family:system-ui,sans-serif;max-width:700px;margin:40px auto;padding:0 20px;color:#111}h1{font-size:22px;margin-bottom:4px}h2{font-size:13px;color:#666;margin-bottom:20px}h3{font-size:15px;margin:18px 0 6px;padding-top:10px;border-top:1px solid #ddd}.c{display:flex;justify-content:space-between;padding:3px 0;font-size:12px}.b{font-weight:600}.cr{color:#888}.f{margin-top:24px;padding-top:12px;border-top:1px solid #ddd;color:#888;font-size:10px}</style></head><body>';
-              html += '<h1>' + currentProfile.name + "'s " + currentProfile.careerLabel + ' Roadmap</h1><h2>' + (courseData.major || '') + ' @ ' + (courseData.schoolFullName || currentProfile.school) + '</h2>';
-              semesters.forEach(function(sem) { html += '<h3>' + sem.name + '</h3>'; if (sem.courses) sem.courses.forEach(function(c) { html += '<div class="c"><span><span class="b">' + c.code + '</span> — ' + c.title + '</span><span class="cr">' + (c.credits||3) + ' cr</span></div>'; }); });
-              html += '<div class="f">Generated by PathForge</div></body></html>';
-              var w = window.open('','_blank'); w.document.write(html); w.document.close(); setTimeout(function(){ w.print(); }, 500);
-            }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '5px 10px', cursor: 'pointer', fontWeight: 600 }}>📄 Export</button>
-            <button onClick={function() {
-              var t = currentProfile.name + "'s " + currentProfile.careerLabel + ' Roadmap\n' + (courseData.major||'') + ' @ ' + (courseData.schoolFullName||currentProfile.school) + '\n\n';
-              semesters.forEach(function(s){ t += '--- '+s.name+' ---\n'; if(s.courses) s.courses.forEach(function(c){ t += c.code+' - '+c.title+' ('+( c.credits||3)+' cr)\n'; }); t+='\n'; });
-              navigator.clipboard.writeText(t).then(function(){ setSaveStatus('Copied!'); setTimeout(function(){ setSaveStatus(''); },2000); });
-            }} style={{ background: btnBg, border: '1px solid ' + btnBdr, borderRadius: 6, color: btnTx, fontSize: 11, padding: '5px 10px', cursor: 'pointer', fontWeight: 600 }}>📋 Share</button>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <header style={{ position: 'sticky', top: 0, zIndex: 50, height: 56, background: sidebarBg, borderBottom: '1px solid ' + bdr, display: 'flex', alignItems: 'center', padding: '0 20px', gap: 12, backdropFilter: 'blur(12px)' }}>
+          {isMobile && (<button onClick={function() { setMobileMenuOpen(!mobileMenuOpen); }} style={{ background: 'none', border: 'none', color: tx, fontSize: 20, cursor: 'pointer', padding: '4px', marginRight: 4 }}>☰</button>)}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+            <h1 style={{ fontSize: 15, fontWeight: 600, color: tx, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentProfile.name}'s Roadmap</h1>
+            <span style={{ color: accentColor, fontSize: 12, fontWeight: 500, flexShrink: 0 }}>• {currentProfile.careerLabel}</span>
+            {saveStatus && <span style={{ color: '#4ade80', fontSize: 11, fontWeight: 600, flexShrink: 0 }}>✓ {saveStatus}</span>}
           </div>
-
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: darkMode ? '#0A5C3622' : '#0A5C3612', border: '1px solid ' + (darkMode ? '#0A5C3644' : '#0A5C3633'), borderRadius: 20, padding: '4px 12px', marginTop: 10 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#16a34a', animation: 'pulse 2s infinite' }} />
-            <span style={{ color: darkMode ? '#4ade80' : '#15803d', fontSize: 11, fontWeight: 600 }}>LIVE DATA</span>
-            <span style={{ color: txMut, fontSize: 11 }}>from {currentProfile.school}</span>
-          </div>
-
-          {/* Major tabs */}
-          <div style={{ marginTop: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <div style={{ color: txMut, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Your Majors</div>
-              {majors.length === 2 && (
-                <button onClick={function() { setCombinedView(!combinedView); }} style={{ background: combinedView ? accentColor + '22' : 'transparent', border: '1px solid ' + accentColor + '44', borderRadius: 6, color: accentColor, fontSize: 11, fontWeight: 600, padding: '4px 10px', cursor: 'pointer' }}>
-                  {combinedView ? '✓ Combined View' : 'Combine Majors'}
-                </button>
-              )}
-            </div>
-            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-              {majors.length > 1 && majors.map(function(maj, idx) {
-                var isActive = idx === activeMajorIndex;
-                return (
-                  <div key={idx} style={{ position: 'relative', display: 'inline-flex' }} onMouseEnter={function() { setHoveredMajor(idx); }} onMouseLeave={function() { setHoveredMajor(-1); }}>
-                    <button onClick={function() { switchToMajor(idx); }}
-                      style={{ background: isActive ? accentColor : bgSec, border: '1px solid ' + (isActive ? accentColor : bdrL), color: isActive ? '#000' : txSub, padding: '8px 24px 8px 14px', borderRadius: 8, fontSize: 13, fontWeight: isActive ? 700 : 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s' }}>
-                      {maj.courseData.major || maj.major}
-                    </button>
-                    {hoveredMajor === idx && (
-                      <button onClick={function(e) { e.stopPropagation(); removeMajor(idx); }}
-                        style={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', width: 18, height: 18, borderRadius: '50%', border: 'none', background: isActive ? '#00000044' : '#ff444488', color: isActive ? '#000' : '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0 }}>×</button>
-                    )}
-                  </div>
-                );
-              })}
-              {majors.length < 2 && (
-                <button onClick={async function() { var n = await showModal('Add Major', 'e.g. Economics, Psychology, Biology...', 'input'); if (n) addNewMajor(n); }} disabled={addingMajor}
-                  style={{ background: bgSec, border: '2px dashed ' + bdrL, color: darkMode ? accentColor : '#b91c1c', padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: addingMajor ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap', opacity: addingMajor ? 0.5 : 1 }}>
-                  {addingMajor ? 'Adding...' : '+ Add Major'}
-                </button>
-              )}
-            </div>
-          </div>
-
-          {recommendedMajors.length > 0 && (
-            <div style={{ marginTop: 10 }}>
-              <button onClick={function() { setShowMajors(!showMajors); }} style={{ background: glassBg, border: '1px solid ' + bdr, borderRadius: 10, padding: '8px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
-                <span style={{ fontSize: 14 }}>🎓</span>
-                <span style={{ color: txSub, fontSize: 12, fontWeight: 600, flex: 1, textAlign: 'left' }}>Recommended Majors at {currentProfile.school}</span>
-                <span style={{ color: txMut, fontSize: 14, transform: showMajors ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▾</span>
-              </button>
-              {showMajors && (
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-                  {recommendedMajors.map(function(m, i) {
-                    var isCurrent = m === (courseData.major || currentProfile.major);
-                    return (
-                      <button key={i} onClick={function() { if (!isCurrent && !switchingMajor) handleMajorSwitch(m); }} style={{ padding: '6px 14px', borderRadius: 20, background: isCurrent ? accentColor : bgSec, color: isCurrent ? '#000' : txSub, fontSize: 12, fontWeight: 600, border: isCurrent ? 'none' : '1px solid ' + bdrL, cursor: isCurrent ? 'default' : 'pointer', opacity: switchingMajor ? 0.5 : 1 }}>
-                        {isCurrent ? '✓ ' : ''}{m}
-                      </button>
-                    );
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            <div ref={settingsRef} style={{ position: 'relative' }}>
+              <button onClick={function() { setSettingsOpen(!settingsOpen); }} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid ' + bdr, background: bgCard, color: txSub, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>⋮</button>
+              {settingsOpen && (
+                <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 6, width: 220, background: bgCard, border: '1px solid ' + bdr, borderRadius: 12, boxShadow: '0 8px 30px rgba(0,0,0,0.3)', overflow: 'hidden', zIndex: 100 }}>
+                  {[
+                    { label: '📄 Export as PDF', action: function() { setSettingsOpen(false); handleExport(); } },
+                    { label: '📋 Copy to Clipboard', action: function() { setSettingsOpen(false); handleShare(); } },
+                    { label: '🏫 Change School', action: function() { setSettingsOpen(false); changeSchool(); } },
+                    { label: '🔗 Link Catalog', action: async function() { setSettingsOpen(false); var url = await showModal('Link Course Catalog', "Paste your school's course catalog URL", 'input'); if (url && url.trim()) { setCatalogUrl(url.trim()); setSwitchingMajor("Scanning course catalog..."); fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: url.trim(), clubsUrl: clubsUrl || '' }) }).then(function(r){return r.json();}).then(function(d){ if(d.semesters){var np={...currentProfile,courseData:d};setCurrentProfile(np);setMajors([np]);setActiveMajorIndex(0);setCompletedCourses({});setActiveSemester(0);setActiveTab('courses');if(user)saveRoadmap(np,{});}setSwitchingMajor("");}).catch(function(){setSwitchingMajor('');}); } } },
+                    { label: '↻ New Roadmap', action: function() { setSettingsOpen(false); onReset(); } },
+                  ].map(function(item, i) {
+                    return (<button key={i} onClick={item.action} style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', borderBottom: i < 4 ? '1px solid ' + bdr : 'none', color: txSub, fontSize: 13, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8 }}>{item.label}</button>);
                   })}
                 </div>
               )}
             </div>
-          )}
-
-          <div style={{ marginTop: 14, background: glassBg, borderRadius: 12, padding: '12px 16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ color: txSub, fontSize: 12 }}>{completedCount}/{totalCourses} courses • {completedCredits}/{totalCredits} credits</span>
-              <span style={{ color: btnTx, fontSize: 13, fontWeight: 700 }}>{progress}%</span>
-            </div>
-            <div style={{ height: 6, background: progBg, borderRadius: 3, overflow: 'hidden' }}><div style={{ height: '100%', width: progress + '%', background: 'linear-gradient(90deg, ' + accentColor + ', ' + primaryColor + ')', borderRadius: 3, transition: 'width 0.5s ease' }} /></div>
+            {user && user.photoURL && <img src={user.photoURL} alt="" style={{ width: 28, height: 28, borderRadius: '50%' }} referrerPolicy="no-referrer" />}
+            <button onClick={function() { setDarkMode(!darkMode); }} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid ' + bdr, background: bgCard, color: tx, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{darkMode ? '☀️' : '🌙'}</button>
           </div>
+        </header>
 
-          {dailyAction && (
-            <div style={{ marginTop: 12, background: 'linear-gradient(135deg, ' + accentColor + '18, ' + primaryColor + '18)', border: '1px solid ' + accentColor + '33', borderRadius: 12, padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'center' }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: accentColor + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>⚡</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ color: btnTx, fontSize: 10, fontWeight: 700, letterSpacing: 1.5, marginBottom: 2 }}>TODAY'S ACTION</div>
-                <div style={{ color: tx, fontSize: 13, fontWeight: 500, lineHeight: 1.4 }}>{dailyAction}</div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+        <main className="hide-scrollbar" style={{ flex: 1, overflow: 'auto', padding: isMobile ? '20px 16px 40px' : '24px 32px 40px' }}>
+          <div style={{ maxWidth: 820, margin: '0 auto' }}>
 
-      {/* WELCOME BACK BANNER */}
-      {showWelcome && (
-        <div className="welcome-banner" style={{ maxWidth: 800, margin: '0 auto', padding: '0 16px' }}>
-          <div style={{ background: 'linear-gradient(135deg, ' + accentColor + '18, ' + primaryColor + '18)', border: '1px solid ' + accentColor + '33', borderRadius: 12, padding: '14px 18px', marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontSize: 24 }}>👋</span>
-              <div>
-                <div style={{ color: tx, fontSize: 15, fontWeight: 700 }}>Welcome back, {currentProfile.name}!</div>
-                <div style={{ color: txSub, fontSize: 13, marginTop: 2 }}>You're {progress}% through your roadmap — {completedCount} of {totalCourses} courses done{totalCourses - completedCount > 0 ? '. ' + (totalCourses - completedCount) + ' to go!' : '. Congrats!'}</div>
-              </div>
+        {showWelcome && (
+          <div className="welcome-banner" style={{ marginBottom: 16 }}>
+            <div style={{ background: accentColor + '12', border: '1px solid ' + accentColor + '33', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><span style={{ fontSize: 24 }}>👋</span><div><div style={{ color: tx, fontSize: 15, fontWeight: 700 }}>Welcome back, {currentProfile.name}!</div><div style={{ color: txSub, fontSize: 13, marginTop: 2 }}>You're {progress}% through — {completedCount}/{totalCourses} courses done.</div></div></div>
+              <button onClick={function() { setShowWelcome(false); }} style={{ background: 'none', border: 'none', color: txMut, fontSize: 16, cursor: 'pointer', padding: '4px 8px', flexShrink: 0 }}>✕</button>
             </div>
-            <button onClick={function() { setShowWelcome(false); }} style={{ background: 'none', border: 'none', color: txMut, fontSize: 16, cursor: 'pointer', padding: '4px 8px', flexShrink: 0 }}>✕</button>
+          </div>
+        )}
+
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <div style={{ color: txMut, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Your Majors</div>
+            {majors.length === 2 && (<button onClick={function() { setCombinedView(!combinedView); }} style={{ background: combinedView ? accentColor + '22' : 'transparent', border: '1px solid ' + accentColor + '44', borderRadius: 6, color: accentColor, fontSize: 11, fontWeight: 600, padding: '4px 10px', cursor: 'pointer' }}>{combinedView ? '✓ Combined' : 'Combine'}</button>)}
+          </div>
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+            {majors.length > 1 && majors.map(function(maj, idx) { var isActive = idx === activeMajorIndex; return (<div key={idx} style={{ position: 'relative', display: 'inline-flex' }} onMouseEnter={function() { setHoveredMajor(idx); }} onMouseLeave={function() { setHoveredMajor(-1); }}><button onClick={function() { switchToMajor(idx); }} style={{ background: isActive ? accentColor : bgSec, border: '1px solid ' + (isActive ? accentColor : bdrL), color: isActive ? '#000' : txSub, padding: '8px 24px 8px 14px', borderRadius: 8, fontSize: 13, fontWeight: isActive ? 700 : 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{maj.courseData.major || maj.major}</button>{hoveredMajor === idx && (<button onClick={function(e) { e.stopPropagation(); removeMajor(idx); }} style={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', width: 18, height: 18, borderRadius: '50%', border: 'none', background: '#ff444488', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>)}</div>); })}
+            {majors.length < 2 && (<button onClick={async function() { var n = await showModal('Add Major', 'e.g. Economics, Psychology...', 'input'); if (n) addNewMajor(n); }} disabled={addingMajor} style={{ background: bgSec, border: '2px dashed ' + bdrL, color: accentColor, padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: addingMajor ? 'not-allowed' : 'pointer', opacity: addingMajor ? 0.5 : 1 }}>{addingMajor ? 'Adding...' : '+ Add Major'}</button>)}
           </div>
         </div>
-      )}
 
-      {/* TAB NAV */}
-      <div style={{ background: tabBg, borderBottom: '1px solid ' + bdr, position: 'sticky', top: 0, zIndex: 10, transition: 'all 0.3s' }}>
-        <div className="hide-scrollbar" style={{ maxWidth: 800, margin: '0 auto', display: 'flex', overflow: 'auto' }}>
-          {tabs.map(function(tab) {
-            return (
-              <button key={tab.id} onClick={function() { setActiveTab(tab.id); }}
-                style={{ flex: '0 0 auto', padding: '12px 14px', background: 'none', border: 'none', borderBottom: activeTab === tab.id ? '2px solid ' + (tab.id === 'beyond' ? '#ff6400' : accentColor) : '2px solid transparent', color: activeTab === tab.id ? (tab.id === 'beyond' ? '#ff6400' : tx) : txMut, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                {tab.icon} {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+        {recommendedMajors.length > 0 && (<div style={{ marginBottom: 16 }}><button onClick={function() { setShowMajors(!showMajors); }} style={{ background: glassBg, border: '1px solid ' + bdr, borderRadius: 10, padding: '8px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}><span style={{ fontSize: 14 }}>🎓</span><span style={{ color: txSub, fontSize: 12, fontWeight: 600, flex: 1, textAlign: 'left' }}>Recommended Majors at {currentProfile.school}</span><span style={{ color: txMut, fontSize: 14, transform: showMajors ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▾</span></button>{showMajors && (<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>{recommendedMajors.map(function(m, i) { var isCurrent = m === (courseData.major || currentProfile.major); return (<button key={i} onClick={function() { if (!isCurrent && !switchingMajor) handleMajorSwitch(m); }} style={{ padding: '6px 14px', borderRadius: 20, background: isCurrent ? accentColor : bgSec, color: isCurrent ? '#000' : txSub, fontSize: 12, fontWeight: 600, border: isCurrent ? 'none' : '1px solid ' + bdrL, cursor: isCurrent ? 'default' : 'pointer', opacity: switchingMajor ? 0.5 : 1 }}>{isCurrent ? '✓ ' : ''}{m}</button>); })}</div>)}</div>)}
 
-      {/* CONTENT */}
-      <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 16px 40px' }}>
         {activeTab === 'courses' && (
           <div style={{ marginTop: 20 }}>
             {!user && (
@@ -631,25 +523,6 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
           </div>
         )}
 
-        {activeTab === 'clubs' && (
-          <div style={{ marginTop: 20, display: 'grid', gap: 12 }}>
-            <div style={{ background: bgSec, border: '1px solid ' + bdrL, borderRadius: 10, padding: '10px 14px', display: 'flex', gap: 8, alignItems: 'flex-start' }}><span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>ℹ️</span><p style={{ color: txDim, fontSize: 12, margin: 0, lineHeight: 1.5 }}>Club suggestions are AI-generated. <a href={'https://www.google.com/search?q=' + encodeURIComponent(currentProfile.school + ' student clubs organizations directory')} target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none', fontWeight: 600 }}>Find clubs at {currentProfile.school} ↗</a></p></div>
-            {clubs.map(function(club, i) {
-              var pc = { Essential: '#ef4444', Recommended: '#C9A84C', Helpful: '#3b82f6' };
-              return (
-                <div key={i} style={{ background: bgCard, border: '1px solid ' + bdr, borderRadius: 14, padding: '16px 18px' }}>
-                  <div style={{ color: tx, fontWeight: 700, fontSize: 15 }}>{club.name}</div>
-                  <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
-                    <span style={{ background: bgSec, color: txSub, padding: '2px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600 }}>{club.type}</span>
-                    <span style={{ background: (pc[club.priority] || '#888') + '22', color: pc[club.priority] || '#888', padding: '2px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600 }}>{club.priority}</span>
-                  </div>
-                  <p style={{ color: txDim, fontSize: 13, marginTop: 10, lineHeight: 1.5 }}>{club.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
         {activeTab === 'overview' && (
           <div style={{ marginTop: 20 }}>
             <div style={{ background: 'linear-gradient(135deg, ' + primaryColor + '44, ' + bgCard + ')', border: '1px solid ' + bdr, borderRadius: 16, padding: 20, marginBottom: 16 }}>
@@ -668,6 +541,8 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
             {skills.length > 0 && (<div style={{ background: bgCard, border: '1px solid ' + bdr, borderRadius: 14, padding: '16px 18px' }}><h4 style={{ color: tx, fontSize: 14, fontWeight: 700, margin: '0 0 12px' }}>Key Skills</h4><div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>{skills.map(function(s, i) { return <span key={i} style={{ background: accentColor + '22', color: accentColor, padding: '6px 14px', borderRadius: 20, fontSize: 13, fontWeight: 500 }}>{s}</span>; })}</div></div>)}
           </div>
         )}
+          </div>
+        </main>
       </div>
       <AiAdvisor profile={currentProfile} accent={accentColor} primaryColor={primaryColor} darkMode={darkMode} />
 
@@ -697,3 +572,4 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
     </div>
   );
 }
+
