@@ -224,7 +224,7 @@ export default function HighSchoolDashboard({ roadmap, onReset, isDemo, onUnlock
         width: isMobile ? 240 : sidebarW, height: '100dvh', background: sidebarBg, borderRight: '1px solid ' + sidebarBdr,
         display: 'flex', flexDirection: 'column', transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', zIndex: 90, flexShrink: 0, overflow: 'hidden',
       }}>
-        <div style={{ padding: sidebarOpen || isMobile ? '16px 16px 12px' : '16px 12px 12px', borderBottom: '1px solid ' + sidebarBdr, display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+        <div onClick={onReset} style={{ padding: sidebarOpen || isMobile ? '16px 16px 12px' : '16px 12px 12px', borderBottom: '1px solid ' + sidebarBdr, display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, cursor: 'pointer' }}>
           {(sidebarOpen || isMobile) ? (
             <>
               <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, ' + accent + ', ' + primaryColor + ')', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
