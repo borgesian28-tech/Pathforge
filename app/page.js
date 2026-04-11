@@ -59,7 +59,7 @@ export default function Home() {
     if (lastRequest.current) {
       setLoadingError(false);
       setLoading(true);
-      setLoadingStatus('Retrying — searching course catalog...');
+      setLoadingStatus('Retrying — building your roadmap...');
       lastRequest.current();
     }
   };
