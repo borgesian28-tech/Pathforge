@@ -97,7 +97,7 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
         ".lp-nav-cta { transition: transform 0.2s, box-shadow 0.2s !important; }",
         ".lp-nav-cta:hover { transform: translateY(-1px) !important; box-shadow: 0 6px 24px rgba(108,92,231,0.25) !important; }",
         "@media (max-width: 860px) { .lp-features-grid { grid-template-columns: 1fr !important; } .lp-steps-row { grid-template-columns: 1fr !important; } .lp-steps-line { display: none !important; } .lp-proof-grid { grid-template-columns: 1fr !important; } .lp-mock-row { flex-direction: column !important; } .lp-mock-sidebar { width: 100% !important; flex-direction: row !important; flex-wrap: wrap !important; } .lp-mock-grid { grid-template-columns: 1fr !important; } .lp-hero-h1 { font-size: 42px !important; } .lp-nav { padding: 14px 20px !important; } .lp-hero-buttons { flex-direction: column !important; align-items: stretch !important; } }"
-      ].join('\n')}</style>
+      ].join('\n') + '\n.lp-gradient-text { background: ' + (dark ? 'linear-gradient(135deg, #a29bfe, #e0c3fc)' : 'linear-gradient(135deg, #6c5ce7, #a78bfa)') + '; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; color: transparent; }'}</style>
 
       {/* NAV */}
       <nav className="lp-nav" style={{
@@ -147,11 +147,7 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
           animation: 'fadeUpHero 0.8s ease 0.1s both',
         }}>
           Your roadmap from{' '}
-          <em style={{
-            fontStyle: 'italic',
-            background: dark ? 'linear-gradient(135deg, #a29bfe, #e0c3fc)' : 'linear-gradient(135deg, ' + accent + ', #a78bfa)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          }}>first class</em>{' '}
+          <em className="lp-gradient-text" style={{ fontStyle: 'italic' }}>first class</em>{' '}
           to first offer.
         </h1>
 
