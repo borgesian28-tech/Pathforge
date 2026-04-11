@@ -99,30 +99,31 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
         ".lp-feature-card:hover { transform: translateY(-3px) !important; }",
         ".lp-nav-cta { transition: transform 0.2s, box-shadow 0.2s !important; }",
         ".lp-nav-cta:hover { transform: translateY(-1px) !important; box-shadow: 0 6px 24px rgba(108,92,231,0.25) !important; }",
-        "@media (max-width: 860px) { .lp-features-grid { grid-template-columns: 1fr !important; } .lp-steps-row { grid-template-columns: 1fr !important; } .lp-steps-line { display: none !important; } .lp-proof-grid { grid-template-columns: 1fr !important; } .lp-mock-row { flex-direction: column !important; } .lp-mock-sidebar { width: 100% !important; flex-direction: row !important; flex-wrap: wrap !important; } .lp-mock-grid { grid-template-columns: 1fr !important; } .lp-hero-h1 { font-size: 42px !important; } .lp-nav { padding: 14px 20px !important; } .lp-hero-buttons { flex-direction: column !important; align-items: stretch !important; } }"
+        "@media (max-width: 860px) { .lp-features-grid { grid-template-columns: 1fr !important; } .lp-steps-row { grid-template-columns: 1fr !important; } .lp-steps-line { display: none !important; } .lp-proof-grid { grid-template-columns: 1fr !important; } .lp-mock-row { flex-direction: column !important; } .lp-mock-sidebar { width: 100% !important; flex-direction: row !important; flex-wrap: wrap !important; } .lp-mock-grid { grid-template-columns: 1fr !important; } .lp-hero-h1 { font-size: 42px !important; } .lp-nav { padding: 10px 14px !important; } .lp-hero-buttons { flex-direction: column !important; align-items: stretch !important; } .lp-nav-links { gap: 6px !important; } }"
       ].join('\n') + '\n.lp-gradient-text { background: ' + (dark ? 'linear-gradient(135deg, #a29bfe, #e0c3fc)' : 'linear-gradient(135deg, #6c5ce7, #a78bfa)') + '; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; color: transparent; }'}</style>
 
       {/* NAV */}
       <nav className="lp-nav" style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        padding: '18px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         background: navBg, backdropFilter: 'blur(24px) saturate(1.4)',
         borderBottom: '1px solid ' + bdr, transition: 'background 0.3s',
       }}>
-        <div style={{ fontFamily: serif, fontSize: 24, letterSpacing: -0.5, color: tx }}>
+        <div style={{ fontFamily: serif, fontSize: 24, letterSpacing: -0.5, color: tx, flexShrink: 0 }}>
           Path<span style={{ color: accentLight }}>Forge</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <a href="/pricing" style={{ color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', textDecoration: 'none', padding: '8px 18px', borderRadius: 100, background: 'linear-gradient(135deg, #f59e0b, #d97706)', transition: 'all 0.2s' }}>Pricing</a>
+        <div className="lp-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'nowrap' }}>
+          <a href="/waitlist" style={{ color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'none', padding: '7px 14px', borderRadius: 100, background: 'linear-gradient(135deg, #10b981, #059669)', transition: 'all 0.2s', whiteSpace: 'nowrap' }}>Join Waitlist</a>
+          <a href="/pricing" style={{ color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'none', padding: '7px 14px', borderRadius: 100, background: 'linear-gradient(135deg, #f59e0b, #d97706)', transition: 'all 0.2s', whiteSpace: 'nowrap' }}>Pricing</a>
           <button onClick={function() { setDark(!dark); }} style={{
-            width: 36, height: 36, borderRadius: 10, border: '1px solid ' + bdr,
-            background: bgCard, color: tx, fontSize: 16, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s',
+            width: 34, height: 34, borderRadius: 10, border: '1px solid ' + bdr,
+            background: bgCard, color: tx, fontSize: 15, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s', flexShrink: 0,
           }}>{dark ? '☀️' : '🌙'}</button>
           <button className="lp-nav-cta" onClick={function() { setShowDevCode(false); onDemo(); }} style={{
-            padding: '10px 26px', borderRadius: 100, border: 'none',
+            padding: '7px 18px', borderRadius: 100, border: 'none',
             background: accent, color: '#fff', fontFamily: sans,
-            fontSize: 14, fontWeight: 600, cursor: 'pointer',
+            fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
           }}>Try Demo</button>
         </div>
       </nav>
@@ -377,6 +378,7 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
         <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 16 }}>
           <a href="/terms" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Terms of Service</a>
           <a href="/pricing" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Pricing</a>
+          <a href="/waitlist" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Waitlist</a>
           <button onClick={function() { setShowDevCode(!showDevCode); setDevError(''); }} style={{ background: 'none', border: 'none', color: txMut, fontSize: 13, cursor: 'pointer', fontFamily: sans, padding: 0 }}>Beta Access</button>
         </div>
         {showDevCode && (
