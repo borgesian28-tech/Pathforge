@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
+import CollegeComparison from './CollegeComparison';
 
 function HSChatbot({ careerField, accent, primaryColor, darkMode, inline }) {
   var [messages, setMessages] = useState([]);
@@ -161,6 +162,7 @@ export default function HighSchoolDashboard({ roadmap, onReset, isDemo, onUnlock
     { id: 'progress', label: 'Progress', icon: '📈' },
     { id: 'colleges', label: 'Top Colleges', icon: '🎓' },
     { id: 'college-search', label: 'College Search', icon: '🔍' },
+    { id: 'college-compare', label: 'Compare Colleges', icon: '⚖️' },
     { id: 'activities', label: 'Activities', icon: '⚡' },
     { id: 'testing', label: 'Testing', icon: '📝' },
     { id: 'timeline', label: 'Timeline', icon: '📅' },
@@ -279,7 +281,7 @@ export default function HighSchoolDashboard({ roadmap, onReset, isDemo, onUnlock
         <nav className="thin-scrollbar" style={{ flex: 1, overflow: 'auto', padding: '8px' }}>
           {tabs.map(function(tab) {
             var isActive = activeTab === tab.id;
-            var premiumTabs = ['college-search', 'careers', 'progress'];
+            var premiumTabs = ['college-search', 'college-compare', 'careers', 'progress'];
             var isPremiumTab = premiumTabs.indexOf(tab.id) !== -1;
             var userTier = subscription && subscription.tier || 'free';
             var isLocked = false;
@@ -721,6 +723,10 @@ export default function HighSchoolDashboard({ roadmap, onReset, isDemo, onUnlock
                   </div>
                 )}
               </div>
+            )}
+
+            {activeTab === 'college-compare' && (
+              <CollegeComparison darkMode={darkMode} accent={accent} primaryColor={primaryColor} />
             )}
 
             {activeTab === 'activities' && (
