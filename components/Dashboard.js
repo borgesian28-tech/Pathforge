@@ -6,7 +6,7 @@ import AiAdvisor from './AiAdvisor';
 import InterviewSimulator from './InterviewSimulator';
 import { useAuth } from './AuthContext';
 
-export default function Dashboard({ profile, onReset, savedProgress, isDemo, onUnlock }) {
+export default function Dashboard({ profile, onReset, savedProgress, isDemo, onUnlock, subscription }) {
   const { user, login, logout, saveRoadmap, saveProgress } = useAuth();
   const [activeTab, setActiveTab] = useState('courses');
   const [activeSemester, setActiveSemester] = useState(0);
@@ -394,8 +394,19 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
         <nav className="hide-scrollbar" style={{ flex: 1, overflow: 'auto', padding: '8px' }}>
           {tabs.map(function(tab) {
             var isActive = activeTab === tab.id;
-            var isLocked = isDemo && tab.id !== 'courses';
-            return (<button key={tab.id} onClick={function() { if (isLocked) return; setActiveTab(tab.id); if (isMobile) setMobileMenuOpen(false); }} title={!sidebarOpen && !isMobile ? tab.label : undefined} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: sidebarOpen || isMobile ? '9px 12px' : '10px 0', justifyContent: sidebarOpen || isMobile ? 'flex-start' : 'center', borderRadius: 8, border: 'none', background: isActive ? accentColor + '15' : 'transparent', color: isLocked ? (darkMode ? '#3a3a4e' : '#c0c0c8') : isActive ? accentColor : txMut, fontSize: 13, fontWeight: isActive ? 600 : 400, cursor: isLocked ? 'default' : 'pointer', transition: 'all 0.15s', marginBottom: 2, position: 'relative', opacity: isLocked ? 0.5 : 1 }}><span style={{ fontSize: 16, width: 22, textAlign: 'center', flexShrink: 0 }}>{isLocked ? '🔒' : tab.icon}</span>{(sidebarOpen || isMobile) && <span>{tab.label}</span>}{isActive && !isLocked && <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', width: 3, height: 20, borderRadius: 2, background: accentColor }} />}</button>);
+            var premiumTabs = ['interview', 'outcomes', 'progress'];
+            var isPremiumTab = premiumTabs.indexOf(tab.id) !== -1;
+            var userTier = subscription && subscription.tier || 'free';
+            var isLocked = false;
+            var lockLabel = '';
+            if (isDemo && tab.id !== 'courses') {
+              isLocked = true;
+              lockLabel = 'Sign up to unlock';
+            } else if (!isDemo && isPremiumTab && userTier === 'student') {
+              isLocked = true;
+              lockLabel = 'Premium feature';
+            }
+            return (<button key={tab.id} onClick={function() { if (isLocked) return; setActiveTab(tab.id); if (isMobile) setMobileMenuOpen(false); }} title={isLocked ? lockLabel : !sidebarOpen && !isMobile ? tab.label : undefined} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: sidebarOpen || isMobile ? '9px 12px' : '10px 0', justifyContent: sidebarOpen || isMobile ? 'flex-start' : 'center', borderRadius: 8, border: 'none', background: isActive && !isLocked ? accentColor + '15' : 'transparent', color: isLocked ? (darkMode ? '#3a3a4e' : '#c0c0c8') : isActive ? accentColor : txMut, fontSize: 13, fontWeight: isActive ? 600 : 400, cursor: isLocked ? 'default' : 'pointer', transition: 'all 0.15s', marginBottom: 2, position: 'relative', opacity: isLocked ? 0.5 : 1 }}><span style={{ fontSize: 16, width: 22, textAlign: 'center', flexShrink: 0 }}>{isLocked ? '🔒' : tab.icon}</span>{(sidebarOpen || isMobile) && <span>{tab.label}{isLocked && lockLabel === 'Premium feature' ? ' ✦' : ''}</span>}{isActive && !isLocked && <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', width: 3, height: 20, borderRadius: 2, background: accentColor }} />}</button>);
           })}
         </nav>
         <div style={{ padding: '8px', borderTop: '1px solid ' + sidebarBdr, flexShrink: 0 }}>
