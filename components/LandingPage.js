@@ -115,11 +115,11 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
             background: bgCard, color: tx, fontSize: 16, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s',
           }}>{dark ? '☀️' : '🌙'}</button>
-          <button className="lp-nav-cta" onClick={onGetStarted} style={{
+          <button className="lp-nav-cta" onClick={function() { setShowDevCode(false); onDemo(); }} style={{
             padding: '10px 26px', borderRadius: 100, border: 'none',
             background: accent, color: '#fff', fontFamily: sans,
             fontSize: 14, fontWeight: 600, cursor: 'pointer',
-          }}>Get Started</button>
+          }}>Try Demo</button>
         </div>
       </nav>
 
@@ -166,17 +166,12 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
           marginTop: 40, display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center',
           animation: 'fadeUpHero 0.8s ease 0.3s both',
         }}>
-          <button className="lp-btn-primary" onClick={onGetStarted} style={{
-            padding: '16px 36px', borderRadius: 100, border: 'none',
-            background: accent, color: '#fff', fontFamily: sans,
-            fontSize: 16, fontWeight: 600, cursor: 'pointer',
-          }}>Start Free Roadmap</button>
           <button className="lp-btn-demo" onClick={function() { setShowDevCode(false); onDemo(); }} style={{
             padding: '16px 36px', borderRadius: 100, border: 'none',
             background: dark ? 'linear-gradient(135deg, #C9A84C, #8B6914)' : 'linear-gradient(135deg, #f59e0b, #d97706)',
             color: dark ? '#000' : '#fff', fontFamily: sans,
             fontSize: 16, fontWeight: 600, cursor: 'pointer',
-          }}>Try a Demo</button>
+          }}>Try a Demo →</button>
         </div>
 
         {/* Dev code toggle */}
@@ -387,17 +382,12 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
           <div style={{ fontFamily: serif, fontSize: 'clamp(36px, 4.5vw, 56px)', lineHeight: 1.1, letterSpacing: -1, margin: '0 auto 16px', maxWidth: 600, color: tx }}>Your future doesn't plan itself.</div>
           <p style={{ margin: '0 auto 40px', fontSize: 17, color: txDim, maxWidth: 520, lineHeight: 1.7 }}>Join students who are already using AI to navigate college smarter. It's free — no credit card, no sign-up wall.</p>
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button className="lp-btn-primary" onClick={onGetStarted} style={{
-              padding: '16px 36px', borderRadius: 100, border: 'none',
-              background: accent, color: '#fff', fontFamily: sans,
-              fontSize: 16, fontWeight: 600, cursor: 'pointer',
-            }}>Build My Roadmap →</button>
             <button className="lp-btn-demo" onClick={onDemo} style={{
               padding: '16px 36px', borderRadius: 100, border: 'none',
               background: dark ? 'linear-gradient(135deg, #C9A84C, #8B6914)' : 'linear-gradient(135deg, #f59e0b, #d97706)',
               color: dark ? '#000' : '#fff', fontFamily: sans,
               fontSize: 16, fontWeight: 600, cursor: 'pointer',
-            }}>Try a Demo</button>
+            }}>Try a Demo →</button>
           </div>
         </div>
       </section>
