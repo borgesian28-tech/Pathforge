@@ -24,7 +24,7 @@ html, body {
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  height: 100%;
+  min-height: 100%;
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -88,10 +88,10 @@ input, textarea {
 }
 .welcome-banner { animation: welcomeSlide 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
 
-/* Mobile responsive */
+/* Mobile responsive - scoped to onboarding/dashboard only */
 @media (max-width: 640px) {
-  h1 { font-size: 22px !important; }
-  h2 { font-size: 20px !important; }
+  .slide-in-right h1, .slide-in-left h1 { font-size: 22px !important; }
+  .slide-in-right h2, .slide-in-left h2 { font-size: 20px !important; }
 }
 
 /* Print styles for export */
