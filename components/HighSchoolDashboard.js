@@ -123,6 +123,11 @@ export default function HighSchoolDashboard({ roadmap, onReset, isDemo, onUnlock
   const [careerExplorerSearch, setCareerExplorerSearch] = useState('');
   const [careerExplorerResult, setCareerExplorerResult] = useState(null);
   const [careerExplorerLoading, setCareerExplorerLoading] = useState(false);
+  const [collegeSearchStep, setCollegeSearchStep] = useState(0);
+  const [collegeSearchPrefs, setCollegeSearchPrefs] = useState({ major: '', size: '', setting: '', region: '', focus: '' });
+  const [collegeSearchResults, setCollegeSearchResults] = useState(null);
+  const [collegeSearchLoading, setCollegeSearchLoading] = useState(false);
+  const [expandedSearchCollege, setExpandedSearchCollege] = useState(null);
   const settingsRef = useRef(null);
 
   useEffect(function() {
@@ -168,6 +173,7 @@ export default function HighSchoolDashboard({ roadmap, onReset, isDemo, onUnlock
     { id: 'courses', label: 'Course Plan', icon: '📚' },
     { id: 'progress', label: 'Progress', icon: '📈' },
     { id: 'colleges', label: 'Top Colleges', icon: '🎓' },
+    { id: 'college-search', label: 'College Search', icon: '🔍' },
     { id: 'activities', label: 'Activities', icon: '⚡' },
     { id: 'testing', label: 'Testing', icon: '📝' },
     { id: 'timeline', label: 'Timeline', icon: '📅' },
@@ -205,11 +211,56 @@ export default function HighSchoolDashboard({ roadmap, onReset, isDemo, onUnlock
     navigator.clipboard.writeText(text);
   };
 
+  var collegeSearchQuestions = [
+    { key: 'major', label: 'What do you want to study?', placeholder: 'e.g. Computer Science, Biology, Business...', type: 'text' },
+    { key: 'size', label: 'What school size do you prefer?', options: ['Small (under 5,000)', 'Medium (5,000–15,000)', 'Large (15,000+)', 'No preference'] },
+    { key: 'setting', label: 'What kind of campus setting?', options: ['Urban (big city)', 'Suburban', 'Rural / College town', 'No preference'] },
+    { key: 'region', label: 'Any region preference?', options: ['Northeast', 'Southeast', 'Midwest', 'West Coast', 'Southwest', 'Anywhere in the US'] },
+    { key: 'focus', label: 'What matters most to you?', options: ['Strong academics & rankings', 'Research opportunities', 'Campus life & community', 'Affordability & financial aid', 'Career placement & internships'] },
+  ];
+
+  var searchColleges = async function() {
+    setCollegeSearchLoading(true);
+    setCollegeSearchResults(null);
+    try {
+      var prefs = collegeSearchPrefs;
+      var prompt = 'Find 5 real colleges/universities that match these student preferences:\n' +
+        '- Intended major: ' + (prefs.major || currentRoadmap.careerField) + '\n' +
+        '- School size: ' + (prefs.size || 'No preference') + '\n' +
+        '- Setting: ' + (prefs.setting || 'No preference') + '\n' +
+        '- Region: ' + (prefs.region || 'Anywhere in the US') + '\n' +
+        '- Priority: ' + (prefs.focus || 'Strong academics') + '\n\n' +
+        'Respond ONLY with a valid JSON array (no markdown, no backticks, no explanation). Each object must have exactly these fields:\n' +
+        '{\n"name": "Full University Name",\n"location": "City, State",\n"size": "X,XXX students",\n"setting": "Urban/Suburban/Rural",\n"acceptanceRate": "XX%",\n"topMajors": ["Major 1", "Major 2", "Major 3"],\n"avgGPA": "X.XX",\n"avgSAT": "XXXX-XXXX",\n"tuition": "$XX,XXX/year",\n"financialAid": "XX% of students receive aid",\n"whyGoodFit": "2 sentences explaining why this school matches the student preferences",\n"website": "https://www.school.edu"\n}';
+      var res = await fetch('/api/chat', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: prompt }],
+          context: 'You are a college admissions expert. Return ONLY a raw JSON array with no extra text, no markdown code fences, and no explanation. Just the JSON array. Make sure all data is factually accurate and up-to-date. Only recommend real accredited US colleges and universities.'
+        })
+      });
+      if (res.ok) {
+        var data = await res.json();
+        var reply = (data.reply || '').trim();
+        // Strip markdown fences if present
+        reply = reply.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+        try {
+          var parsed = JSON.parse(reply);
+          setCollegeSearchResults(Array.isArray(parsed) ? parsed : [parsed]);
+        } catch(e) {
+          console.error('Failed to parse college results:', e, reply);
+          setCollegeSearchResults([]);
+        }
+      }
+    } catch(e) { console.error(e); setCollegeSearchResults([]); }
+    setCollegeSearchLoading(false);
+  };
+
   var isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   var sidebarW = sidebarOpen ? 240 : 64;
 
   return (
-    <div style={{ minHeight: '100vh', background: bg, display: 'flex', transition: 'background 0.3s', overflow: 'hidden', height: '100dvh' }}>
+    <div style={{ minHeight: '100vh', background: bg, display: 'flex', transition: 'background 0.3s', overflow: 'hidden', height: '100dvh', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
       {regenerating && (
         <div style={{ position: 'fixed', inset: 0, background: overlayBg, zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
           <div style={{ width: 40, height: 40, borderRadius: '50%', border: '2px solid transparent', borderTopColor: accent, animation: 'spin 1s linear infinite', marginBottom: 16 }} />
@@ -502,6 +553,188 @@ export default function HighSchoolDashboard({ roadmap, onReset, isDemo, onUnlock
                     );
                   })}
                 </div>
+              </div>
+            )}
+
+            {activeTab === 'college-search' && (
+              <div>
+                <div style={{ textAlign: 'center', marginBottom: 24 }}>
+                  <div style={{ fontSize: 36, marginBottom: 8 }}>🔍</div>
+                  <h3 style={{ color: tx, fontSize: 22, fontWeight: 700, margin: '0 0 6px' }}>College Search</h3>
+                  <p style={{ color: txMut, fontSize: 14, margin: 0, maxWidth: 440, marginLeft: 'auto', marginRight: 'auto' }}>Tell us what you're looking for and we'll find colleges that match your preferences.</p>
+                </div>
+
+                {!collegeSearchResults && !collegeSearchLoading && (
+                  <div>
+                    {collegeSearchQuestions.map(function(q, qIdx) {
+                      var isActive = collegeSearchStep === qIdx;
+                      var isCompleted = q.type === 'text' ? collegeSearchPrefs[q.key].trim() !== '' : collegeSearchPrefs[q.key] !== '';
+                      var isPast = qIdx < collegeSearchStep;
+                      var isFuture = qIdx > collegeSearchStep;
+
+                      return (
+                        <div key={q.key} onClick={function() { if (isPast || isActive) setCollegeSearchStep(qIdx); }}
+                          style={{ background: isActive ? (dm ? '#16161e' : '#f0eeff') : bgCard, border: '1px solid ' + (isActive ? accent + '44' : bdr), borderRadius: 14, padding: isActive ? '18px 20px' : '14px 20px', marginBottom: 10, cursor: isPast ? 'pointer' : 'default', transition: 'all 0.2s', opacity: isFuture && !isCompleted ? 0.5 : 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isActive ? 12 : 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <div style={{ width: 26, height: 26, borderRadius: '50%', background: isCompleted ? accent + '22' : (dm ? '#1e1e28' : '#e8e8ee'), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: isCompleted ? accent : txMut, fontWeight: 700, flexShrink: 0 }}>
+                                {isCompleted ? '✓' : qIdx + 1}
+                              </div>
+                              <div>
+                                <div style={{ color: isActive ? tx : txSub, fontSize: 14, fontWeight: isActive ? 600 : 500 }}>{q.label}</div>
+                                {!isActive && isCompleted && <div style={{ color: accent, fontSize: 12, marginTop: 2 }}>{collegeSearchPrefs[q.key]}</div>}
+                              </div>
+                            </div>
+                            {isPast && <span style={{ color: txMut, fontSize: 12 }}>edit</span>}
+                          </div>
+
+                          {isActive && q.type === 'text' && (
+                            <div>
+                              <input type="text" placeholder={q.placeholder} value={collegeSearchPrefs[q.key]}
+                                onChange={function(e) { setCollegeSearchPrefs(function(prev) { var n = Object.assign({}, prev); n[q.key] = e.target.value; return n; }); }}
+                                onKeyDown={function(e) { if (e.key === 'Enter' && collegeSearchPrefs[q.key].trim()) setCollegeSearchStep(qIdx + 1); }}
+                                autoFocus
+                                style={{ width: '100%', padding: '12px 16px', borderRadius: 10, border: '1px solid ' + bdrL, background: dm ? '#0c0c0f' : '#ffffff', color: tx, fontSize: 14, outline: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
+                              <button onClick={function() { if (collegeSearchPrefs[q.key].trim()) setCollegeSearchStep(qIdx + 1); }}
+                                disabled={!collegeSearchPrefs[q.key].trim()}
+                                style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: collegeSearchPrefs[q.key].trim() ? accent : bgSec, color: collegeSearchPrefs[q.key].trim() ? '#fff' : txMut, fontWeight: 600, fontSize: 13, cursor: collegeSearchPrefs[q.key].trim() ? 'pointer' : 'default' }}>
+                                Next →
+                              </button>
+                            </div>
+                          )}
+
+                          {isActive && !q.type && (
+                            <div style={{ display: 'grid', gap: 6, gridTemplateColumns: q.options.length > 4 ? '1fr 1fr' : '1fr' }}>
+                              {q.options.map(function(opt, oi) {
+                                var isSelected = collegeSearchPrefs[q.key] === opt;
+                                return (
+                                  <button key={oi} onClick={function(e) {
+                                    e.stopPropagation();
+                                    setCollegeSearchPrefs(function(prev) { var n = Object.assign({}, prev); n[q.key] = opt; return n; });
+                                    if (qIdx < collegeSearchQuestions.length - 1) setTimeout(function() { setCollegeSearchStep(qIdx + 1); }, 200);
+                                  }}
+                                    style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid ' + (isSelected ? accent + '66' : bdr), background: isSelected ? accent + '18' : bgCard, color: isSelected ? accent : txSub, fontSize: 13, fontWeight: isSelected ? 600 : 400, cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+                                    {opt}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* Search button */}
+                    <div style={{ marginTop: 20, textAlign: 'center' }}>
+                      <button onClick={searchColleges}
+                        disabled={!collegeSearchPrefs.major.trim()}
+                        style={{ padding: '14px 36px', borderRadius: 12, border: 'none', background: collegeSearchPrefs.major.trim() ? 'linear-gradient(135deg, ' + accent + ', ' + primaryColor + ')' : bgSec, color: collegeSearchPrefs.major.trim() ? '#fff' : txMut, fontWeight: 700, fontSize: 15, cursor: collegeSearchPrefs.major.trim() ? 'pointer' : 'default', boxShadow: collegeSearchPrefs.major.trim() ? '0 4px 20px ' + accent + '33' : 'none', transition: 'all 0.2s' }}>
+                        🔍 Find My Colleges
+                      </button>
+                      {!collegeSearchPrefs.major.trim() && <p style={{ color: txMut, fontSize: 12, marginTop: 8 }}>Enter a major to get started</p>}
+                    </div>
+                  </div>
+                )}
+
+                {collegeSearchLoading && (
+                  <div style={{ textAlign: 'center', padding: '50px 20px' }}>
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', border: '2px solid transparent', borderTopColor: accent, animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+                    <p style={{ color: tx, fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Searching colleges...</p>
+                    <p style={{ color: txMut, fontSize: 13 }}>Finding the best matches for {collegeSearchPrefs.major || 'your interests'}</p>
+                  </div>
+                )}
+
+                {collegeSearchResults && (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                      <div>
+                        <h3 style={{ color: tx, fontSize: 16, fontWeight: 700, margin: 0 }}>Your Matches</h3>
+                        <p style={{ color: txMut, fontSize: 12, margin: '4px 0 0' }}>Based on: {collegeSearchPrefs.major} • {collegeSearchPrefs.size || 'Any size'} • {collegeSearchPrefs.setting || 'Any setting'}</p>
+                      </div>
+                      <button onClick={function() { setCollegeSearchResults(null); setCollegeSearchStep(0); }}
+                        style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid ' + bdr, background: 'transparent', color: txSub, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                        ← New Search
+                      </button>
+                    </div>
+
+                    {collegeSearchResults.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: '40px 20px', background: bgCard, border: '1px solid ' + bdr, borderRadius: 14 }}>
+                        <p style={{ color: txSub, fontSize: 14 }}>Couldn't find matches. Try adjusting your preferences and searching again.</p>
+                      </div>
+                    )}
+
+                    <div style={{ display: 'grid', gap: 12 }}>
+                      {collegeSearchResults.map(function(college, i) {
+                        var isExpanded = expandedSearchCollege === i;
+                        return (
+                          <div key={i} style={{ background: bgCard, border: '1px solid ' + bdr, borderRadius: 14, overflow: 'hidden', transition: 'all 0.2s' }}>
+                            <div onClick={function() { setExpandedSearchCollege(isExpanded ? null : i); }}
+                              style={{ padding: '16px 18px', cursor: 'pointer' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ color: tx, fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{college.name}</div>
+                                  <div style={{ color: txMut, fontSize: 12 }}>📍 {college.location}</div>
+                                </div>
+                                <span style={{ color: txMut, fontSize: 14, transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', marginTop: 4 }}>▾</span>
+                              </div>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                                <span style={{ background: accent + '15', color: accent, padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600 }}>Acceptance: {college.acceptanceRate}</span>
+                                <span style={{ background: bgSec, color: txSub, padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 500 }}>{college.size}</span>
+                                <span style={{ background: bgSec, color: txSub, padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 500 }}>{college.setting}</span>
+                              </div>
+                            </div>
+
+                            {isExpanded && (
+                              <div style={{ padding: '0 18px 18px', borderTop: '1px solid ' + bdr, paddingTop: 14 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+                                  <div style={{ background: bgSec, borderRadius: 10, padding: '12px 14px' }}>
+                                    <div style={{ color: txMut, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Avg GPA</div>
+                                    <div style={{ color: tx, fontSize: 16, fontWeight: 700 }}>{college.avgGPA || 'N/A'}</div>
+                                  </div>
+                                  <div style={{ background: bgSec, borderRadius: 10, padding: '12px 14px' }}>
+                                    <div style={{ color: txMut, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>SAT Range</div>
+                                    <div style={{ color: tx, fontSize: 16, fontWeight: 700 }}>{college.avgSAT || 'N/A'}</div>
+                                  </div>
+                                  <div style={{ background: bgSec, borderRadius: 10, padding: '12px 14px' }}>
+                                    <div style={{ color: txMut, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Tuition</div>
+                                    <div style={{ color: tx, fontSize: 14, fontWeight: 700 }}>{college.tuition || 'N/A'}</div>
+                                  </div>
+                                  <div style={{ background: bgSec, borderRadius: 10, padding: '12px 14px' }}>
+                                    <div style={{ color: txMut, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Financial Aid</div>
+                                    <div style={{ color: tx, fontSize: 13, fontWeight: 600 }}>{college.financialAid || 'N/A'}</div>
+                                  </div>
+                                </div>
+
+                                {college.topMajors && college.topMajors.length > 0 && (
+                                  <div style={{ marginBottom: 14 }}>
+                                    <div style={{ color: txMut, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Top Majors</div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                      {college.topMajors.map(function(m, mi) { return <span key={mi} style={{ background: accent + '12', color: accent, padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 500 }}>{m}</span>; })}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {college.whyGoodFit && (
+                                  <div style={{ background: accent + '0a', border: '1px solid ' + accent + '22', borderRadius: 10, padding: '12px 14px', marginBottom: 14 }}>
+                                    <div style={{ color: accent, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Why It's a Good Fit</div>
+                                    <p style={{ color: txSub, fontSize: 13, margin: 0, lineHeight: 1.6 }}>{college.whyGoodFit}</p>
+                                  </div>
+                                )}
+
+                                {college.website && (
+                                  <a href={college.website} target="_blank" rel="noopener noreferrer"
+                                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: '1px solid ' + accent + '44', background: accent + '0a', color: accent, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                                    Visit Website ↗
+                                  </a>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
