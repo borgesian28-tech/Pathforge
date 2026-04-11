@@ -1,8 +1,9 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 
-export default function LandingPage({ onGetStarted, user, onLogin }) {
+export default function LandingPage({ onGetStarted, onDemo, user, onLogin }) {
   var [visible, setVisible] = useState(new Set());
+  var [dark, setDark] = useState(true);
   var observerRef = useRef(null);
 
   useEffect(function() {
@@ -31,38 +32,40 @@ export default function LandingPage({ onGetStarted, user, onLogin }) {
     return Object.assign({}, base, { opacity: 0, transform: 'translateY(32px)' });
   };
 
-  // Light mode palette
+  // Theme
   var accent = '#6c5ce7';
-  var accentLight = '#5a4bd1';
-  var accentSoft = '#ede9fe';
-  var accentGlow = 'rgba(108, 92, 231, 0.12)';
-  var green = '#16a34a';
-  var greenDim = 'rgba(22, 163, 74, 0.1)';
-  var bg = '#ffffff';
-  var bgCard = '#f8f8fb';
-  var bgEl = '#f0f0f5';
-  var bgHero = 'linear-gradient(160deg, #f5f3ff 0%, #ffffff 40%, #f0f4ff 100%)';
-  var tx = '#111111';
-  var txDim = '#555555';
-  var txMut = '#888888';
-  var bdr = 'rgba(0,0,0,0.08)';
+  var accentLight = dark ? '#a29bfe' : '#5a4bd1';
+  var accentSoft = dark ? 'rgba(108,92,231,0.25)' : '#ede9fe';
+  var accentGlow = dark ? 'rgba(108,92,231,0.25)' : 'rgba(108,92,231,0.12)';
+  var green = dark ? '#00e676' : '#16a34a';
+  var greenDim = dark ? 'rgba(0,230,118,0.15)' : 'rgba(22,163,74,0.1)';
+  var bg = dark ? '#0a0a0c' : '#ffffff';
+  var bgCard = dark ? '#111115' : '#f8f8fb';
+  var bgEl = dark ? '#18181e' : '#f0f0f5';
+  var bgHero = dark ? 'linear-gradient(160deg, #0a0a0c 0%, #12121a 50%, #0a0a0c 100%)' : 'linear-gradient(160deg, #f5f3ff 0%, #ffffff 40%, #f0f4ff 100%)';
+  var tx = dark ? '#f0eff4' : '#111111';
+  var txDim = dark ? '#9896a6' : '#555555';
+  var txMut = dark ? '#5f5d6e' : '#888888';
+  var bdr = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)';
+  var navBg = dark ? 'rgba(10,10,12,0.82)' : 'rgba(255,255,255,0.82)';
   var radius = 18;
   var serif = "'Instrument Serif', Georgia, serif";
   var sans = "'DM Sans', system-ui, sans-serif";
+  var starColor = dark ? '#ffc107' : '#f59e0b';
 
   var features = [
-    { icon: '🎯', title: 'Real Course Plans', desc: 'AI-generated roadmaps with actual courses from your school\'s catalog — semester by semester, year by year. No generic templates.' },
-    { icon: '🤖', title: 'AI Career Advisor', desc: 'Chat with an AI advisor that knows your school, your major, and your career goals. Get instant answers about courses, internships, and strategy.' },
-    { icon: '🏆', title: 'Beyond the Classroom', desc: 'Clubs, organizations, competitions, and experiences that actually matter for your career — personalized to your school and field.' },
-    { icon: '💰', title: 'Career Outcomes', desc: 'Real salary data, top employers, job placement rates, and career growth outlook so you can make informed decisions.' },
-    { icon: '🎓', title: 'High School Planning', desc: 'Not in college yet? Get AP and honors course recommendations tailored to your dream major — freshman through senior year.' },
-    { icon: '🎤', title: 'Mock Interviews', desc: 'Practice behavioral, technical, and case study interviews with AI feedback. Get scored and walk in prepared.' },
+    { icon: '🎯', title: 'Real Course Plans', desc: 'AI-generated roadmaps with actual courses from your school\'s catalog — semester by semester, year by year.' },
+    { icon: '🤖', title: 'AI Career Advisor', desc: 'Chat with an AI advisor that knows your school, your major, and your career goals.' },
+    { icon: '🏆', title: 'Beyond the Classroom', desc: 'Clubs, organizations, competitions, and experiences that actually matter for your career.' },
+    { icon: '💰', title: 'Career Outcomes', desc: 'Real salary data, top employers, job placement rates, and career growth outlook.' },
+    { icon: '🎓', title: 'High School Planning', desc: 'AP and honors course recommendations tailored to your dream major — freshman through senior year.' },
+    { icon: '🎤', title: 'Mock Interviews', desc: 'Practice behavioral, technical, and case study interviews with AI feedback and scoring.' },
   ];
 
   var steps = [
-    { num: '1', title: 'Tell Us Your Goals', desc: 'Pick your dream career, choose your school, and select a major. High school or college — we\'ve got you covered.' },
-    { num: '2', title: 'AI Builds Your Plan', desc: 'Our AI researches your school\'s real courses, clubs, and opportunities — then assembles a personalized roadmap.' },
-    { num: '3', title: 'Track & Adapt', desc: 'Check off courses as you complete them, chat with your AI advisor, and practice interviews when you\'re ready.' },
+    { num: '1', title: 'Tell Us Your Goals', desc: 'Pick your dream career, choose your school, and select a major.' },
+    { num: '2', title: 'AI Builds Your Plan', desc: 'Our AI researches your school\'s real courses, clubs, and opportunities.' },
+    { num: '3', title: 'Track & Adapt', desc: 'Check off courses, chat with your AI advisor, and practice interviews.' },
   ];
 
   var testimonials = [
@@ -72,7 +75,7 @@ export default function LandingPage({ onGetStarted, user, onLogin }) {
   ];
 
   return (
-    <div style={{ background: bg, color: tx, fontFamily: sans, overflowX: 'hidden', WebkitFontSmoothing: 'antialiased' }}>
+    <div style={{ background: bg, color: tx, fontFamily: sans, overflowX: 'hidden', WebkitFontSmoothing: 'antialiased', transition: 'background 0.3s, color 0.3s' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
         @keyframes pulseDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
@@ -80,9 +83,10 @@ export default function LandingPage({ onGetStarted, user, onLogin }) {
         .lp-btn-primary { transition: all 0.25s !important; }
         .lp-btn-primary:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 32px rgba(108,92,231,0.25) !important; }
         .lp-btn-secondary { transition: all 0.25s !important; }
-        .lp-btn-secondary:hover { border-color: rgba(0,0,0,0.25) !important; color: ${tx} !important; }
+        .lp-btn-demo { transition: all 0.25s !important; }
+        .lp-btn-demo:hover { transform: translateY(-1px) !important; opacity: 0.9 !important; }
         .lp-feature-card { transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s !important; }
-        .lp-feature-card:hover { border-color: rgba(0,0,0,0.15) !important; transform: translateY(-3px) !important; box-shadow: 0 12px 40px rgba(0,0,0,0.06) !important; }
+        .lp-feature-card:hover { transform: translateY(-3px) !important; }
         .lp-nav-cta { transition: transform 0.2s, box-shadow 0.2s !important; }
         .lp-nav-cta:hover { transform: translateY(-1px) !important; box-shadow: 0 6px 24px rgba(108,92,231,0.25) !important; }
         @media (max-width: 860px) {
@@ -95,6 +99,7 @@ export default function LandingPage({ onGetStarted, user, onLogin }) {
           .lp-mock-grid { grid-template-columns: 1fr !important; }
           .lp-hero-h1 { font-size: 42px !important; }
           .lp-nav { padding: 14px 20px !important; }
+          .lp-hero-buttons { flex-direction: column !important; align-items: stretch !important; }
         }
       `}</style>
 
@@ -102,17 +107,24 @@ export default function LandingPage({ onGetStarted, user, onLogin }) {
       <nav className="lp-nav" style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
         padding: '18px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(24px) saturate(1.4)',
-        borderBottom: '1px solid ' + bdr,
+        background: navBg, backdropFilter: 'blur(24px) saturate(1.4)',
+        borderBottom: '1px solid ' + bdr, transition: 'background 0.3s',
       }}>
         <div style={{ fontFamily: serif, fontSize: 24, letterSpacing: -0.5, color: tx }}>
-          Path<span style={{ color: accent }}>Forge</span>
+          Path<span style={{ color: accentLight }}>Forge</span>
         </div>
-        <button className="lp-nav-cta" onClick={onGetStarted} style={{
-          padding: '10px 26px', borderRadius: 100, border: 'none',
-          background: accent, color: '#fff', fontFamily: sans,
-          fontSize: 14, fontWeight: 600, cursor: 'pointer',
-        }}>Get Started — Free</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={function() { setDark(!dark); }} style={{
+            width: 36, height: 36, borderRadius: 10, border: '1px solid ' + bdr,
+            background: bgCard, color: tx, fontSize: 16, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s',
+          }}>{dark ? '☀️' : '🌙'}</button>
+          <button className="lp-nav-cta" onClick={onGetStarted} style={{
+            padding: '10px 26px', borderRadius: 100, border: 'none',
+            background: accent, color: '#fff', fontFamily: sans,
+            fontSize: 14, fontWeight: 600, cursor: 'pointer',
+          }}>Get Started</button>
+        </div>
       </nav>
 
       {/* HERO */}
@@ -120,18 +132,19 @@ export default function LandingPage({ onGetStarted, user, onLogin }) {
         minHeight: '100vh', display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center', textAlign: 'center',
         padding: '140px 24px 80px', position: 'relative', background: bgHero,
+        transition: 'background 0.3s',
       }}>
         <div style={{
           position: 'absolute', top: -120, left: '50%', transform: 'translateX(-50%)',
           width: 800, height: 800, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(108,92,231,0.08) 0%, transparent 70%)',
-          pointerEvents: 'none',
+          background: 'radial-gradient(circle, ' + accentGlow + ' 0%, transparent 70%)',
+          pointerEvents: 'none', opacity: dark ? 0.5 : 1,
         }} />
 
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 8,
           padding: '6px 16px 6px 8px', borderRadius: 100,
-          background: greenDim, border: '1px solid rgba(22,163,74,0.2)',
+          background: greenDim, border: '1px solid ' + (dark ? 'rgba(0,230,118,0.2)' : 'rgba(22,163,74,0.2)'),
           fontSize: 13, color: green, fontWeight: 600, marginBottom: 32,
           animation: 'fadeUpHero 0.8s ease both',
         }}>
@@ -147,7 +160,7 @@ export default function LandingPage({ onGetStarted, user, onLogin }) {
           Your roadmap from{' '}
           <em style={{
             fontStyle: 'italic',
-            background: 'linear-gradient(135deg, ' + accent + ', #a78bfa)',
+            background: dark ? 'linear-gradient(135deg, #a29bfe, #e0c3fc)' : 'linear-gradient(135deg, ' + accent + ', #a78bfa)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           }}>first class</em>{' '}
           to first offer.
@@ -160,7 +173,7 @@ export default function LandingPage({ onGetStarted, user, onLogin }) {
           PathForge builds a personalized academic plan — real courses, real clubs, real career prep — tailored to your school, your major, and where you want to end up.
         </p>
 
-        <div style={{
+        <div className="lp-hero-buttons" style={{
           marginTop: 40, display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center',
           animation: 'fadeUpHero 0.8s ease 0.3s both',
         }}>
@@ -169,20 +182,20 @@ export default function LandingPage({ onGetStarted, user, onLogin }) {
             background: accent, color: '#fff', fontFamily: sans,
             fontSize: 16, fontWeight: 600, cursor: 'pointer',
           }}>Start Free Roadmap</button>
-          <button className="lp-btn-secondary" onClick={function() {
-            document.getElementById('lp-how').scrollIntoView({ behavior: 'smooth' });
-          }} style={{
-            padding: '16px 36px', borderRadius: 100,
-            border: '1px solid rgba(0,0,0,0.15)', background: 'transparent',
-            color: txDim, fontFamily: sans, fontSize: 16, fontWeight: 500, cursor: 'pointer',
-          }}>See How It Works</button>
+          <button className="lp-btn-demo" onClick={onDemo} style={{
+            padding: '16px 36px', borderRadius: 100, border: 'none',
+            background: dark ? 'linear-gradient(135deg, #C9A84C, #8B6914)' : 'linear-gradient(135deg, #f59e0b, #d97706)',
+            color: dark ? '#000' : '#fff', fontFamily: sans,
+            fontSize: 16, fontWeight: 600, cursor: 'pointer',
+          }}>Try a Demo →</button>
         </div>
 
-        {/* PRODUCT MOCK — dark themed to show the actual app */}
+        {/* PRODUCT MOCK — always dark to show the actual app */}
         <div style={{
           marginTop: 64, width: '100%', maxWidth: 900, borderRadius: radius,
-          overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)', background: '#111115',
-          boxShadow: '0 40px 120px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05)',
+          overflow: 'hidden', border: '1px solid ' + (dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.1)'),
+          background: '#111115',
+          boxShadow: dark ? '0 40px 120px rgba(0,0,0,0.5)' : '0 40px 120px rgba(0,0,0,0.15)',
           animation: 'fadeUpHero 0.8s ease 0.45s both',
         }}>
           <div style={{
@@ -205,8 +218,9 @@ export default function LandingPage({ onGetStarted, user, onLogin }) {
                   return (
                     <div key={i} style={{
                       padding: '10px 14px', borderRadius: 10, fontSize: 13,
-                      color: isActive ? '#a29bfe' : '#5f5d6e', display: 'flex', alignItems: 'center', gap: 10,
-                      background: isActive ? 'rgba(108,92,231,0.25)' : 'transparent', fontWeight: isActive ? 600 : 400,
+                      color: isActive ? '#a29bfe' : '#5f5d6e',
+                      background: isActive ? 'rgba(108,92,231,0.25)' : 'transparent',
+                      fontWeight: isActive ? 600 : 400,
                     }}>{item}</div>
                   );
                 })}
@@ -222,9 +236,7 @@ export default function LandingPage({ onGetStarted, user, onLogin }) {
                     { label: 'ELECTIVE', badge: 'Suggested', isGreen: false, course: 'Financial Accounting', code: 'ECON 1723', progress: 20 },
                   ].map(function(c, i) {
                     return (
-                      <div key={i} style={{
-                        padding: 16, borderRadius: 12, background: '#18181e', border: '1px solid rgba(255,255,255,0.06)',
-                      }}>
+                      <div key={i} style={{ padding: 16, borderRadius: 12, background: '#18181e', border: '1px solid rgba(255,255,255,0.06)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                           <span style={{ fontSize: 12, fontWeight: 600, color: '#9896a6' }}>{c.label}</span>
                           <span style={{
@@ -249,10 +261,10 @@ export default function LandingPage({ onGetStarted, user, onLogin }) {
       </section>
 
       {/* FEATURES */}
-      <section style={{ padding: '100px 24px', background: bg }}>
+      <section style={{ padding: '100px 24px', background: bg, transition: 'background 0.3s' }}>
         <div style={{ maxWidth: 1140, margin: '0 auto' }}>
           <div data-reveal="feat-head" style={revealStyle('feat-head')}>
-            <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 3, color: accent, fontWeight: 600, marginBottom: 16 }}>Features</div>
+            <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 3, color: accentLight, fontWeight: 600, marginBottom: 16 }}>Features</div>
             <div style={{ fontFamily: serif, fontSize: 'clamp(36px, 4.5vw, 56px)', lineHeight: 1.1, letterSpacing: -1, maxWidth: 600, color: tx }}>Everything your academic advisor should be.</div>
             <p style={{ marginTop: 16, fontSize: 17, color: txDim, maxWidth: 520, lineHeight: 1.7 }}>PathForge doesn't just list courses — it builds a complete strategy from freshman year to your first job offer.</p>
           </div>
@@ -262,8 +274,7 @@ export default function LandingPage({ onGetStarted, user, onLogin }) {
               return (
                 <div key={i} className="lp-feature-card" data-reveal={id} style={Object.assign({}, revealStyle(id, i * 0.08), {
                   padding: '36px 30px', borderRadius: radius, background: bgCard,
-                  border: '1px solid ' + bdr, cursor: 'default',
-                  position: 'relative', overflow: 'hidden',
+                  border: '1px solid ' + bdr, cursor: 'default', position: 'relative', overflow: 'hidden',
                 })}>
                   <div style={{
                     width: 48, height: 48, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -279,16 +290,16 @@ export default function LandingPage({ onGetStarted, user, onLogin }) {
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="lp-how" style={{ padding: '100px 24px', background: bgCard }}>
+      <section id="lp-how" style={{ padding: '100px 24px', background: bgCard, transition: 'background 0.3s' }}>
         <div style={{ maxWidth: 1140, margin: '0 auto' }}>
           <div data-reveal="how-head" style={Object.assign({}, revealStyle('how-head'), { textAlign: 'center' })}>
-            <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 3, color: accent, fontWeight: 600, marginBottom: 16 }}>How It Works</div>
+            <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 3, color: accentLight, fontWeight: 600, marginBottom: 16 }}>How It Works</div>
             <div style={{ fontFamily: serif, fontSize: 'clamp(36px, 4.5vw, 56px)', lineHeight: 1.1, letterSpacing: -1, margin: '0 auto', color: tx }}>Three steps. Five minutes. Full roadmap.</div>
           </div>
           <div className="lp-steps-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 40, marginTop: 56, position: 'relative' }}>
             <div className="lp-steps-line" style={{
               position: 'absolute', top: 36, left: '15%', right: '15%', height: 1,
-              background: 'linear-gradient(90deg, transparent, rgba(0,0,0,0.1), rgba(0,0,0,0.1), transparent)',
+              background: 'linear-gradient(90deg, transparent, ' + bdr + ', ' + bdr + ', transparent)',
             }} />
             {steps.map(function(s, i) {
               var id = 'step-' + i;
@@ -298,8 +309,9 @@ export default function LandingPage({ onGetStarted, user, onLogin }) {
                     width: 72, height: 72, borderRadius: '50%', margin: '0 auto 24px',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontFamily: serif, fontSize: 28, fontWeight: 400,
-                    background: bg, border: '1px solid ' + bdr, color: accent, position: 'relative', zIndex: 1,
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
+                    background: bg, border: '1px solid ' + bdr, color: accentLight,
+                    position: 'relative', zIndex: 1,
+                    boxShadow: dark ? 'none' : '0 4px 16px rgba(0,0,0,0.04)',
                   }}>{s.num}</div>
                   <h3 style={{ fontFamily: serif, fontSize: 22, marginBottom: 10, letterSpacing: -0.3, color: tx }}>{s.title}</h3>
                   <p style={{ fontSize: 14, color: txDim, lineHeight: 1.65, maxWidth: 280, margin: '0 auto' }}>{s.desc}</p>
@@ -311,10 +323,10 @@ export default function LandingPage({ onGetStarted, user, onLogin }) {
       </section>
 
       {/* SOCIAL PROOF */}
-      <section style={{ padding: '100px 24px', background: bg }}>
+      <section style={{ padding: '100px 24px', background: bg, transition: 'background 0.3s' }}>
         <div style={{ maxWidth: 1140, margin: '0 auto' }}>
           <div data-reveal="proof-head" style={Object.assign({}, revealStyle('proof-head'), { textAlign: 'center' })}>
-            <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 3, color: accent, fontWeight: 600, marginBottom: 16 }}>What Students Say</div>
+            <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 3, color: accentLight, fontWeight: 600, marginBottom: 16 }}>What Students Say</div>
             <div style={{ fontFamily: serif, fontSize: 'clamp(36px, 4.5vw, 56px)', lineHeight: 1.1, letterSpacing: -1, margin: '0 auto', color: tx }}>Built by students, for students.</div>
           </div>
           <div className="lp-proof-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginTop: 48 }}>
@@ -324,7 +336,7 @@ export default function LandingPage({ onGetStarted, user, onLogin }) {
                 <div key={i} data-reveal={id} style={Object.assign({}, revealStyle(id, i * 0.1), {
                   padding: 32, borderRadius: radius, background: bgCard, border: '1px solid ' + bdr,
                 })}>
-                  <div style={{ color: '#f59e0b', fontSize: 14, letterSpacing: 2, marginBottom: 14 }}>★★★★★</div>
+                  <div style={{ color: starColor, fontSize: 14, letterSpacing: 2, marginBottom: 14 }}>★★★★★</div>
                   <p style={{ fontSize: 15, color: txDim, lineHeight: 1.7, marginBottom: 20, fontStyle: 'italic' }}>"{t.text}"</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{
@@ -347,22 +359,37 @@ export default function LandingPage({ onGetStarted, user, onLogin }) {
       {/* FINAL CTA */}
       <section style={{
         textAlign: 'center', padding: '120px 24px', position: 'relative',
-        background: 'linear-gradient(180deg, ' + bg + ' 0%, #f5f3ff 100%)',
+        background: dark ? bg : 'linear-gradient(180deg, #ffffff 0%, #f5f3ff 100%)',
+        transition: 'background 0.3s',
       }}>
+        <div style={{
+          position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+          width: 700, height: 700, borderRadius: '50%',
+          background: 'radial-gradient(circle, ' + accentGlow + ' 0%, transparent 70%)',
+          pointerEvents: 'none', opacity: dark ? 0.4 : 0.8,
+        }} />
         <div data-reveal="cta-final" style={revealStyle('cta-final')}>
-          <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 3, color: accent, fontWeight: 600, marginBottom: 16 }}>Ready?</div>
+          <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 3, color: accentLight, fontWeight: 600, marginBottom: 16 }}>Ready?</div>
           <div style={{ fontFamily: serif, fontSize: 'clamp(36px, 4.5vw, 56px)', lineHeight: 1.1, letterSpacing: -1, margin: '0 auto 16px', maxWidth: 600, color: tx }}>Your future doesn't plan itself.</div>
           <p style={{ margin: '0 auto 40px', fontSize: 17, color: txDim, maxWidth: 520, lineHeight: 1.7 }}>Join students who are already using AI to navigate college smarter. It's free — no credit card, no sign-up wall.</p>
-          <button className="lp-btn-primary" onClick={onGetStarted} style={{
-            padding: '16px 36px', borderRadius: 100, border: 'none',
-            background: accent, color: '#fff', fontFamily: sans,
-            fontSize: 16, fontWeight: 600, cursor: 'pointer',
-          }}>Build My Roadmap →</button>
+          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button className="lp-btn-primary" onClick={onGetStarted} style={{
+              padding: '16px 36px', borderRadius: 100, border: 'none',
+              background: accent, color: '#fff', fontFamily: sans,
+              fontSize: 16, fontWeight: 600, cursor: 'pointer',
+            }}>Build My Roadmap →</button>
+            <button className="lp-btn-demo" onClick={onDemo} style={{
+              padding: '16px 36px', borderRadius: 100, border: 'none',
+              background: dark ? 'linear-gradient(135deg, #C9A84C, #8B6914)' : 'linear-gradient(135deg, #f59e0b, #d97706)',
+              color: dark ? '#000' : '#fff', fontFamily: sans,
+              fontSize: 16, fontWeight: 600, cursor: 'pointer',
+            }}>Try a Demo</button>
+          </div>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer style={{ padding: '40px 24px', borderTop: '1px solid ' + bdr, textAlign: 'center', background: bg }}>
+      <footer style={{ padding: '40px 24px', borderTop: '1px solid ' + bdr, textAlign: 'center', background: bg, transition: 'background 0.3s' }}>
         <p style={{ fontSize: 13, color: txMut }}>© 2026 PathForge · Built with AI, designed for ambition.</p>
       </footer>
     </div>
