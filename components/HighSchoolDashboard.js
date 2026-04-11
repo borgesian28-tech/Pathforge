@@ -1,8 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 
-function HSChatbot({ careerField, accent, primaryColor, darkMode }) {
-  var [open, setOpen] = useState(false);
+function HSChatbot({ careerField, accent, primaryColor, darkMode, inline }) {
   var [messages, setMessages] = useState([]);
   var [input, setInput] = useState('');
   var [loading, setLoading] = useState(false);
@@ -11,7 +10,7 @@ function HSChatbot({ careerField, accent, primaryColor, darkMode }) {
   var dm = darkMode;
 
   useEffect(function() { if (messagesEnd.current) messagesEnd.current.scrollIntoView({ behavior: 'smooth' }); }, [messages, loading]);
-  useEffect(function() { if (open && inputRef.current) setTimeout(function() { inputRef.current.focus(); }, 100); }, [open]);
+  useEffect(function() { if (inputRef.current) setTimeout(function() { inputRef.current.focus(); }, 100); }, []);
 
   var sendMessage = async function(text) {
     var userMsg = text || input.trim();
@@ -39,28 +38,16 @@ function HSChatbot({ careerField, accent, primaryColor, darkMode }) {
   var chatTxSub = dm ? '#a0a0b0' : '#444450';
   var chatTxMut = dm ? '#606070' : '#777784';
 
-  if (!open) {
-    return (
-      <button onClick={function() { setOpen(true); }}
-        style={{ position: 'fixed', bottom: 20, right: 20, width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg, ' + accent + ', ' + primaryColor + ')', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer', boxShadow: '0 4px 20px ' + accent + '44', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        💬
-      </button>
-    );
-  }
-
   return (
-    <div style={{ position: 'fixed', bottom: 20, right: 20, width: 'min(400px, calc(100vw - 32px))', height: 'min(560px, calc(100vh - 40px))', background: chatBg, border: '1px solid ' + chatBdr, borderRadius: 16, zIndex: 50, display: 'flex', flexDirection: 'column', boxShadow: '0 8px 40px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
-      <div style={{ padding: '14px 16px', background: 'linear-gradient(135deg, ' + primaryColor + (dm ? '66' : '33') + ', ' + chatBg + ')', borderBottom: '1px solid ' + chatBdr, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: accent + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🎓</div>
-          <div>
-            <div style={{ color: chatTx, fontSize: 14, fontWeight: 700 }}>HS Advisor</div>
-            <div style={{ color: chatTxMut, fontSize: 11 }}>AI guidance counselor • {careerField}</div>
-          </div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: inline ? '100%' : 'min(560px, calc(100vh - 40px))', background: chatBg, border: inline ? 'none' : ('1px solid ' + chatBdr), borderRadius: inline ? 0 : 16, overflow: 'hidden' }}>
+      <div style={{ padding: '14px 16px', background: 'linear-gradient(135deg, ' + primaryColor + (dm ? '66' : '33') + ', ' + chatBg + ')', borderBottom: '1px solid ' + chatBdr, display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+        <div style={{ width: 32, height: 32, borderRadius: 8, background: accent + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🎓</div>
+        <div>
+          <div style={{ color: chatTx, fontSize: 14, fontWeight: 700 }}>AI Guidance Counselor</div>
+          <div style={{ color: chatTxMut, fontSize: 11 }}>Personalized advice for {careerField}</div>
         </div>
-        <button onClick={function() { setOpen(false); }} style={{ background: 'none', border: 'none', color: chatTxMut, fontSize: 18, cursor: 'pointer', padding: '4px 8px', lineHeight: 1 }}>✕</button>
       </div>
-      <div style={{ flex: 1, overflow: 'auto', padding: '14px' }}>
+      <div className="thin-scrollbar" style={{ flex: 1, overflow: 'auto', padding: '14px' }}>
         {messages.length === 0 && (
           <div>
             <div style={{ textAlign: 'center', marginBottom: 16, paddingTop: 10 }}>
@@ -178,6 +165,7 @@ export default function HighSchoolDashboard({ roadmap, onReset, isDemo, onUnlock
     { id: 'testing', label: 'Testing', icon: '📝' },
     { id: 'timeline', label: 'Timeline', icon: '📅' },
     { id: 'careers', label: 'Career Explorer', icon: '🧭' },
+    { id: 'advisor', label: 'AI Advisor', icon: '💬' },
   ];
 
   var exploreCareer = async function() {
@@ -364,8 +352,8 @@ export default function HighSchoolDashboard({ roadmap, onReset, isDemo, onUnlock
         </header>
 
         {/* CONTENT */}
-        <main className="thin-scrollbar" style={{ flex: 1, overflow: 'auto', WebkitOverflowScrolling: 'touch', padding: isMobile ? '20px 16px 40px' : '24px 32px 40px' }}>
-          <div style={{ maxWidth: 820, margin: '0 auto' }}>
+        <main className="thin-scrollbar" style={{ flex: 1, overflow: activeTab === 'advisor' ? 'hidden' : 'auto', WebkitOverflowScrolling: 'touch', padding: activeTab === 'advisor' ? 0 : (isMobile ? '20px 16px 40px' : '24px 32px 40px') }}>
+          <div style={{ maxWidth: activeTab === 'advisor' ? 'none' : 820, margin: '0 auto', height: activeTab === 'advisor' ? '100%' : 'auto' }}>
 
             {isDemo && (
               <div style={{ marginBottom: 16, background: 'linear-gradient(135deg, #6c5ce722, ' + bgCard + ')', border: '1px solid #6c5ce744', borderRadius: 14, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
@@ -595,7 +583,7 @@ export default function HighSchoolDashboard({ roadmap, onReset, isDemo, onUnlock
                                 onKeyDown={function(e) { if (e.key === 'Enter' && collegeSearchPrefs[q.key].trim()) setCollegeSearchStep(qIdx + 1); }}
                                 autoFocus
                                 style={{ width: '100%', padding: '12px 16px', borderRadius: 10, border: '1px solid ' + bdrL, background: dm ? '#0c0c0f' : '#ffffff', color: tx, fontSize: 14, outline: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
-                              <button onClick={function() { if (collegeSearchPrefs[q.key].trim()) setCollegeSearchStep(qIdx + 1); }}
+                              <button onClick={function(e) { e.stopPropagation(); if (collegeSearchPrefs[q.key].trim()) setCollegeSearchStep(qIdx + 1); }}
                                 disabled={!collegeSearchPrefs[q.key].trim()}
                                 style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: collegeSearchPrefs[q.key].trim() ? accent : bgSec, color: collegeSearchPrefs[q.key].trim() ? '#fff' : txMut, fontWeight: 600, fontSize: 13, cursor: collegeSearchPrefs[q.key].trim() ? 'pointer' : 'default' }}>
                                 Next →
@@ -881,11 +869,15 @@ export default function HighSchoolDashboard({ roadmap, onReset, isDemo, onUnlock
               </div>
             )}
 
+            {activeTab === 'advisor' && (
+              <div style={{ height: '100%' }}>
+                <HSChatbot careerField={currentRoadmap.careerField} accent={accent} primaryColor={primaryColor} darkMode={darkMode} inline={true} />
+              </div>
+            )}
+
           </div>
         </main>
       </div>
-
-      <HSChatbot careerField={currentRoadmap.careerField} accent={accent} primaryColor={primaryColor} darkMode={darkMode} />
 
       {/* MODAL */}
       {hsModal && (
