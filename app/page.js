@@ -83,11 +83,11 @@ export default function Home() {
   };
 
   const handleUnlock = function() {
-    // User wants to upgrade from demo — go to full onboarding
+    // User wants to upgrade from demo — go back to landing to enter dev code
     setProfile(null);
     setSavedProgress(null);
     setIsDemo(false);
-    setShowLanding(false);
+    setShowLanding(true);
   };
 
   if (authLoading || checkingSaved) {
