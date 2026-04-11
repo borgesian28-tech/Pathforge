@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { CAREER_OPTIONS } from '@/lib/constants';
 
-export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveRetry, user, onLogin }) {
+export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveRetry, user, onLogin, onBack }) {
   const [step, setStep] = useState(0);
   const [slideDir, setSlideDir] = useState('right');
   const [animKey, setAnimKey] = useState(0);
@@ -88,6 +88,7 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
   if (step === 0) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%)', padding: 20 }}>
       <div style={{ maxWidth: 520, textAlign: 'center' }} className={slideClass} key={animKey}>
+        {onBack && <button onClick={onBack} style={backBtn}>← Back</button>}
         <div style={{ fontSize: 48, marginBottom: 16 }}>🎓</div>
         <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(28px, 5vw, 42px)', color: '#fff', margin: '0 0 6px' }}>PathForge</h1>
         <p style={{ color: '#C9A84C', fontSize: 13, fontWeight: 600, letterSpacing: 2, marginBottom: 6 }}>AI-POWERED ACADEMIC ADVISING</p>
