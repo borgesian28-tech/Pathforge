@@ -118,13 +118,17 @@ export default function Home() {
   }
 
   if (profile) {
-    // Full access if: paid subscription, dev code used, or not in demo mode
+    // Dev code users get full premium access
+    // Demo users see locked tabs
+    // Paid users get access based on their tier
     var hasAccess = !isDemo || subscription.tier === 'student' || subscription.tier === 'premium';
     var effectiveDemo = !hasAccess;
+    // Dev code users (isDemo=false, no subscription) get premium-equivalent access
+    var effectiveSub = !isDemo && subscription.tier === 'free' ? { tier: 'premium', status: 'active' } : subscription;
     return profile.programLevel === 'highschool' ? (
-      <HighSchoolDashboard roadmap={profile.hsRoadmap} onReset={handleReset} isDemo={effectiveDemo} onUnlock={handleUnlock} subscription={subscription} />
+      <HighSchoolDashboard roadmap={profile.hsRoadmap} onReset={handleReset} isDemo={effectiveDemo} onUnlock={handleUnlock} subscription={effectiveSub} />
     ) : (
-      <Dashboard profile={profile} onReset={handleReset} savedProgress={savedProgress} isDemo={effectiveDemo} onUnlock={handleUnlock} subscription={subscription} />
+      <Dashboard profile={profile} onReset={handleReset} savedProgress={savedProgress} isDemo={effectiveDemo} onUnlock={handleUnlock} subscription={effectiveSub} />
     );
   }
 
