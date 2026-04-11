@@ -83,7 +83,7 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
   ];
 
   return (
-    <div style={{ background: bg, color: tx, fontFamily: sans, overflowX: 'hidden', WebkitFontSmoothing: 'antialiased', transition: 'background 0.3s, color 0.3s' }}>
+    <div style={{ background: bg, color: tx, fontFamily: sans, overflowX: 'clip', WebkitFontSmoothing: 'antialiased', transition: 'background 0.3s, color 0.3s', minHeight: '100vh' }}>
       <style>{[
         "@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');",
         "@keyframes pulseDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }",
