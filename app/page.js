@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/components/AuthContext';
+import LandingPage from '@/components/LandingPage';
 import OnboardingFlow from '@/components/OnboardingFlow';
 import LoadingScreen from '@/components/LoadingScreen';
 import Dashboard from '@/components/Dashboard';
@@ -15,8 +16,10 @@ export default function Home() {
   const [loadingStatus, setLoadingStatus] = useState('Initializing...');
   const [loadingError, setLoadingError] = useState(false);
   const [checkingSaved, setCheckingSaved] = useState(false);
+  const [showLanding, setShowLanding] = useState(true);
   const lastRequest = useRef(null);
 
+  // If user is logged in and has a saved roadmap, skip landing page
   useEffect(function() {
     if (user && !profile) {
       setCheckingSaved(true);
@@ -24,6 +27,7 @@ export default function Home() {
         if (data && data.profile && data.profile.courseData) {
           setProfile(data.profile);
           setSavedProgress(data.completedCourses || {});
+          setShowLanding(false);
         }
         setCheckingSaved(false);
       });
@@ -62,6 +66,11 @@ export default function Home() {
     setProfile(null);
     setSavedProgress(null);
     setLoadingError(false);
+    setShowLanding(true);
+  };
+
+  const handleGetStarted = function() {
+    setShowLanding(false);
   };
 
   if (authLoading || checkingSaved) {
@@ -78,24 +87,26 @@ export default function Home() {
     return <LoadingScreen status={loadingStatus} career={loadingCareer} error={loadingError} onRetry={handleRetry} />;
   }
 
+  if (profile) {
+    return profile.programLevel === 'highschool' ? (
+      <HighSchoolDashboard roadmap={profile.hsRoadmap} onReset={handleReset} />
+    ) : (
+      <Dashboard profile={profile} onReset={handleReset} savedProgress={savedProgress} />
+    );
+  }
+
+  if (showLanding) {
+    return <LandingPage onGetStarted={handleGetStarted} user={user} onLogin={login} />;
+  }
+
   return (
-    <>
-      {profile ? (
-        profile.programLevel === 'highschool' ? (
-          <HighSchoolDashboard roadmap={profile.hsRoadmap} onReset={handleReset} />
-        ) : (
-          <Dashboard profile={profile} onReset={handleReset} savedProgress={savedProgress} />
-        )
-      ) : (
-        <OnboardingFlow
-          onComplete={handleComplete}
-          onLoading={handleLoading}
-          onError={handleError}
-          onSaveRetry={function(fn) { lastRequest.current = fn; }}
-          user={user}
-          onLogin={login}
-        />
-      )}
-    </>
+    <OnboardingFlow
+      onComplete={handleComplete}
+      onLoading={handleLoading}
+      onError={handleError}
+      onSaveRetry={function(fn) { lastRequest.current = fn; }}
+      user={user}
+      onLogin={login}
+    />
   );
 }
