@@ -113,7 +113,7 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
           Path<span style={{ color: accentLight }}>Forge</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <a href="/pricing" style={{ color: txDim, fontSize: 14, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'color 0.2s' }}>Pricing</a>
+          <a href="/pricing" style={{ color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', textDecoration: 'none', padding: '8px 18px', borderRadius: 100, background: 'linear-gradient(135deg, #f59e0b, #d97706)', transition: 'all 0.2s' }}>Pricing</a>
           <button onClick={function() { setDark(!dark); }} style={{
             width: 36, height: 36, borderRadius: 10, border: '1px solid ' + bdr,
             background: bgCard, color: tx, fontSize: 16, cursor: 'pointer',
