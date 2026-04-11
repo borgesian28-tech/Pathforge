@@ -6,7 +6,7 @@ import AiAdvisor from './AiAdvisor';
 import InterviewSimulator from './InterviewSimulator';
 import { useAuth } from './AuthContext';
 
-export default function Dashboard({ profile, onReset, savedProgress }) {
+export default function Dashboard({ profile, onReset, savedProgress, isDemo, onUnlock }) {
   const { user, login, logout, saveRoadmap, saveProgress } = useAuth();
   const [activeTab, setActiveTab] = useState('courses');
   const [activeSemester, setActiveSemester] = useState(0);
@@ -394,7 +394,8 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
         <nav className="hide-scrollbar" style={{ flex: 1, overflow: 'auto', padding: '8px' }}>
           {tabs.map(function(tab) {
             var isActive = activeTab === tab.id;
-            return (<button key={tab.id} onClick={function() { setActiveTab(tab.id); if (isMobile) setMobileMenuOpen(false); }} title={!sidebarOpen && !isMobile ? tab.label : undefined} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: sidebarOpen || isMobile ? '9px 12px' : '10px 0', justifyContent: sidebarOpen || isMobile ? 'flex-start' : 'center', borderRadius: 8, border: 'none', background: isActive ? accentColor + '15' : 'transparent', color: isActive ? accentColor : txMut, fontSize: 13, fontWeight: isActive ? 600 : 400, cursor: 'pointer', transition: 'all 0.15s', marginBottom: 2, position: 'relative' }}><span style={{ fontSize: 16, width: 22, textAlign: 'center', flexShrink: 0 }}>{tab.icon}</span>{(sidebarOpen || isMobile) && <span>{tab.label}</span>}{isActive && <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', width: 3, height: 20, borderRadius: 2, background: accentColor }} />}</button>);
+            var isLocked = isDemo && tab.id !== 'courses';
+            return (<button key={tab.id} onClick={function() { if (isLocked) return; setActiveTab(tab.id); if (isMobile) setMobileMenuOpen(false); }} title={!sidebarOpen && !isMobile ? tab.label : undefined} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: sidebarOpen || isMobile ? '9px 12px' : '10px 0', justifyContent: sidebarOpen || isMobile ? 'flex-start' : 'center', borderRadius: 8, border: 'none', background: isActive ? accentColor + '15' : 'transparent', color: isLocked ? (darkMode ? '#3a3a4e' : '#c0c0c8') : isActive ? accentColor : txMut, fontSize: 13, fontWeight: isActive ? 600 : 400, cursor: isLocked ? 'default' : 'pointer', transition: 'all 0.15s', marginBottom: 2, position: 'relative', opacity: isLocked ? 0.5 : 1 }}><span style={{ fontSize: 16, width: 22, textAlign: 'center', flexShrink: 0 }}>{isLocked ? '🔒' : tab.icon}</span>{(sidebarOpen || isMobile) && <span>{tab.label}</span>}{isActive && !isLocked && <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', width: 3, height: 20, borderRadius: 2, background: accentColor }} />}</button>);
           })}
         </nav>
         <div style={{ padding: '8px', borderTop: '1px solid ' + sidebarBdr, flexShrink: 0 }}>
@@ -434,6 +435,19 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
 
         <main className="hide-scrollbar" style={{ flex: 1, overflow: 'auto', WebkitOverflowScrolling: 'touch', padding: isMobile ? '20px 16px 40px' : '24px 32px 40px' }}>
           <div style={{ maxWidth: 820, margin: '0 auto' }}>
+
+        {isDemo && (
+          <div style={{ marginBottom: 16, background: 'linear-gradient(135deg, #6c5ce722, ' + bgCard + ')', border: '1px solid #6c5ce744', borderRadius: 14, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 200 }}>
+              <span style={{ fontSize: 24 }}>🔓</span>
+              <div>
+                <div style={{ color: tx, fontSize: 15, fontWeight: 700 }}>You're viewing a demo</div>
+                <div style={{ color: txDim, fontSize: 13, marginTop: 2 }}>Freshman & sophomore courses are unlocked. Sign up free to access your full roadmap, AI advisor, interviews, and more.</div>
+              </div>
+            </div>
+            <button onClick={onUnlock} style={{ padding: '10px 24px', borderRadius: 100, border: 'none', background: '#6c5ce7', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>Unlock Full Access →</button>
+          </div>
+        )}
 
         {showWelcome && (
           <div className="welcome-banner" style={{ marginBottom: 16 }}>
@@ -475,7 +489,8 @@ export default function Dashboard({ profile, onReset, savedProgress }) {
                 {semesters.map(function(sem, i) {
                   var done = sem.courses && sem.courses.every(function(_, ci) { return completedCourses[i + '-' + ci]; });
                   var isCurrent = currentSemesterIdx === i;
-                  return (<button key={i} onClick={function() { setActiveSemester(i); }} onDoubleClick={function() { setCurrentSemesterIdx(i); }} title={isCurrent ? 'Current semester' : 'Double-click to set as current'} style={{ padding: '8px 14px', borderRadius: 20, border: isCurrent ? '2px solid ' + accentColor : 'none', background: activeSemester === i ? accentColor : done ? '#1a3a24' : bgSec, color: activeSemester === i ? '#000' : done ? '#4ade80' : txSub, fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, position: 'relative' }}>{done ? '✓ ' : ''}{isCurrent ? '📍 ' : ''}{sem.name}</button>);
+                  var semLocked = isDemo && i >= 4;
+                  return (<button key={i} onClick={function() { if (semLocked) return; setActiveSemester(i); }} onDoubleClick={function() { if (!semLocked) setCurrentSemesterIdx(i); }} title={semLocked ? 'Sign up to unlock' : isCurrent ? 'Current semester' : 'Double-click to set as current'} style={{ padding: '8px 14px', borderRadius: 20, border: isCurrent && !semLocked ? '2px solid ' + accentColor : 'none', background: semLocked ? (darkMode ? '#1a1a22' : '#e8e8ee') : activeSemester === i ? accentColor : done ? '#1a3a24' : bgSec, color: semLocked ? (darkMode ? '#3a3a4e' : '#b0b0b8') : activeSemester === i ? '#000' : done ? '#4ade80' : txSub, fontSize: 12, fontWeight: 600, cursor: semLocked ? 'default' : 'pointer', whiteSpace: 'nowrap', flexShrink: 0, position: 'relative', opacity: semLocked ? 0.6 : 1 }}>{semLocked ? '🔒 ' : done ? '✓ ' : ''}{isCurrent && !semLocked ? '📍 ' : ''}{sem.name}</button>);
                 })}
               </div>
               <button onClick={function() { if (semRef.current) semRef.current.scrollBy({ left: 150, behavior: 'smooth' }); }} style={{ position: 'absolute', right: -4, top: '50%', transform: 'translateY(-50%)', zIndex: 2, width: 28, height: 28, borderRadius: '50%', border: '1px solid ' + bdrL, background: tabBg + 'ee', color: txSub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>›</button>
