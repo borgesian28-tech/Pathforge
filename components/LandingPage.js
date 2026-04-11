@@ -174,38 +174,6 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
           }}>Try a Demo →</button>
         </div>
 
-        {/* Dev code toggle */}
-        <div style={{ marginTop: 20, animation: 'fadeUpHero 0.8s ease 0.35s both' }}>
-          <button onClick={function() { setShowDevCode(!showDevCode); setDevError(''); }} style={{
-            background: 'none', border: 'none', color: txMut, fontSize: 13,
-            cursor: 'pointer', textDecoration: 'underline', fontFamily: sans,
-          }}>Have a developer code?</button>
-          {showDevCode && (
-            <div style={{
-              marginTop: 12, display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center',
-            }}>
-              <input
-                type="text" placeholder="Enter code" value={devCode}
-                onChange={function(e) { setDevCode(e.target.value); }}
-                onKeyDown={function(e) { if (e.key === 'Enter') handleDevSubmit(); }}
-                style={{
-                  padding: '10px 16px', borderRadius: 10, fontSize: 14,
-                  border: '1px solid ' + (devError ? '#ef4444' : bdr),
-                  background: dark ? '#111115' : '#f8f8fb', color: tx,
-                  outline: 'none', width: 180, fontFamily: sans,
-                  transition: 'border-color 0.2s',
-                }}
-              />
-              <button onClick={handleDevSubmit} style={{
-                padding: '10px 20px', borderRadius: 10, border: 'none',
-                background: accent, color: '#fff', fontSize: 14, fontWeight: 600,
-                cursor: 'pointer', fontFamily: sans,
-              }}>Submit</button>
-            </div>
-          )}
-          {devError && <p style={{ color: '#ef4444', fontSize: 12, marginTop: 6 }}>{devError}</p>}
-        </div>
-
         {/* PRODUCT MOCK */}
         <div style={{
           marginTop: 48, width: '100%', maxWidth: 900, borderRadius: radius,
@@ -409,7 +377,18 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
         <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 16 }}>
           <a href="/terms" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Terms of Service</a>
           <a href="/pricing" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Pricing</a>
+          <button onClick={function() { setShowDevCode(!showDevCode); setDevError(''); }} style={{ background: 'none', border: 'none', color: txMut, fontSize: 13, cursor: 'pointer', fontFamily: sans, padding: 0 }}>Beta Access</button>
         </div>
+        {showDevCode && (
+          <div style={{ marginBottom: 16, display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center' }}>
+            <input type="text" placeholder="Enter access code" value={devCode}
+              onChange={function(e) { setDevCode(e.target.value); }}
+              onKeyDown={function(e) { if (e.key === 'Enter') handleDevSubmit(); }}
+              style={{ padding: '8px 14px', borderRadius: 8, fontSize: 13, border: '1px solid ' + (devError ? '#ef4444' : bdr), background: dark ? '#111115' : '#f8f8fb', color: tx, outline: 'none', width: 160, fontFamily: sans }} />
+            <button onClick={handleDevSubmit} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: sans }}>→</button>
+          </div>
+        )}
+        {devError && <p style={{ color: '#ef4444', fontSize: 11, marginBottom: 8 }}>{devError}</p>}
         <p style={{ fontSize: 13, color: txMut }}>© 2026 PathForge · Built with AI, designed for ambition.</p>
       </footer>
     </div>
