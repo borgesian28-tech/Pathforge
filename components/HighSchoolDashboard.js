@@ -211,36 +211,18 @@ export default function HighSchoolDashboard({ roadmap, onReset, isDemo, onUnlock
     setCollegeSearchLoading(true);
     setCollegeSearchResults(null);
     try {
-      var prefs = collegeSearchPrefs;
-      var prompt = 'Find 5 real colleges/universities that match these student preferences:\n' +
-        '- Intended major: ' + (prefs.major || currentRoadmap.careerField) + '\n' +
-        '- School size: ' + (prefs.size || 'No preference') + '\n' +
-        '- Setting: ' + (prefs.setting || 'No preference') + '\n' +
-        '- Region: ' + (prefs.region || 'Anywhere in the US') + '\n' +
-        '- Priority: ' + (prefs.focus || 'Strong academics') + '\n\n' +
-        'Respond ONLY with a valid JSON array (no markdown, no backticks, no explanation). Each object must have exactly these fields:\n' +
-        '{\n"name": "Full University Name",\n"location": "City, State",\n"size": "X,XXX students",\n"setting": "Urban/Suburban/Rural",\n"acceptanceRate": "XX%",\n"topMajors": ["Major 1", "Major 2", "Major 3"],\n"avgGPA": "X.XX",\n"avgSAT": "XXXX-XXXX",\n"tuition": "$XX,XXX/year",\n"financialAid": "XX% of students receive aid",\n"whyGoodFit": "2 sentences explaining why this school matches the student preferences",\n"website": "https://www.school.edu"\n}';
-      var res = await fetch('/api/chat', {
+      var res = await fetch('/api/college-search', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [{ role: 'user', content: prompt }],
-          context: 'You are a college admissions expert. Return ONLY a raw JSON array with no extra text, no markdown code fences, and no explanation. Just the JSON array. Make sure all data is factually accurate and up-to-date. Only recommend real accredited US colleges and universities.'
-        })
+        body: JSON.stringify({ preferences: collegeSearchPrefs })
       });
       if (res.ok) {
         var data = await res.json();
-        var reply = (data.reply || '').trim();
-        // Strip markdown fences if present
-        reply = reply.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
-        try {
-          var parsed = JSON.parse(reply);
-          setCollegeSearchResults(Array.isArray(parsed) ? parsed : [parsed]);
-        } catch(e) {
-          console.error('Failed to parse college results:', e, reply);
-          setCollegeSearchResults([]);
-        }
+        setCollegeSearchResults(data.colleges && data.colleges.length > 0 ? data.colleges : []);
+      } else {
+        console.error('College search failed:', res.status);
+        setCollegeSearchResults([]);
       }
-    } catch(e) { console.error(e); setCollegeSearchResults([]); }
+    } catch(e) { console.error('College search error:', e); setCollegeSearchResults([]); }
     setCollegeSearchLoading(false);
   };
 
