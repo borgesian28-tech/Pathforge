@@ -168,7 +168,7 @@ export default function LoadingScreen({ status, career, onRetry, error }) {
 
   if (error) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #08080f 0%, #0c0c1a 50%, #08080f 100%)', padding: 20 }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #08080f 0%, #0c0c1a 50%, #08080f 100%)', padding: '80px 20px 40px', overflow: 'auto' }}>
         <div style={{ maxWidth: 420, textAlign: 'center' }} className="fade-in">
           <div style={{ fontSize: 56, marginBottom: 20 }}>⚡</div>
           <h2 style={{ fontFamily: "'Playfair Display', serif", color: '#fff', fontSize: 24, margin: '0 0 12px' }}>Hit a Snag</h2>
@@ -184,7 +184,7 @@ export default function LoadingScreen({ status, career, onRetry, error }) {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #08080f 0%, #0c0c1a 50%, #08080f 100%)', padding: 20 }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #08080f 0%, #0c0c1a 50%, #08080f 100%)', padding: '80px 20px 40px', overflow: 'auto' }}>
       <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }} className="fade-in">
         {/* Spinner */}
         <div style={{ position: 'relative', width: 80, height: 80, margin: '0 auto 28px' }}>
