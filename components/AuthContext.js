@@ -9,6 +9,8 @@ const AuthContext = createContext({});
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [subscription, setSubscription] = useState({ tier: 'free', status: null });
+  const [subLoading, setSubLoading] = useState(false);
 
   useEffect(function() {
     var unsubscribe = onAuthStateChanged(auth, function(u) {
@@ -17,6 +19,29 @@ export function AuthProvider({ children }) {
     });
     return function() { unsubscribe(); };
   }, []);
+
+  // Fetch subscription status when user changes
+  useEffect(function() {
+    if (user) {
+      setSubLoading(true);
+      fetch('/api/subscription-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.uid }),
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        setSubscription(data);
+        setSubLoading(false);
+      })
+      .catch(function() {
+        setSubscription({ tier: 'free', status: null });
+        setSubLoading(false);
+      });
+    } else {
+      setSubscription({ tier: 'free', status: null });
+    }
+  }, [user]);
 
   var login = async function() {
     try {
@@ -31,6 +56,7 @@ export function AuthProvider({ children }) {
   var logout = async function() {
     try {
       await signOut(auth);
+      setSubscription({ tier: 'free', status: null });
     } catch (err) {
       console.error('Logout error:', err);
     }
@@ -87,8 +113,61 @@ export function AuthProvider({ children }) {
     }
   };
 
+  var startCheckout = async function(priceId) {
+    try {
+      var res = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          priceId: priceId,
+          userId: user ? user.uid : null,
+          userEmail: user ? user.email : null,
+        }),
+      });
+      var data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      console.error('Checkout error:', err);
+    }
+  };
+
+  var openPortal = async function() {
+    if (!subscription.customerId) return;
+    try {
+      var res = await fetch('/api/create-portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customerId: subscription.customerId }),
+      });
+      var data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      console.error('Portal error:', err);
+    }
+  };
+
+  var refreshSubscription = function() {
+    if (!user) return;
+    fetch('/api/subscription-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: user.uid }),
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) { setSubscription(data); })
+    .catch(function() {});
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, saveRoadmap, loadRoadmap, saveProgress }}>
+    <AuthContext.Provider value={{
+      user, loading, login, logout,
+      saveRoadmap, loadRoadmap, saveProgress,
+      subscription, subLoading, startCheckout, openPortal, refreshSubscription,
+    }}>
       {children}
     </AuthContext.Provider>
   );
