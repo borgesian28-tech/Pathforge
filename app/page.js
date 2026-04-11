@@ -112,8 +112,17 @@ export default function Home() {
     );
   }
 
+  var handleDevLogin = function(code) {
+    if (code === '348145') {
+      setShowLanding(false);
+      setIsDemo(false);
+      return true;
+    }
+    return false;
+  };
+
   if (showLanding) {
-    return <LandingPage onGetStarted={handleGetStarted} onDemo={handleDemo} user={user} onLogin={login} />;
+    return <LandingPage onGetStarted={handleGetStarted} onDemo={handleDemo} onDevLogin={handleDevLogin} user={user} onLogin={login} />;
   }
 
   return (
