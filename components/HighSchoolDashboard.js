@@ -106,7 +106,7 @@ function HSChatbot({ careerField, accent, primaryColor, darkMode }) {
   );
 }
 
-export default function HighSchoolDashboard({ roadmap, onReset }) {
+export default function HighSchoolDashboard({ roadmap, onReset, isDemo, onUnlock }) {
   const [activeTab, setActiveTab] = useState('courses');
   const [activeYear, setActiveYear] = useState(0);
   const [expandedCollege, setExpandedCollege] = useState(null);
@@ -258,13 +258,14 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
         <nav className="thin-scrollbar" style={{ flex: 1, overflow: 'auto', padding: '8px' }}>
           {tabs.map(function(tab) {
             var isActive = activeTab === tab.id;
+            var isLocked = isDemo && tab.id !== 'courses';
             return (
-              <button key={tab.id} onClick={function() { setActiveTab(tab.id); if (isMobile) setMobileMenuOpen(false); }}
-                title={!sidebarOpen && !isMobile ? tab.label : undefined}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: sidebarOpen || isMobile ? '9px 12px' : '10px 0', justifyContent: sidebarOpen || isMobile ? 'flex-start' : 'center', borderRadius: 8, border: 'none', background: isActive ? accent + '15' : 'transparent', color: isActive ? accent : txMut, fontSize: 13, fontWeight: isActive ? 600 : 400, cursor: 'pointer', transition: 'all 0.15s', marginBottom: 2, position: 'relative' }}>
-                <span style={{ fontSize: 16, width: 22, textAlign: 'center', flexShrink: 0 }}>{tab.icon}</span>
+              <button key={tab.id} onClick={function() { if (isLocked) return; setActiveTab(tab.id); if (isMobile) setMobileMenuOpen(false); }}
+                title={isLocked ? 'Sign up to unlock' : !sidebarOpen && !isMobile ? tab.label : undefined}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: sidebarOpen || isMobile ? '9px 12px' : '10px 0', justifyContent: sidebarOpen || isMobile ? 'flex-start' : 'center', borderRadius: 8, border: 'none', background: isActive && !isLocked ? accent + '15' : 'transparent', color: isLocked ? (darkMode ? '#3a3a4e' : '#c0c0c8') : isActive ? accent : txMut, fontSize: 13, fontWeight: isActive ? 600 : 400, cursor: isLocked ? 'default' : 'pointer', transition: 'all 0.15s', marginBottom: 2, position: 'relative', opacity: isLocked ? 0.5 : 1 }}>
+                <span style={{ fontSize: 16, width: 22, textAlign: 'center', flexShrink: 0 }}>{isLocked ? '🔒' : tab.icon}</span>
                 {(sidebarOpen || isMobile) && <span>{tab.label}</span>}
-                {isActive && <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', width: 3, height: 20, borderRadius: 2, background: accent }} />}
+                {isActive && !isLocked && <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', width: 3, height: 20, borderRadius: 2, background: accent }} />}
               </button>
             );
           })}
@@ -315,6 +316,19 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
         <main className="thin-scrollbar" style={{ flex: 1, overflow: 'auto', WebkitOverflowScrolling: 'touch', padding: isMobile ? '20px 16px 40px' : '24px 32px 40px' }}>
           <div style={{ maxWidth: 820, margin: '0 auto' }}>
 
+            {isDemo && (
+              <div style={{ marginBottom: 16, background: 'linear-gradient(135deg, #6c5ce722, ' + bgCard + ')', border: '1px solid #6c5ce744', borderRadius: 14, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 200 }}>
+                  <span style={{ fontSize: 24 }}>🔓</span>
+                  <div>
+                    <div style={{ color: tx, fontSize: 15, fontWeight: 700 }}>You're viewing a demo</div>
+                    <div style={{ color: txDim, fontSize: 13, marginTop: 2 }}>Freshman & sophomore years are unlocked. Sign up free to see your full 4-year plan, activities, test prep, and more.</div>
+                  </div>
+                </div>
+                <button onClick={onUnlock} style={{ padding: '10px 24px', borderRadius: 100, border: 'none', background: '#6c5ce7', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>Unlock Full Access →</button>
+              </div>
+            )}
+
             {activeTab === 'courses' && (
               <div>
                 <div style={{ background: bgCard, border: '1px solid ' + bdr, borderRadius: 10, padding: '10px 14px', marginBottom: 14, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
@@ -325,7 +339,8 @@ export default function HighSchoolDashboard({ roadmap, onReset }) {
                   {years.map(function(y, i) {
                     var isActive = activeYear === i;
                     var isCurrent = currentYearIdx === i;
-                    return (<button key={i} onClick={function() { setActiveYear(i); }} onDoubleClick={function() { setCurrentYearIdx(i); }} title={isCurrent ? 'Current year' : 'Double-click to set as current'} style={{ padding: '6px 16px', borderRadius: 20, border: isCurrent ? '2px solid ' + accent : (isActive ? '1px solid ' + accent + '44' : '1px solid ' + bdr), background: isActive ? accent + '15' : bgCard, color: isActive ? accent : txSub, fontSize: 13, fontWeight: isActive ? 600 : 400, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.15s' }}>{isCurrent ? '📍 ' : ''}{y.year}</button>);
+                    var yearLocked = isDemo && i >= 2;
+                    return (<button key={i} onClick={function() { if (yearLocked) return; setActiveYear(i); }} onDoubleClick={function() { if (!yearLocked) setCurrentYearIdx(i); }} title={yearLocked ? 'Sign up to unlock' : isCurrent ? 'Current year' : 'Double-click to set as current'} style={{ padding: '6px 16px', borderRadius: 20, border: yearLocked ? '1px solid ' + bdr : isCurrent ? '2px solid ' + accent : (isActive ? '1px solid ' + accent + '44' : '1px solid ' + bdr), background: yearLocked ? (darkMode ? '#1a1a22' : '#e8e8ee') : isActive ? accent + '15' : bgCard, color: yearLocked ? (darkMode ? '#3a3a4e' : '#b0b0b8') : isActive ? accent : txSub, fontSize: 13, fontWeight: isActive ? 600 : 400, cursor: yearLocked ? 'default' : 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.15s', opacity: yearLocked ? 0.6 : 1 }}>{yearLocked ? '🔒 ' : isCurrent ? '📍 ' : ''}{y.year}</button>);
                   })}
                 </div>
                 {years[activeYear] && (<>
