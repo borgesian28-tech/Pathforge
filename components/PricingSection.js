@@ -124,9 +124,9 @@ export default function PricingSection({ onSelectPlan, user, onLogin, darkMode }
                 <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
                   <input type="email" placeholder="your@email.com" value={waitlistEmail}
                     onChange={function(e) { setWaitlistEmail(e.target.value); }}
-                    onKeyDown={function(e) { if (e.key === 'Enter' && waitlistEmail.includes('@')) { setWaitlistSubmitted(true); } }}
+                    onKeyDown={function(e) { if (e.key === 'Enter' && waitlistEmail.includes('@')) { fetch('/api/waitlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: waitlistEmail, plan: selectedPlanName }) }).catch(function(){}); setWaitlistSubmitted(true); } }}
                     style={{ flex: 1, padding: '12px 16px', borderRadius: 10, border: '1px solid ' + bdr, background: dm ? '#09090b' : '#f5f5f8', color: tx, fontSize: 14, outline: 'none', fontFamily: sans }} />
-                  <button onClick={function() { if (waitlistEmail.includes('@')) setWaitlistSubmitted(true); }}
+                  <button onClick={function() { if (waitlistEmail.includes('@')) { fetch('/api/waitlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: waitlistEmail, plan: selectedPlanName }) }).catch(function(){}); setWaitlistSubmitted(true); } }}
                     style={{ padding: '12px 20px', borderRadius: 10, border: 'none', background: waitlistEmail.includes('@') ? accent : (dm ? '#1e1e28' : '#e2e2e8'), color: waitlistEmail.includes('@') ? '#fff' : txMut, fontSize: 14, fontWeight: 700, cursor: waitlistEmail.includes('@') ? 'pointer' : 'default', fontFamily: sans }}>
                     Join
                   </button>
