@@ -4,111 +4,124 @@ const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/
 
 export async function POST(request) {
   try {
-    var body = await request.json();
-    var prefs = body.preferences || {};
+    var body = null;
+    try { body = await request.json(); } catch(e) { body = {}; }
+    var careerGoal = body.careerGoal || body.career || body.careerPath || '';
+    
+    if (!careerGoal || !careerGoal.trim()) {
+      return Response.json({ error: 'Missing career goal' }, { status: 400 });
+    }
+    careerGoal = careerGoal.trim();
 
-    var apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return Response.json({ error: 'No key' }, { status: 500 });
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return Response.json({ error: 'No API key' }, { status: 500 });
+    }
 
-    var prompt = 'Find 5 real US colleges/universities that match these student preferences:\n' +
-      '- Intended major: ' + (prefs.major || 'Undecided') + '\n' +
-      '- School size: ' + (prefs.size || 'No preference') + '\n' +
-      '- Setting: ' + (prefs.setting || 'No preference') + '\n' +
-      '- Region: ' + (prefs.region || 'Anywhere in the US') + '\n' +
-      '- Priority: ' + (prefs.focus || 'Strong academics') + '\n\n' +
-      'Return a JSON array of 5 colleges. Each object must have these exact fields:\n' +
-      '- name: Full university name\n' +
-      '- location: "City, State"\n' +
-      '- size: "XX,XXX students"\n' +
-      '- setting: "Urban" or "Suburban" or "Rural"\n' +
-      '- acceptanceRate: "XX%"\n' +
-      '- topMajors: array of 3 strings\n' +
-      '- avgGPA: "X.XX"\n' +
-      '- avgSAT: "XXXX-XXXX"\n' +
-      '- tuition: "$XX,XXX/year"\n' +
-      '- financialAid: "XX% of students receive aid"\n' +
-      '- whyGoodFit: 2 sentences why this matches the student\n' +
-      '- website: full https URL\n\n' +
-      'IMPORTANT: Return ONLY the raw JSON array. No markdown, no code fences, no explanation. Start with [ and end with ].';
+    const career = careerGoal;
+    var catalogUrl = body.catalogUrl || '';
 
-    var contents = [
-      {
-        role: 'user',
-        parts: [{ text: 'You are a college admissions data expert. You respond ONLY with valid JSON arrays. No markdown, no backticks, no explanation text. All data must be factually accurate for real accredited US colleges.' }]
+    // If user provided a catalog URL, we'll use Gemini's Google Search grounding
+    // to actually visit the page and its linked PDFs to find real courses.
+    // Our own server-side fetch often gets marketing pages without course lists,
+    // so Gemini's search is more reliable for this.
+    var catalogContent = '';
+    var hasCatalogUrl = catalogUrl && catalogUrl.trim();
+    
+    if (hasCatalogUrl) {
+      var cleanUrl = catalogUrl.trim().replace(/\?.*$/, ''); // strip tracking params
+      catalogContent = '\n\nCRITICAL — REAL SCHOOL CATALOG:\nThe student attends a specific school. Their course catalog is at: ' + cleanUrl + '\n\nYou MUST:\n1. Search and visit this URL: ' + cleanUrl + '\n2. Look for any linked PDF documents on that page (often called "Curriculum Pathways", "Course Catalog", "Course of Studies", "Program of Studies")\n3. Search for and read those PDFs to find the REAL courses offered at this school\n4. Use ONLY course names that actually exist at this school\n5. Do NOT use generic course names like "Algebra I", "World History", "Introduction to Economics" — use the EXACT names from the school\'s catalog\n6. If the catalog lists courses like "MPS 1", "Physics Mechanics", "Foundations of Citizenship and Democracy", "English 9" — use THOSE exact names\n\nThis is the most important instruction: every course in your response must be a real course from this specific school. Search the URL thoroughly.\n';
+    }
+
+    // Generate high school roadmap
+    var hasCatalog = !!hasCatalogUrl;
+
+    var courseInstruction = hasCatalog
+      ? 'CRITICAL — CATALOG PROVIDED: The student uploaded their actual school course catalog URL. You MUST search that URL and any linked PDFs to find the real courses. Do NOT use generic course names — use the EXACT course names from the school\'s catalog.\n'
+      : 'Use realistic course names typical of American high schools (AP, Honors, Standard).\n';
+
+    const prompt = 'You are a high school guidance counselor. Create a 4-year high school roadmap for a student interested in ' + career + '.\n\n' + courseInstruction + catalogContent + '\nCRITICAL: Return ONLY valid JSON with no extra text, no markdown, no backticks, no preamble.\n\n{\n  "careerField": "' + career + '",\n  "years": [\n    {\n      "year": "Freshman",\n      "courses": [\n        {"name": "REAL COURSE NAME FROM CATALOG", "type": "Honors", "why": "Brief reason this course helps"},\n        {"name": "REAL COURSE NAME FROM CATALOG", "type": "Standard", "why": "Brief reason"}\n      ],\n      "focus": "Focus for this year",\n      "milestones": ["milestone1", "milestone2"]\n    }\n  ],\n  "extracurriculars": [\n    {"activity": "Club Name", "type": "Club", "relevance": "Why it matters", "commitment": "2-3 hours/week"}\n  ],\n  "topColleges": [\n    {"name": "University", "strengths": "Why this school", "selectivity": "Highly Selective"}\n  ],\n  "standardizedTests": {\n    "sat": {"when": "When to take", "target": "Score range", "prep": "How to prepare"},\n    "act": {"when": "When to take", "target": "Score range", "prep": "How to prepare"},\n    "ap": ["AP Exam 1", "AP Exam 2"]\n  },\n  "summerActivities": [\n    {"year": "After Freshman Year", "activities": ["activity1", "activity2"]}\n  ],\n  "collegeAppTimeline": [\n    {"when": "Junior Spring", "tasks": ["task1", "task2"]}\n  ],\n  "skills": ["skill1", "skill2"]\n}\n\nReturn 4 years (Freshman, Sophomore, Junior, Senior) with 6-8 courses each.\n' + (hasCatalog ? 'EVERY course name MUST come from the school\'s actual catalog. Do NOT invent course names. Search the catalog URL provided.\n' : '') + '8-12 colleges for ' + career + '.\n5-7 extracurriculars.\nJSON ONLY - no other text.';
+
+    // ALWAYS use search grounding when catalog URL is provided so Gemini can visit it
+    var useSearch = hasCatalog;
+    
+    var geminiBody = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { 
+        maxOutputTokens: hasCatalog ? 6144 : 4096, 
+        temperature: 0.3 
       },
-      {
-        role: 'model',
-        parts: [{ text: 'Understood. I will respond only with a raw JSON array of real US colleges.' }]
-      },
-      {
-        role: 'user',
-        parts: [{ text: prompt }]
-      }
-    ];
+    };
+    if (useSearch) geminiBody.tools = [{ google_search: {} }];
 
-    var response = await fetch(GEMINI_API_URL, {
+    const response = await fetch(GEMINI_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-goog-api-key': apiKey,
       },
-      body: JSON.stringify({
-        contents: contents,
-        generationConfig: { maxOutputTokens: 4096, temperature: 0.4 },
-        safetySettings: [
-          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
-          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
-          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
-          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
-        ],
-      }),
+      body: JSON.stringify(geminiBody),
     });
 
     if (!response.ok) {
-      var errText = await response.text();
-      console.error('College search API error:', response.status, errText);
-      return Response.json({ colleges: [], error: 'API error' });
+      throw new Error('Gemini API failed');
     }
 
-    var data = await response.json();
-    var reply = '';
-    var candidates = data.candidates || [];
-    if (candidates.length > 0 && candidates[0].content && candidates[0].content.parts) {
-      for (var j = 0; j < candidates[0].content.parts.length; j++) {
-        if (candidates[0].content.parts[j].text) {
-          reply += candidates[0].content.parts[j].text;
-        }
+    const data = await response.json();
+    
+    // Extract text from response
+    let text = '';
+    if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
+      for (const part of data.candidates[0].content.parts) {
+        if (part.text) text += part.text;
       }
     }
 
-    reply = reply.trim();
-    // Strip markdown fences
-    reply = reply.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim();
-    // Extract JSON array
-    var startIdx = reply.indexOf('[');
-    var endIdx = reply.lastIndexOf(']');
-    if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
-      reply = reply.substring(startIdx, endIdx + 1);
+    text = text.trim();
+    
+    // Clean markdown code blocks if present
+    if (text.includes('```')) {
+      const match = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (match) text = match[1].trim();
     }
 
-    try {
-      var parsed = JSON.parse(reply);
-      var colleges = Array.isArray(parsed) ? parsed : [parsed];
-      return Response.json({ colleges: colleges });
-    } catch (e) {
-      // Try fixing trailing commas
-      try {
-        var fixed = reply.replace(/,\s*]/g, ']').replace(/,\s*}/g, '}');
-        var parsed2 = JSON.parse(fixed);
-        var colleges2 = Array.isArray(parsed2) ? parsed2 : [parsed2];
-        return Response.json({ colleges: colleges2 });
-      } catch (e2) {
-        console.error('College search JSON parse failed:', e2.message, reply.substring(0, 300));
-        return Response.json({ colleges: [], error: 'Failed to parse results' });
-      }
+    // Extract JSON object
+    const start = text.indexOf('{');
+    if (start === -1) {
+      throw new Error('No JSON found in response');
     }
+
+    let depth = 0, inString = false, escape = false, end = -1;
+    const substr = text.substring(start);
+    
+    for (let i = 0; i < substr.length; i++) {
+      const char = substr[i];
+      if (escape) { escape = false; continue; }
+      if (char === '\\') { escape = true; continue; }
+      if (char === '"') { inString = !inString; continue; }
+      if (inString) continue;
+      if (char === '{') depth++;
+      if (char === '}') { depth--; if (depth === 0) { end = i; break; } }
+    }
+
+    if (end === -1) {
+      throw new Error('Incomplete JSON in response');
+    }
+
+    const roadmap = JSON.parse(substr.substring(0, end + 1));
+    
+    // Validate response structure
+    if (!roadmap.years || !Array.isArray(roadmap.years) || roadmap.years.length < 1) {
+      throw new Error('Invalid roadmap structure');
+    }
+
+    return Response.json(roadmap);
+    
   } catch (err) {
-    console.error('College search error:', err);
-    return Response.json({ colleges: [], error: 'Server error' });
+    console.error('HS roadmap error:', err);
+    return Response.json({ 
+      error: 'Failed to generate high school roadmap',
+      message: err.message 
+    }, { status: 500 });
   }
 }
