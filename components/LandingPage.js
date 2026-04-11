@@ -1,7 +1,10 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import PricingSection from '@/components/PricingSection';
+import { useAuth } from '@/components/AuthContext';
 
 export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, onLogin }) {
+  var { startCheckout } = useAuth();
   var [visible, setVisible] = useState(new Set());
   var [dark, setDark] = useState(true);
   var [showDevCode, setShowDevCode] = useState(false);
@@ -365,6 +368,18 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
               );
             })}
           </div>
+        </div>
+      </section>
+
+      {/* PRICING */}
+      <section id="lp-pricing" style={{ padding: '100px 24px', background: bgCard, transition: 'background 0.3s' }}>
+        <div style={{ maxWidth: 1140, margin: '0 auto' }}>
+          <div data-reveal="pricing-head" style={Object.assign({}, revealStyle('pricing-head'), { textAlign: 'center', marginBottom: 16 })}>
+            <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 3, color: accentLight, fontWeight: 600, marginBottom: 16 }}>Pricing</div>
+            <div style={{ fontFamily: serif, fontSize: 'clamp(36px, 4.5vw, 56px)', lineHeight: 1.1, letterSpacing: -1, margin: '0 auto', color: tx }}>Invest in your future.</div>
+            <p style={{ color: txDim, fontSize: 17, maxWidth: 520, margin: '16px auto 0', lineHeight: 1.7 }}>Cancel anytime. No hidden fees.</p>
+          </div>
+          <PricingSection onSelectPlan={function(priceId) { startCheckout(priceId); }} user={user} onLogin={onLogin} darkMode={dark} />
         </div>
       </section>
 
