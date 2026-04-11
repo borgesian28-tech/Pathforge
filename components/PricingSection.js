@@ -44,7 +44,8 @@ export default function PricingSection({ onSelectPlan, user, onLogin, darkMode }
       </div>
 
       {/* Plan cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, maxWidth: 700, margin: '0 auto' }}>
+      <div className="pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, maxWidth: 960, margin: '0 auto' }}>
+        <style>{'.pricing-grid { grid-template-columns: repeat(3, 1fr) !important; } @media (max-width: 860px) { .pricing-grid { grid-template-columns: 1fr !important; } }'}</style>
         {/* Free */}
         <div style={{ padding: '32px 28px', borderRadius: 18, background: bgCard, border: '1px solid ' + bdr }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: txMut, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Free</div>
