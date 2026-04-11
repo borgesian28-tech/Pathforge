@@ -27,23 +27,28 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
 
     if (programLevel === 'highschool') {
       onLoading(true, selectedCareer, 'Building your high school roadmap...');
-      try {
-        const res = await fetch('/api/generate-hs', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ careerGoal: isCustom ? customGoal : career.label }),
-        });
-        if (!res.ok) throw new Error('API error');
-        const data = await res.json();
-        if (data.years) {
-          onComplete({
-            name, career: selectedCareer,
-            careerLabel: data.careerField || career.label,
-            programLevel: 'highschool', hsRoadmap: data,
-            careerObj: isCustom ? { ...career, label: data.careerField || 'Custom Path' } : career,
+      var hsCareerGoal = isCustom ? customGoal : career.label;
+      var doHsFetch = async function() {
+        try {
+          const res = await fetch('/api/generate-hs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ careerGoal: hsCareerGoal }),
           });
-        } else { throw new Error('Invalid data'); }
-      } catch (err) { console.error(err); if (onError) onError(); else { onLoading(false); } }
+          if (!res.ok) throw new Error('API error');
+          const data = await res.json();
+          if (data.years) {
+            onComplete({
+              name, career: selectedCareer,
+              careerLabel: data.careerField || career.label,
+              programLevel: 'highschool', hsRoadmap: data,
+              careerObj: isCustom ? { ...career, label: data.careerField || 'Custom Path' } : career,
+            });
+          } else { throw new Error('Invalid data'); }
+        } catch (err) { console.error(err); if (onError) onError(); else { onLoading(false); } }
+      };
+      if (onSaveRetry) onSaveRetry(doHsFetch);
+      doHsFetch();
       return;
     }
 
