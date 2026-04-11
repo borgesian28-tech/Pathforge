@@ -107,6 +107,7 @@ export default function Home() {
       onSaveRetry={function(fn) { lastRequest.current = fn; }}
       user={user}
       onLogin={login}
+      onBack={function() { setShowLanding(true); }}
     />
   );
 }
