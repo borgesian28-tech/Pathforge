@@ -360,7 +360,7 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: bg, display: 'flex', transition: 'background 0.3s', overflow: 'hidden', height: '100dvh' }}>
+    <div style={{ minHeight: '100vh', background: bg, display: 'flex', transition: 'background 0.3s', overflow: 'hidden', height: '100dvh', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
       {switchingMajor && (
         <div style={{ position: 'fixed', inset: 0, background: overlayBg, zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
           <div style={{ width: 40, height: 40, borderRadius: '50%', border: '2px solid transparent', borderTopColor: accentColor, animation: 'spin 1s linear infinite', marginBottom: 16 }} />
