@@ -4,6 +4,7 @@ import CourseCard from './CourseCard';
 import BeyondClassroom from './BeyondClassroom';
 import AiAdvisor from './AiAdvisor';
 import InterviewSimulator from './InterviewSimulator';
+import CareerComparison from './CareerComparison';
 import { useAuth } from './AuthContext';
 
 export default function Dashboard({ profile, onReset, savedProgress, isDemo, onUnlock, subscription }) {
@@ -338,6 +339,7 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
     { id: 'beyond', label: 'Beyond Class', icon: '⚡' },
     { id: 'interview', label: 'Interview', icon: '🎯' },
     { id: 'outcomes', label: 'Outcomes', icon: '💰' },
+    { id: 'career-compare', label: 'Compare Careers', icon: '⚖️' },
     { id: 'timeline', label: 'Timeline', icon: '📍' },
     { id: 'overview', label: 'Overview', icon: '📊' },
     { id: 'advisor', label: 'AI Advisor', icon: '💬' },
@@ -394,7 +396,7 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
         <nav className="hide-scrollbar" style={{ flex: 1, overflow: 'auto', padding: '8px' }}>
           {tabs.map(function(tab) {
             var isActive = activeTab === tab.id;
-            var premiumTabs = ['interview', 'outcomes', 'progress'];
+            var premiumTabs = ['interview', 'outcomes', 'career-compare', 'progress'];
             var isPremiumTab = premiumTabs.indexOf(tab.id) !== -1;
             var userTier = subscription && subscription.tier || 'free';
             var isLocked = false;
@@ -727,6 +729,12 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
               {outcomes.growthOutlook && (<div style={{ background: 'linear-gradient(135deg, ' + primaryColor + '33, ' + bgCard + ')', border: '1px solid ' + accentColor + '33', borderRadius: 14, padding: '16px 18px', marginBottom: 16 }}><h4 style={{ color: accentColor, fontSize: 12, fontWeight: 700, letterSpacing: 1.5, margin: '0 0 8px', textTransform: 'uppercase' }}>Industry Outlook</h4><p style={{ color: txSub, fontSize: 14, margin: 0, lineHeight: 1.6 }}>{outcomes.growthOutlook}</p></div>)}
               <div style={{ background: bgSec, border: '1px solid ' + bdrL, borderRadius: 10, padding: '10px 14px', display: 'flex', gap: 8, alignItems: 'flex-start' }}><span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>ℹ️</span><p style={{ color: txDim, fontSize: 12, margin: 0, lineHeight: 1.5 }}>Salary data is AI-estimated. Verify with <a href={'https://www.google.com/search?q=' + encodeURIComponent(currentProfile.careerLabel + ' salary')} target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none', fontWeight: 600 }}>Glassdoor or Payscale ↗</a></p></div>
             </>) : (<div style={{ textAlign: 'center', padding: '40px 20px' }}><div style={{ fontSize: 48, marginBottom: 12 }}>💰</div><h3 style={{ color: tx, fontSize: 18, margin: '0 0 8px' }}>Outcome data unavailable</h3><p style={{ color: txMut, fontSize: 14 }}>Try regenerating your roadmap.</p></div>)}
+          </div>
+        )}
+
+        {activeTab === 'career-compare' && (
+          <div style={{ maxWidth: 820, margin: '0 auto' }}>
+            <CareerComparison darkMode={darkMode} accent={accentColor} primaryColor={primaryColor} />
           </div>
         )}
 
