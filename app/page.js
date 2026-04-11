@@ -17,6 +17,7 @@ export default function Home() {
   const [loadingError, setLoadingError] = useState(false);
   const [checkingSaved, setCheckingSaved] = useState(false);
   const [showLanding, setShowLanding] = useState(true);
+  const [isDemo, setIsDemo] = useState(false);
   const lastRequest = useRef(null);
 
   // If user is logged in and has a saved roadmap, skip landing page
@@ -28,6 +29,7 @@ export default function Home() {
           setProfile(data.profile);
           setSavedProgress(data.completedCourses || {});
           setShowLanding(false);
+          setIsDemo(false);
         }
         setCheckingSaved(false);
       });
@@ -46,7 +48,7 @@ export default function Home() {
     setLoadingError(false);
     setProfile(p);
     setSavedProgress(null);
-    if (user) saveRoadmap(p, {});
+    if (user && !isDemo) saveRoadmap(p, {});
   };
 
   const handleError = function() {
@@ -67,9 +69,24 @@ export default function Home() {
     setSavedProgress(null);
     setLoadingError(false);
     setShowLanding(true);
+    setIsDemo(false);
   };
 
   const handleGetStarted = function() {
+    setShowLanding(false);
+    setIsDemo(false);
+  };
+
+  const handleDemo = function() {
+    setShowLanding(false);
+    setIsDemo(true);
+  };
+
+  const handleUnlock = function() {
+    // User wants to upgrade from demo — go to full onboarding
+    setProfile(null);
+    setSavedProgress(null);
+    setIsDemo(false);
     setShowLanding(false);
   };
 
@@ -89,14 +106,14 @@ export default function Home() {
 
   if (profile) {
     return profile.programLevel === 'highschool' ? (
-      <HighSchoolDashboard roadmap={profile.hsRoadmap} onReset={handleReset} />
+      <HighSchoolDashboard roadmap={profile.hsRoadmap} onReset={handleReset} isDemo={isDemo} onUnlock={handleUnlock} />
     ) : (
-      <Dashboard profile={profile} onReset={handleReset} savedProgress={savedProgress} />
+      <Dashboard profile={profile} onReset={handleReset} savedProgress={savedProgress} isDemo={isDemo} onUnlock={handleUnlock} />
     );
   }
 
   if (showLanding) {
-    return <LandingPage onGetStarted={handleGetStarted} user={user} onLogin={login} />;
+    return <LandingPage onGetStarted={handleGetStarted} onDemo={handleDemo} user={user} onLogin={login} />;
   }
 
   return (
@@ -107,7 +124,7 @@ export default function Home() {
       onSaveRetry={function(fn) { lastRequest.current = fn; }}
       user={user}
       onLogin={login}
-      onBack={function() { setShowLanding(true); }}
+      onBack={function() { setShowLanding(true); setIsDemo(false); }}
     />
   );
 }
