@@ -26,11 +26,6 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
   min-height: 100%;
   min-height: 100dvh;
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-  top: 0;
-  left: 0;
 }
 
 /* Thin scrollbar for webkit */
