@@ -28,45 +28,36 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
     if (programLevel === 'highschool') {
       var hsCareer = career || { id: selectedCareer, label: selectedCareer, icon: '🎯', color: '#1a1a2e', accent: '#8b5cf6', majors: [] };
       var hsCareerGoal = isCustom ? customGoal : hsCareer.label;
-      var hsName = name;
-      var hsSelectedCareer = selectedCareer;
-      var hsIsCustom = isCustom;
-      onLoading(true, hsSelectedCareer, 'Building your high school roadmap...');
-      var doHsFetch = async function() {
-        try {
-          var res = await fetch('/api/generate-hs', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ careerGoal: hsCareerGoal }),
-          });
-          var text = await res.text();
-          var data;
-          try { data = JSON.parse(text); } catch(parseErr) {
-            console.error('HS response not JSON:', text.substring(0, 500));
-            throw new Error('Response was not valid JSON');
+      onLoading(true, selectedCareer, 'Building your high school roadmap...');
+
+      var doHsFetch = function() {
+        fetch('/api/generate-hs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ careerGoal: hsCareerGoal }),
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data && data.years && data.years.length > 0) {
+            onComplete({
+              name: name,
+              career: selectedCareer,
+              careerLabel: data.careerField || hsCareerGoal,
+              programLevel: 'highschool',
+              hsRoadmap: data,
+              careerObj: hsCareer,
+            });
+          } else {
+            console.error('HS: No years in response', Object.keys(data || {}));
+            if (onError) onError();
           }
-          if (!res.ok) {
-            console.error('HS API returned error status:', res.status, data);
-            throw new Error(data.error || 'API returned status ' + res.status);
-          }
-          if (!data.years || !Array.isArray(data.years) || data.years.length === 0) {
-            console.error('HS roadmap missing years field. Keys received:', Object.keys(data));
-            throw new Error('Roadmap data missing years');
-          }
-          onComplete({
-            name: hsName,
-            career: hsSelectedCareer,
-            careerLabel: data.careerField || hsCareerGoal,
-            programLevel: 'highschool',
-            hsRoadmap: data,
-            careerObj: hsCareer,
-          });
-        } catch (err) {
-          console.error('HS generation failed:', err.message, err.stack);
+        })
+        .catch(function(err) {
+          console.error('HS fetch failed:', err);
           if (onError) onError();
-          else { onLoading(false); }
-        }
+        });
       };
+
       if (onSaveRetry) onSaveRetry(doHsFetch);
       doHsFetch();
       return;
