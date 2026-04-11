@@ -6,6 +6,8 @@ export default function PricingSection({ onSelectPlan, user, onLogin, darkMode }
   var [billing, setBilling] = useState('annual');
   var [showComingSoon, setShowComingSoon] = useState(false);
   var [selectedPlanName, setSelectedPlanName] = useState('');
+  var [waitlistEmail, setWaitlistEmail] = useState('');
+  var [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
   var dm = darkMode !== false;
 
   var bg = dm ? '#0a0a0c' : '#ffffff';
@@ -111,13 +113,35 @@ export default function PricingSection({ onSelectPlan, user, onLogin, darkMode }
 
       {/* Coming Soon Modal */}
       {showComingSoon && (
-        <div onClick={function() { setShowComingSoon(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+        <div onClick={function() { setShowComingSoon(false); setWaitlistSubmitted(false); setWaitlistEmail(''); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div onClick={function(e) { e.stopPropagation(); }} style={{ background: dm ? '#131318' : '#ffffff', border: '1px solid ' + bdr, borderRadius: 18, padding: '40px 36px', maxWidth: 420, width: '100%', textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>🚀</div>
             <h3 style={{ fontFamily: serif, fontSize: 24, color: tx, margin: '0 0 8px' }}>Coming Soon!</h3>
             <p style={{ color: txDim, fontSize: 15, lineHeight: 1.7, marginBottom: 8 }}>The <strong style={{ color: accent }}>{selectedPlanName}</strong> plan is launching very soon.</p>
-            <p style={{ color: txMut, fontSize: 13, lineHeight: 1.6, marginBottom: 28 }}>We're putting the finishing touches on PathForge. Join our waitlist to be the first to know when subscriptions go live.</p>
-            <button onClick={function() { setShowComingSoon(false); }} style={{ padding: '12px 32px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: sans }}>Got it →</button>
+            {!waitlistSubmitted ? (
+              <div>
+                <p style={{ color: txMut, fontSize: 13, lineHeight: 1.6, marginBottom: 20 }}>Drop your email to join the waitlist — we'll let you know the moment subscriptions go live.</p>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                  <input type="email" placeholder="your@email.com" value={waitlistEmail}
+                    onChange={function(e) { setWaitlistEmail(e.target.value); }}
+                    onKeyDown={function(e) { if (e.key === 'Enter' && waitlistEmail.includes('@')) { setWaitlistSubmitted(true); } }}
+                    style={{ flex: 1, padding: '12px 16px', borderRadius: 10, border: '1px solid ' + bdr, background: dm ? '#09090b' : '#f5f5f8', color: tx, fontSize: 14, outline: 'none', fontFamily: sans }} />
+                  <button onClick={function() { if (waitlistEmail.includes('@')) setWaitlistSubmitted(true); }}
+                    style={{ padding: '12px 20px', borderRadius: 10, border: 'none', background: waitlistEmail.includes('@') ? accent : (dm ? '#1e1e28' : '#e2e2e8'), color: waitlistEmail.includes('@') ? '#fff' : txMut, fontSize: 14, fontWeight: 700, cursor: waitlistEmail.includes('@') ? 'pointer' : 'default', fontFamily: sans }}>
+                    Join
+                  </button>
+                </div>
+                <button onClick={function() { setShowComingSoon(false); }} style={{ background: 'none', border: 'none', color: txMut, fontSize: 13, cursor: 'pointer', fontFamily: sans }}>Maybe later</button>
+              </div>
+            ) : (
+              <div>
+                <div style={{ background: green + '15', border: '1px solid ' + green + '33', borderRadius: 12, padding: '16px 20px', marginBottom: 20 }}>
+                  <p style={{ color: green, fontSize: 14, fontWeight: 600, margin: 0 }}>✓ You're on the waitlist!</p>
+                  <p style={{ color: txDim, fontSize: 13, margin: '6px 0 0', lineHeight: 1.5 }}>We'll email you at <strong style={{ color: tx }}>{waitlistEmail}</strong> when it's ready.</p>
+                </div>
+                <button onClick={function() { setShowComingSoon(false); setWaitlistSubmitted(false); setWaitlistEmail(''); }} style={{ padding: '12px 32px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: sans }}>Got it →</button>
+              </div>
+            )}
           </div>
         </div>
       )}
