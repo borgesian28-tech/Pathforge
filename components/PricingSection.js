@@ -4,6 +4,8 @@ import { PLANS } from '@/lib/stripe-config';
 
 export default function PricingSection({ onSelectPlan, user, onLogin, darkMode }) {
   var [billing, setBilling] = useState('annual');
+  var [showComingSoon, setShowComingSoon] = useState(false);
+  var [selectedPlanName, setSelectedPlanName] = useState('');
   var dm = darkMode !== false;
 
   var bg = dm ? '#0a0a0c' : '#ffffff';
@@ -13,17 +15,15 @@ export default function PricingSection({ onSelectPlan, user, onLogin, darkMode }
   var txMut = dm ? '#5f5d6e' : '#888888';
   var bdr = dm ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)';
   var accent = '#6c5ce7';
-  var accentLight = dm ? '#a29bfe' : '#5a4bd1';
   var green = '#10b981';
   var serif = "'Instrument Serif', Georgia, serif";
   var sans = "'DM Sans', system-ui, sans-serif";
 
   var handleSelect = function(planKey) {
     var plan = PLANS[planKey];
-    var priceId = billing === 'annual' ? plan.annual.priceId : plan.monthly.priceId;
-    if (onSelectPlan) {
-      onSelectPlan(priceId, planKey, billing);
-    }
+    var name = plan.name + ' ' + (billing === 'annual' ? 'Annual' : 'Monthly');
+    setSelectedPlanName(name);
+    setShowComingSoon(true);
   };
 
   return (
@@ -80,7 +80,7 @@ export default function PricingSection({ onSelectPlan, user, onLogin, darkMode }
               </div>;
             })}
           </div>
-          <button onClick={function() { if (!user && onLogin) { onLogin().then(function() { handleSelect('student'); }); } else { handleSelect('student'); } }}
+          <button onClick={function() { handleSelect('student'); }}
             style={{ width: '100%', padding: '14px 24px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, ' + accent + ', #8b5cf6)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: sans, transition: 'all 0.2s' }}>
             Get Started →
           </button>
@@ -102,12 +102,25 @@ export default function PricingSection({ onSelectPlan, user, onLogin, darkMode }
               </div>;
             })}
           </div>
-          <button onClick={function() { if (!user && onLogin) { onLogin().then(function() { handleSelect('premium'); }); } else { handleSelect('premium'); } }}
+          <button onClick={function() { handleSelect('premium'); }}
             style={{ width: '100%', padding: '14px 24px', borderRadius: 10, border: '1px solid #f59e0b44', background: 'transparent', color: '#f59e0b', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: sans, transition: 'all 0.2s' }}>
             Go Premium →
           </button>
         </div>
       </div>
+
+      {/* Coming Soon Modal */}
+      {showComingSoon && (
+        <div onClick={function() { setShowComingSoon(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div onClick={function(e) { e.stopPropagation(); }} style={{ background: dm ? '#131318' : '#ffffff', border: '1px solid ' + bdr, borderRadius: 18, padding: '40px 36px', maxWidth: 420, width: '100%', textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🚀</div>
+            <h3 style={{ fontFamily: serif, fontSize: 24, color: tx, margin: '0 0 8px' }}>Coming Soon!</h3>
+            <p style={{ color: txDim, fontSize: 15, lineHeight: 1.7, marginBottom: 8 }}>The <strong style={{ color: accent }}>{selectedPlanName}</strong> plan is launching very soon.</p>
+            <p style={{ color: txMut, fontSize: 13, lineHeight: 1.6, marginBottom: 28 }}>We're putting the finishing touches on PathForge. Join our waitlist to be the first to know when subscriptions go live.</p>
+            <button onClick={function() { setShowComingSoon(false); }} style={{ padding: '12px 32px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: sans }}>Got it →</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
