@@ -1,9 +1,12 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 
-export default function LandingPage({ onGetStarted, onDemo, user, onLogin }) {
+export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, onLogin }) {
   var [visible, setVisible] = useState(new Set());
   var [dark, setDark] = useState(true);
+  var [showDevCode, setShowDevCode] = useState(false);
+  var [devCode, setDevCode] = useState('');
+  var [devError, setDevError] = useState('');
   var observerRef = useRef(null);
 
   useEffect(function() {
@@ -32,17 +35,22 @@ export default function LandingPage({ onGetStarted, onDemo, user, onLogin }) {
     return Object.assign({}, base, { opacity: 0, transform: 'translateY(32px)' });
   };
 
-  // Theme
+  var handleDevSubmit = function() {
+    if (devCode.trim() === '348145') {
+      if (onDevLogin) onDevLogin(devCode.trim());
+    } else {
+      setDevError('Invalid code');
+      setTimeout(function() { setDevError(''); }, 3000);
+    }
+  };
+
   var accent = '#6c5ce7';
   var accentLight = dark ? '#a29bfe' : '#5a4bd1';
   var accentSoft = dark ? 'rgba(108,92,231,0.25)' : '#ede9fe';
-  var accentGlow = dark ? 'rgba(108,92,231,0.25)' : 'rgba(108,92,231,0.12)';
   var green = dark ? '#00e676' : '#16a34a';
   var greenDim = dark ? 'rgba(0,230,118,0.15)' : 'rgba(22,163,74,0.1)';
   var bg = dark ? '#0a0a0c' : '#ffffff';
   var bgCard = dark ? '#111115' : '#f8f8fb';
-  var bgEl = dark ? '#18181e' : '#f0f0f5';
-  var bgHero = dark ? 'linear-gradient(160deg, #0a0a0c 0%, #12121a 50%, #0a0a0c 100%)' : 'linear-gradient(160deg, #f5f3ff 0%, #ffffff 40%, #f0f4ff 100%)';
   var tx = dark ? '#f0eff4' : '#111111';
   var txDim = dark ? '#9896a6' : '#555555';
   var txMut = dark ? '#5f5d6e' : '#888888';
@@ -76,32 +84,20 @@ export default function LandingPage({ onGetStarted, onDemo, user, onLogin }) {
 
   return (
     <div style={{ background: bg, color: tx, fontFamily: sans, overflowX: 'hidden', WebkitFontSmoothing: 'antialiased', transition: 'background 0.3s, color 0.3s' }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
-        @keyframes pulseDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        @keyframes fadeUpHero { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-        .lp-btn-primary { transition: all 0.25s !important; }
-        .lp-btn-primary:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 32px rgba(108,92,231,0.25) !important; }
-        .lp-btn-secondary { transition: all 0.25s !important; }
-        .lp-btn-demo { transition: all 0.25s !important; }
-        .lp-btn-demo:hover { transform: translateY(-1px) !important; opacity: 0.9 !important; }
-        .lp-feature-card { transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s !important; }
-        .lp-feature-card:hover { transform: translateY(-3px) !important; }
-        .lp-nav-cta { transition: transform 0.2s, box-shadow 0.2s !important; }
-        .lp-nav-cta:hover { transform: translateY(-1px) !important; box-shadow: 0 6px 24px rgba(108,92,231,0.25) !important; }
-        @media (max-width: 860px) {
-          .lp-features-grid { grid-template-columns: 1fr !important; }
-          .lp-steps-row { grid-template-columns: 1fr !important; }
-          .lp-steps-line { display: none !important; }
-          .lp-proof-grid { grid-template-columns: 1fr !important; }
-          .lp-mock-row { flex-direction: column !important; }
-          .lp-mock-sidebar { width: 100% !important; flex-direction: row !important; flex-wrap: wrap !important; }
-          .lp-mock-grid { grid-template-columns: 1fr !important; }
-          .lp-hero-h1 { font-size: 42px !important; }
-          .lp-nav { padding: 14px 20px !important; }
-          .lp-hero-buttons { flex-direction: column !important; align-items: stretch !important; }
-        }
-      `}</style>
+      <style>{[
+        "@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');",
+        "@keyframes pulseDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }",
+        "@keyframes fadeUpHero { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }",
+        ".lp-btn-primary { transition: all 0.25s !important; }",
+        ".lp-btn-primary:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 32px rgba(108,92,231,0.25) !important; }",
+        ".lp-btn-demo { transition: all 0.25s !important; }",
+        ".lp-btn-demo:hover { transform: translateY(-1px) !important; opacity: 0.9 !important; }",
+        ".lp-feature-card { transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s !important; }",
+        ".lp-feature-card:hover { transform: translateY(-3px) !important; }",
+        ".lp-nav-cta { transition: transform 0.2s, box-shadow 0.2s !important; }",
+        ".lp-nav-cta:hover { transform: translateY(-1px) !important; box-shadow: 0 6px 24px rgba(108,92,231,0.25) !important; }",
+        "@media (max-width: 860px) { .lp-features-grid { grid-template-columns: 1fr !important; } .lp-steps-row { grid-template-columns: 1fr !important; } .lp-steps-line { display: none !important; } .lp-proof-grid { grid-template-columns: 1fr !important; } .lp-mock-row { flex-direction: column !important; } .lp-mock-sidebar { width: 100% !important; flex-direction: row !important; flex-wrap: wrap !important; } .lp-mock-grid { grid-template-columns: 1fr !important; } .lp-hero-h1 { font-size: 42px !important; } .lp-nav { padding: 14px 20px !important; } .lp-hero-buttons { flex-direction: column !important; align-items: stretch !important; } }"
+      ].join('\n')}</style>
 
       {/* NAV */}
       <nav className="lp-nav" style={{
@@ -131,16 +127,9 @@ export default function LandingPage({ onGetStarted, onDemo, user, onLogin }) {
       <section style={{
         minHeight: '100vh', display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center', textAlign: 'center',
-        padding: '140px 24px 80px', position: 'relative', background: bgHero,
+        padding: '140px 24px 80px', position: 'relative', background: bg,
         transition: 'background 0.3s',
       }}>
-        <div style={{
-          position: 'absolute', top: -120, left: '50%', transform: 'translateX(-50%)',
-          width: 800, height: 800, borderRadius: '50%',
-          background: 'radial-gradient(circle, ' + accentGlow + ' 0%, transparent 70%)',
-          pointerEvents: 'none', opacity: dark ? 0.5 : 1,
-        }} />
-
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 8,
           padding: '6px 16px 6px 8px', borderRadius: 100,
@@ -174,7 +163,7 @@ export default function LandingPage({ onGetStarted, onDemo, user, onLogin }) {
         </p>
 
         <div className="lp-hero-buttons" style={{
-          marginTop: 40, display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center',
+          marginTop: 40, display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center',
           animation: 'fadeUpHero 0.8s ease 0.3s both',
         }}>
           <button className="lp-btn-primary" onClick={onGetStarted} style={{
@@ -182,17 +171,49 @@ export default function LandingPage({ onGetStarted, onDemo, user, onLogin }) {
             background: accent, color: '#fff', fontFamily: sans,
             fontSize: 16, fontWeight: 600, cursor: 'pointer',
           }}>Start Free Roadmap</button>
-          <button className="lp-btn-demo" onClick={onDemo} style={{
+          <button className="lp-btn-demo" onClick={function() { setShowDevCode(false); onDemo(); }} style={{
             padding: '16px 36px', borderRadius: 100, border: 'none',
             background: dark ? 'linear-gradient(135deg, #C9A84C, #8B6914)' : 'linear-gradient(135deg, #f59e0b, #d97706)',
             color: dark ? '#000' : '#fff', fontFamily: sans,
             fontSize: 16, fontWeight: 600, cursor: 'pointer',
-          }}>Try a Demo →</button>
+          }}>Try a Demo</button>
         </div>
 
-        {/* PRODUCT MOCK — always dark to show the actual app */}
+        {/* Dev code toggle */}
+        <div style={{ marginTop: 20, animation: 'fadeUpHero 0.8s ease 0.35s both' }}>
+          <button onClick={function() { setShowDevCode(!showDevCode); setDevError(''); }} style={{
+            background: 'none', border: 'none', color: txMut, fontSize: 13,
+            cursor: 'pointer', textDecoration: 'underline', fontFamily: sans,
+          }}>Have a developer code?</button>
+          {showDevCode && (
+            <div style={{
+              marginTop: 12, display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center',
+            }}>
+              <input
+                type="text" placeholder="Enter code" value={devCode}
+                onChange={function(e) { setDevCode(e.target.value); }}
+                onKeyDown={function(e) { if (e.key === 'Enter') handleDevSubmit(); }}
+                style={{
+                  padding: '10px 16px', borderRadius: 10, fontSize: 14,
+                  border: '1px solid ' + (devError ? '#ef4444' : bdr),
+                  background: dark ? '#111115' : '#f8f8fb', color: tx,
+                  outline: 'none', width: 180, fontFamily: sans,
+                  transition: 'border-color 0.2s',
+                }}
+              />
+              <button onClick={handleDevSubmit} style={{
+                padding: '10px 20px', borderRadius: 10, border: 'none',
+                background: accent, color: '#fff', fontSize: 14, fontWeight: 600,
+                cursor: 'pointer', fontFamily: sans,
+              }}>Submit</button>
+            </div>
+          )}
+          {devError && <p style={{ color: '#ef4444', fontSize: 12, marginTop: 6 }}>{devError}</p>}
+        </div>
+
+        {/* PRODUCT MOCK */}
         <div style={{
-          marginTop: 64, width: '100%', maxWidth: 900, borderRadius: radius,
+          marginTop: 48, width: '100%', maxWidth: 900, borderRadius: radius,
           overflow: 'hidden', border: '1px solid ' + (dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.1)'),
           background: '#111115',
           boxShadow: dark ? '0 40px 120px rgba(0,0,0,0.5)' : '0 40px 120px rgba(0,0,0,0.15)',
@@ -358,16 +379,9 @@ export default function LandingPage({ onGetStarted, onDemo, user, onLogin }) {
 
       {/* FINAL CTA */}
       <section style={{
-        textAlign: 'center', padding: '120px 24px', position: 'relative',
-        background: dark ? bg : 'linear-gradient(180deg, #ffffff 0%, #f5f3ff 100%)',
+        textAlign: 'center', padding: '120px 24px', position: 'relative', background: bg,
         transition: 'background 0.3s',
       }}>
-        <div style={{
-          position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-          width: 700, height: 700, borderRadius: '50%',
-          background: 'radial-gradient(circle, ' + accentGlow + ' 0%, transparent 70%)',
-          pointerEvents: 'none', opacity: dark ? 0.4 : 0.8,
-        }} />
         <div data-reveal="cta-final" style={revealStyle('cta-final')}>
           <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 3, color: accentLight, fontWeight: 600, marginBottom: 16 }}>Ready?</div>
           <div style={{ fontFamily: serif, fontSize: 'clamp(36px, 4.5vw, 56px)', lineHeight: 1.1, letterSpacing: -1, margin: '0 auto 16px', maxWidth: 600, color: tx }}>Your future doesn't plan itself.</div>
