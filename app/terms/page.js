@@ -15,8 +15,8 @@ export default function TermsPage() {
   var bdr = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)';
   var bgCard = dark ? '#111115' : '#f8f8fb';
   var navBg = dark ? 'rgba(10,10,12,0.82)' : 'rgba(255,255,255,0.82)';
-  var accentLight = dark ? '#a29bfe' : '#5a4bd1';
-  var accent = '#6c5ce7';
+  var accentLight = dark ? '#C9A84C' : '#a07830';
+  var accent = '#C9A84C';
 
   var sections = [
     {
@@ -53,7 +53,7 @@ export default function TermsPage() {
     },
     {
       title: 'Contact',
-      content: 'If you have questions about these Terms of Service, please reach out through the PathForge platform.'
+      content: 'If you have questions about these Terms of Service, please contact us at pathforgeapp@gmail.com'
     },
   ];
 
@@ -118,6 +118,7 @@ export default function TermsPage() {
       <footer style={{ padding: '40px 24px', borderTop: '1px solid ' + bdr, textAlign: 'center', background: bg, transition: 'background 0.3s' }}>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 16 }}>
           <a href="/terms" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Terms of Service</a>
+          <a href="/privacy" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Privacy Policy</a>
           <a href="/pricing" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Pricing</a>
         </div>
         <p style={{ fontSize: 13, color: txMut }}>© 2026 PathForge · Built with AI, designed for ambition.</p>
