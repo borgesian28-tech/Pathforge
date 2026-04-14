@@ -16,7 +16,7 @@ export default function PricingSection({ onSelectPlan, user, onLogin, darkMode }
   var txDim = dm ? '#9896a6' : '#555555';
   var txMut = dm ? '#5f5d6e' : '#888888';
   var bdr = dm ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)';
-  var accent = '#6c5ce7';
+  var accent = '#C9A84C';
   var green = '#10b981';
   var serif = "'Instrument Serif', Georgia, serif";
   var sans = "'DM Sans', system-ui, sans-serif";
@@ -32,7 +32,7 @@ export default function PricingSection({ onSelectPlan, user, onLogin, darkMode }
     <div>
       {/* Billing toggle */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 40 }}>
-        <div style={{ display: 'flex', background: dm ? '#19191f' : '#f0f0f4', borderRadius: 12, padding: 4, gap: 4 }}>
+        <div style={{ display: 'flex', background: dm ? '#1a1a1a' : '#f0f0f4', borderRadius: 12, padding: 4, gap: 4 }}>
           <button onClick={function() { setBilling('monthly'); }}
             style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: billing === 'monthly' ? accent : 'transparent', color: billing === 'monthly' ? '#fff' : txMut, fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', fontFamily: sans }}>
             Monthly
@@ -83,7 +83,7 @@ export default function PricingSection({ onSelectPlan, user, onLogin, darkMode }
             })}
           </div>
           <button onClick={function() { handleSelect('student'); }}
-            style={{ width: '100%', padding: '14px 24px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, ' + accent + ', #8b5cf6)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: sans, transition: 'all 0.2s' }}>
+            style={{ width: '100%', padding: '14px 24px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: sans, transition: 'all 0.2s' }}>
             Get Started →
           </button>
         </div>
@@ -127,7 +127,7 @@ export default function PricingSection({ onSelectPlan, user, onLogin, darkMode }
                     onKeyDown={function(e) { if (e.key === 'Enter' && waitlistEmail.includes('@')) { fetch('/api/waitlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: waitlistEmail, plan: selectedPlanName }) }).catch(function(){}); setWaitlistSubmitted(true); } }}
                     style={{ flex: 1, padding: '12px 16px', borderRadius: 10, border: '1px solid ' + bdr, background: dm ? '#09090b' : '#f5f5f8', color: tx, fontSize: 14, outline: 'none', fontFamily: sans }} />
                   <button onClick={function() { if (waitlistEmail.includes('@')) { fetch('/api/waitlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: waitlistEmail, plan: selectedPlanName }) }).catch(function(){}); setWaitlistSubmitted(true); } }}
-                    style={{ padding: '12px 20px', borderRadius: 10, border: 'none', background: waitlistEmail.includes('@') ? accent : (dm ? '#1e1e28' : '#e2e2e8'), color: waitlistEmail.includes('@') ? '#fff' : txMut, fontSize: 14, fontWeight: 700, cursor: waitlistEmail.includes('@') ? 'pointer' : 'default', fontFamily: sans }}>
+                    style={{ padding: '12px 20px', borderRadius: 10, border: 'none', background: waitlistEmail.includes('@') ? accent : (dm ? '#222222' : '#e2e2e8'), color: waitlistEmail.includes('@') ? '#fff' : txMut, fontSize: 14, fontWeight: 700, cursor: waitlistEmail.includes('@') ? 'pointer' : 'default', fontFamily: sans }}>
                     Join
                   </button>
                 </div>
