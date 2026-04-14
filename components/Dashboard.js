@@ -425,7 +425,11 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
             {saveStatus && <span style={{ color: '#4ade80', fontSize: 11, fontWeight: 600, flexShrink: 0 }}>✓ {saveStatus}</span>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-            <div ref={settingsRef} style={{ position: 'relative' }}>
+            <button onClick={function() {
+              var isBeta = !isDemo && (!subscription || subscription.tier === 'free') && !user;
+              onReset(isBeta);
+            }} style={{ height: 32, padding: '0 12px', borderRadius: 8, border: '1px solid ' + bdr, background: bgCard, color: txSub, fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 5 }}>↻ New</button>
+          <div ref={settingsRef} style={{ position: 'relative' }}>
               <button onClick={function() { setSettingsOpen(!settingsOpen); }} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid ' + bdr, background: bgCard, color: txSub, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>⋮</button>
               {settingsOpen && (
                 <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 6, width: 220, background: bgCard, border: '1px solid ' + bdr, borderRadius: 12, boxShadow: '0 8px 30px rgba(0,0,0,0.3)', overflow: 'hidden', zIndex: 100 }}>
@@ -434,7 +438,6 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
                     { label: '📋 Copy to Clipboard', action: function() { setSettingsOpen(false); handleShare(); } },
                     { label: '🏫 Change School', action: function() { setSettingsOpen(false); changeSchool(); } },
                     { label: '🔗 Link Catalog', action: async function() { setSettingsOpen(false); var url = await showModal('Link Course Catalog', "Paste your school's course catalog URL", 'input'); if (url && url.trim()) { setCatalogUrl(url.trim()); setSwitchingMajor("Scanning course catalog..."); fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ schoolName: currentProfile.school, careerPath: currentProfile.careerLabel, majorName: courseData.major, customGoal: null, programLevel: currentProfile.programLevel || 'undergraduate', catalogUrl: url.trim(), clubsUrl: clubsUrl || '' }) }).then(function(r){return r.json();}).then(function(d){ if(d.semesters){var np={...currentProfile,courseData:d};setCurrentProfile(np);setMajors([np]);setActiveMajorIndex(0);setCompletedCourses({});setActiveSemester(0);setActiveTab('courses');if(user)saveRoadmap(np,{});}setSwitchingMajor("");}).catch(function(){setSwitchingMajor('');}); } } },
-                    { label: '↻ New Roadmap', action: function() { setSettingsOpen(false); onReset(); } },
                   ].map(function(item, i) {
                     return (<button key={i} onClick={item.action} style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', borderBottom: i < 4 ? '1px solid ' + bdr : 'none', color: txSub, fontSize: 13, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8 }}>{item.label}</button>);
                   })}
