@@ -178,7 +178,7 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
   var txSub = darkMode ? '#aaa' : '#333333';
   var txMut = darkMode ? '#6a6a7a' : '#666666';
   var txDim = darkMode ? '#8a8a9a' : '#555555';
-  var headerBg = darkMode ? 'linear-gradient(135deg, ' + primaryColor + '44, #08080f)' : 'linear-gradient(135deg, ' + primaryColor + '20, #f8f8fa)';
+  var headerBg = darkMode ? 'linear-gradient(135deg, ' + primaryColor + '44, #0a0a0a)' : 'linear-gradient(135deg, ' + primaryColor + '20, #f8f8fa)';
   var tabBg = darkMode ? '#0d0d0d' : '#ffffff';
   var overlayBg = darkMode ? '#0a0a0add' : '#ffffffdd';
   var cardHov = darkMode ? '#151528' : '#f0f0f8';
@@ -408,7 +408,7 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
               isLocked = true;
               lockLabel = 'Premium feature';
             }
-            return (<button key={tab.id} onClick={function() { if (isLocked) return; setActiveTab(tab.id); if (isMobile) setMobileMenuOpen(false); }} title={isLocked ? lockLabel : !sidebarOpen && !isMobile ? tab.label : undefined} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: sidebarOpen || isMobile ? '9px 12px' : '10px 0', justifyContent: sidebarOpen || isMobile ? 'flex-start' : 'center', borderRadius: 8, border: 'none', background: isActive && !isLocked ? accentColor + '15' : 'transparent', color: isLocked ? (darkMode ? '#3a3a4e' : '#c0c0c8') : isActive ? accentColor : txMut, fontSize: 13, fontWeight: isActive ? 600 : 400, cursor: isLocked ? 'default' : 'pointer', transition: 'all 0.15s', marginBottom: 2, position: 'relative', opacity: isLocked ? 0.5 : 1 }}><span style={{ fontSize: 16, width: 22, textAlign: 'center', flexShrink: 0 }}>{isLocked ? '🔒' : tab.icon}</span>{(sidebarOpen || isMobile) && <span>{tab.label}{isLocked && lockLabel === 'Premium feature' ? ' ✦' : ''}</span>}{isActive && !isLocked && <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', width: 3, height: 20, borderRadius: 2, background: accentColor }} />}</button>);
+            return (<button key={tab.id} onClick={function() { if (isLocked) return; setActiveTab(tab.id); if (isMobile) setMobileMenuOpen(false); }} title={isLocked ? lockLabel : !sidebarOpen && !isMobile ? tab.label : undefined} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: sidebarOpen || isMobile ? '9px 12px' : '10px 0', justifyContent: sidebarOpen || isMobile ? 'flex-start' : 'center', borderRadius: 8, border: 'none', background: isActive && !isLocked ? accentColor + '15' : 'transparent', color: isLocked ? (darkMode ? '#444444' : '#c0c0c8') : isActive ? accentColor : txMut, fontSize: 13, fontWeight: isActive ? 600 : 400, cursor: isLocked ? 'default' : 'pointer', transition: 'all 0.15s', marginBottom: 2, position: 'relative', opacity: isLocked ? 0.5 : 1 }}><span style={{ fontSize: 16, width: 22, textAlign: 'center', flexShrink: 0 }}>{isLocked ? '🔒' : tab.icon}</span>{(sidebarOpen || isMobile) && <span>{tab.label}{isLocked && lockLabel === 'Premium feature' ? ' ✦' : ''}</span>}{isActive && !isLocked && <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', width: 3, height: 20, borderRadius: 2, background: accentColor }} />}</button>);
           })}
         </nav>
         <div style={{ padding: '8px', borderTop: '1px solid ' + sidebarBdr, flexShrink: 0 }}>
@@ -450,7 +450,7 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
           <div style={{ maxWidth: 820, margin: '0 auto' }}>
 
         {isDemo && (
-          <div style={{ marginBottom: 16, background: 'linear-gradient(135deg, #6c5ce722, ' + bgCard + ')', border: '1px solid #6c5ce744', borderRadius: 14, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ marginBottom: 16, background: 'linear-gradient(135deg, #C9A84C22, ' + bgCard + ')', border: '1px solid #C9A84C44', borderRadius: 14, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 200 }}>
               <span style={{ fontSize: 24 }}>🔓</span>
               <div>
@@ -458,7 +458,7 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
                 <div style={{ color: txDim, fontSize: 13, marginTop: 2 }}>Freshman & sophomore courses are unlocked. Sign up free to access your full roadmap, AI advisor, interviews, and more.</div>
               </div>
             </div>
-            <button onClick={onUnlock} style={{ padding: '10px 24px', borderRadius: 100, border: 'none', background: '#6c5ce7', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>Unlock Full Access →</button>
+            <button onClick={onUnlock} style={{ padding: '10px 24px', borderRadius: 100, border: 'none', background: '#C9A84C', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>Unlock Full Access →</button>
           </div>
         )}
 
@@ -503,7 +503,7 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
                   var done = sem.courses && sem.courses.every(function(_, ci) { return completedCourses[i + '-' + ci]; });
                   var isCurrent = currentSemesterIdx === i;
                   var semLocked = isDemo && i >= 4;
-                  return (<button key={i} onClick={function() { if (semLocked) return; setActiveSemester(i); }} onDoubleClick={function() { if (!semLocked) setCurrentSemesterIdx(i); }} title={semLocked ? 'Sign up to unlock' : isCurrent ? 'Current semester' : 'Double-click to set as current'} style={{ padding: '8px 14px', borderRadius: 20, border: isCurrent && !semLocked ? '2px solid ' + accentColor : 'none', background: semLocked ? (darkMode ? '#1a1a22' : '#e8e8ee') : activeSemester === i ? accentColor : done ? '#1a3a24' : bgSec, color: semLocked ? (darkMode ? '#3a3a4e' : '#b0b0b8') : activeSemester === i ? '#000' : done ? '#4ade80' : txSub, fontSize: 12, fontWeight: 600, cursor: semLocked ? 'default' : 'pointer', whiteSpace: 'nowrap', flexShrink: 0, position: 'relative', opacity: semLocked ? 0.6 : 1 }}>{semLocked ? '🔒 ' : done ? '✓ ' : ''}{isCurrent && !semLocked ? '📍 ' : ''}{sem.name}</button>);
+                  return (<button key={i} onClick={function() { if (semLocked) return; setActiveSemester(i); }} onDoubleClick={function() { if (!semLocked) setCurrentSemesterIdx(i); }} title={semLocked ? 'Sign up to unlock' : isCurrent ? 'Current semester' : 'Double-click to set as current'} style={{ padding: '8px 14px', borderRadius: 20, border: isCurrent && !semLocked ? '2px solid ' + accentColor : 'none', background: semLocked ? (darkMode ? '#222222' : '#e8e8ee') : activeSemester === i ? accentColor : done ? '#1a3a24' : bgSec, color: semLocked ? (darkMode ? '#444444' : '#b0b0b8') : activeSemester === i ? '#000' : done ? '#4ade80' : txSub, fontSize: 12, fontWeight: 600, cursor: semLocked ? 'default' : 'pointer', whiteSpace: 'nowrap', flexShrink: 0, position: 'relative', opacity: semLocked ? 0.6 : 1 }}>{semLocked ? '🔒 ' : done ? '✓ ' : ''}{isCurrent && !semLocked ? '📍 ' : ''}{sem.name}</button>);
                 })}
               </div>
               <button onClick={function() { if (semRef.current) semRef.current.scrollBy({ left: 150, behavior: 'smooth' }); }} style={{ position: 'absolute', right: -4, top: '50%', transform: 'translateY(-50%)', zIndex: 2, width: 28, height: 28, borderRadius: '50%', border: '1px solid ' + bdrL, background: tabBg + 'ee', color: txSub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>›</button>
@@ -577,7 +577,7 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
                       if (completedCourses[si + '-' + ci]) typesCompleted[t] = (typesCompleted[t] || 0) + 1;
                     });
                   });
-                  var typeColors = { Core: accentColor, Prerequisite: '#f59e0b', Elective: '#3b82f6', 'Gen Ed': '#8b5cf6', Other: '#6b7280' };
+                  var typeColors = { Core: accentColor, Prerequisite: '#f59e0b', Elective: '#3b82f6', 'Gen Ed': '#C9A84C', Other: '#6b7280' };
                   return Object.keys(types).map(function(t) {
                     var total = types[t];
                     var done = typesCompleted[t] || 0;
@@ -790,7 +790,7 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
       {/* INLINE MODAL */}
       {modal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={function() { closeModal(null); }}>
-          <div onClick={function(e) { e.stopPropagation(); }} style={{ background: darkMode ? '#111122' : '#ffffff', border: '1px solid ' + bdr, borderRadius: 16, padding: '24px 28px', maxWidth: 420, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
+          <div onClick={function(e) { e.stopPropagation(); }} style={{ background: darkMode ? '#141414' : '#ffffff', border: '1px solid ' + bdr, borderRadius: 16, padding: '24px 28px', maxWidth: 420, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
             <h3 style={{ color: tx, fontSize: 18, fontWeight: 700, margin: '0 0 16px', fontFamily: "'Playfair Display', serif" }}>{modal.title}</h3>
             <input
               type="text"
