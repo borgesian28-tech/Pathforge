@@ -113,17 +113,17 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
           Path<span style={{ color: accentLight }}>Forge</span>
         </div>
         <div className="lp-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'nowrap' }}>
-          <a href="/waitlist" style={{ color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'none', padding: '7px 14px', borderRadius: 100, background: 'linear-gradient(135deg, #10b981, #059669)', transition: 'all 0.2s', whiteSpace: 'nowrap' }}>Join Waitlist</a>
-          <a href="/pricing" style={{ color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'none', padding: '7px 14px', borderRadius: 100, background: 'linear-gradient(135deg, #f59e0b, #d97706)', transition: 'all 0.2s', whiteSpace: 'nowrap' }}>Pricing</a>
           <button onClick={function() { setDark(!dark); }} style={{
-            width: 34, height: 34, borderRadius: 10, border: '1px solid ' + bdr,
-            background: bgCard, color: tx, fontSize: 15, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s', flexShrink: 0,
+            width: 32, height: 32, borderRadius: 8, border: '1px solid ' + bdr,
+            background: 'transparent', color: tx, fontSize: 14, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', flexShrink: 0,
           }}>{dark ? '☀️' : '🌙'}</button>
+          <a href="/waitlist" style={{ color: tx, fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', padding: '6px 14px', borderRadius: 8, border: '1px solid ' + bdr, background: 'transparent', transition: 'all 0.2s', whiteSpace: 'nowrap' }}>Waitlist</a>
+          <a href="/pricing" style={{ color: tx, fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', padding: '6px 14px', borderRadius: 8, border: '1px solid ' + bdr, background: 'transparent', transition: 'all 0.2s', whiteSpace: 'nowrap' }}>Pricing</a>
           <button className="lp-nav-cta" onClick={function() { setShowDevCode(false); onDemo(); }} style={{
-            padding: '7px 18px', borderRadius: 100, border: 'none',
-            background: accent, color: '#fff', fontFamily: sans,
-            fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+            padding: '6px 16px', borderRadius: 8, border: '1px solid ' + accent,
+            background: accent, color: '#000', fontFamily: sans,
+            fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s',
           }}>Try Demo</button>
         </div>
       </nav>
@@ -327,7 +327,7 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
                     <div style={{
                       width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 16, fontWeight: 700,
-                      background: 'linear-gradient(135deg, ' + accent + ', #C9A84C)', color: '#fff',
+                      background: accent, color: '#fff',
                     }}>{t.initial}</div>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 600, color: tx }}>{t.name}</div>
