@@ -169,25 +169,25 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
   const logoUrl = schoolBranding ? schoolBranding.logoUrl : '';
 
   // ===== THEME =====
-  var bg = darkMode ? '#08080f' : '#ffffff';
-  var bgCard = darkMode ? '#111122' : '#f7f7fa';
-  var bgSec = darkMode ? '#1a1a2e' : '#ededf3';
-  var bdr = darkMode ? '#1e1e32' : '#d5d5e0';
-  var bdrL = darkMode ? '#2a2a3e' : '#c5c5d0';
+  var bg = darkMode ? '#0a0a0a' : '#ffffff';
+  var bgCard = darkMode ? '#141414' : '#f7f7fa';
+  var bgSec = darkMode ? '#1e1e1e' : '#ededf3';
+  var bdr = darkMode ? '#2a2a2a' : '#d5d5e0';
+  var bdrL = darkMode ? '#333333' : '#c5c5d0';
   var tx = darkMode ? '#fff' : '#111111';
   var txSub = darkMode ? '#aaa' : '#333333';
   var txMut = darkMode ? '#6a6a7a' : '#666666';
   var txDim = darkMode ? '#8a8a9a' : '#555555';
   var headerBg = darkMode ? 'linear-gradient(135deg, ' + primaryColor + '44, #08080f)' : 'linear-gradient(135deg, ' + primaryColor + '20, #f8f8fa)';
-  var tabBg = darkMode ? '#0c0c18' : '#ffffff';
-  var overlayBg = darkMode ? '#08080fdd' : '#ffffffdd';
+  var tabBg = darkMode ? '#0d0d0d' : '#ffffff';
+  var overlayBg = darkMode ? '#0a0a0add' : '#ffffffdd';
   var cardHov = darkMode ? '#151528' : '#f0f0f8';
-  var progBg = darkMode ? '#1a1a2e' : '#d5d5e0';
-  var glassBg = darkMode ? '#ffffff0a' : '#00000008';
+  var progBg = darkMode ? '#222222' : '#d5d5e0';
+  var glassBg = darkMode ? '#ffffff08' : '#00000008';
   // High-contrast button styles — always readable
-  var btnBg = darkMode ? '#1a1a2e' : '#ffffff';
+  var btnBg = darkMode ? '#1e1e1e' : '#ffffff';
   var btnTx = darkMode ? '#ffffff' : '#111111';
-  var btnBdr = darkMode ? '#3a3a5e' : '#c5c5d0';
+  var btnBdr = darkMode ? '#333333' : '#c5c5d0';
 
   var dailyAction = null;
   if (outcomes && outcomes.dailyActions) {
@@ -344,8 +344,8 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
     { id: 'overview', label: 'Overview', icon: '📊' },
     { id: 'advisor', label: 'AI Advisor', icon: '💬' },
   ];
-  var sidebarBg = darkMode ? '#0c0c0f' : '#ffffff';
-  var sidebarBdr = darkMode ? '#1a1a22' : '#e8e8ee';
+  var sidebarBg = darkMode ? '#0d0d0d' : '#ffffff';
+  var sidebarBdr = darkMode ? '#222222' : '#e8e8ee';
 
   var handleExport = function() {
     var html = '<html><head><title>' + currentProfile.name + ' Roadmap</title><style>body{font-family:system-ui,sans-serif;max-width:700px;margin:40px auto;padding:0 20px;color:#111}h1{font-size:22px;margin-bottom:4px}h2{font-size:13px;color:#666;margin-bottom:20px}h3{font-size:15px;margin:18px 0 6px;padding-top:10px;border-top:1px solid #ddd}.c{display:flex;justify-content:space-between;padding:3px 0;font-size:12px}.b{font-weight:600}.cr{color:#888}.f{margin-top:24px;padding-top:12px;border-top:1px solid #ddd;color:#888;font-size:10px}</style></head><body>';
