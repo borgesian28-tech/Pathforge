@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 
-export default function HSCourseAdvisor({ accent = '#8b5cf6', primaryColor = '#6366f1' }) {
+export default function HSCourseAdvisor({ accent = '#C9A84C', primaryColor = '#6366f1' }) {
   const [careerGoal, setCareerGoal] = useState('');
   const [courses, setCourses] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,7 +41,7 @@ export default function HSCourseAdvisor({ accent = '#8b5cf6', primaryColor = '#6
       bottom: 20, 
       right: 20, 
       background: '#0a0a0f', 
-      border: '1px solid #1e1e32', 
+      border: '1px solid #2a2a2a', 
       borderRadius: 16, 
       boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
       zIndex: 1000,
@@ -49,8 +49,8 @@ export default function HSCourseAdvisor({ accent = '#8b5cf6', primaryColor = '#6
       width: '90vw'
     }}>
       <div style={{ 
-        background: `linear-gradient(135deg, ${primaryColor}44, #111122)`, 
-        borderBottom: '1px solid #1e1e32',
+        background: `linear-gradient(135deg, ${primaryColor}44, #141414)`, 
+        borderBottom: '1px solid #2a2a2a',
         padding: '14px 18px',
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
@@ -82,8 +82,8 @@ export default function HSCourseAdvisor({ accent = '#8b5cf6', primaryColor = '#6
                 onChange={(e) => setCareerGoal(e.target.value)}
                 style={{
                   width: '100%',
-                  background: '#111122',
-                  border: '1px solid #1e1e32',
+                  background: '#141414',
+                  border: '1px solid #2a2a2a',
                   borderRadius: 8,
                   padding: '10px 12px',
                   color: '#fff',
@@ -92,7 +92,7 @@ export default function HSCourseAdvisor({ accent = '#8b5cf6', primaryColor = '#6
                   boxSizing: 'border-box'
                 }}
                 onFocus={(e) => e.target.style.borderColor = accent}
-                onBlur={(e) => e.target.style.borderColor = '#1e1e32'}
+                onBlur={(e) => e.target.style.borderColor = '#2a2a2a'}
               />
             </div>
 
@@ -107,8 +107,8 @@ export default function HSCourseAdvisor({ accent = '#8b5cf6', primaryColor = '#6
                 rows={3}
                 style={{
                   width: '100%',
-                  background: '#111122',
-                  border: '1px solid #1e1e32',
+                  background: '#141414',
+                  border: '1px solid #2a2a2a',
                   borderRadius: 8,
                   padding: '10px 12px',
                   color: '#fff',
@@ -119,7 +119,7 @@ export default function HSCourseAdvisor({ accent = '#8b5cf6', primaryColor = '#6
                   boxSizing: 'border-box'
                 }}
                 onFocus={(e) => e.target.style.borderColor = accent}
-                onBlur={(e) => e.target.style.borderColor = '#1e1e32'}
+                onBlur={(e) => e.target.style.borderColor = '#2a2a2a'}
               />
             </div>
 
