@@ -4,13 +4,13 @@ import { TYPE_COLORS } from '@/lib/constants';
 export default function CourseCard({ course, semIdx, cIdx, completed, onToggle, accent, darkMode }) {
   var dm = darkMode !== false; // default to dark
   var tc = TYPE_COLORS[course.type] || '#444';
-  var cardBg = completed ? (dm ? '#0d1a12' : '#eef7f0') : (dm ? '#111122' : '#f7f7fa');
-  var cardBorder = completed ? (dm ? '1px solid #1a3a24' : '1px solid #a3d9b1') : (dm ? '1px solid #1e1e32' : '1px solid #d5d5e0');
+  var cardBg = completed ? (dm ? '#0d1a12' : '#eef7f0') : (dm ? '#141414' : '#f7f7fa');
+  var cardBorder = completed ? (dm ? '1px solid #1a3a24' : '1px solid #a3d9b1') : (dm ? '1px solid #2a2a2a' : '1px solid #d5d5e0');
   var codeTx = dm ? '#fff' : '#111111';
   var titleTx = dm ? '#ccc' : '#222222';
   var descTx = dm ? '#6a6a7a' : '#555555';
   var crTx = dm ? '#6a6a7a' : '#666666';
-  var checkBorder = dm ? '2px solid #3a3a4e' : '2px solid #b0b0bb';
+  var checkBorder = dm ? '2px solid #444444' : '2px solid #b0b0bb';
 
   return (
     <div style={{ background: cardBg, border: cardBorder, borderRadius: 12, padding: '14px 16px', transition: 'all 0.3s', opacity: completed ? 0.7 : 1 }}>
