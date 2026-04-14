@@ -380,6 +380,7 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
           <a href="/privacy" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Privacy Policy</a>
           <a href="/pricing" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Pricing</a>
           <a href="/waitlist" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Waitlist</a>
+          <a href="/contact" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Contact</a>
           <button onClick={function() { setShowDevCode(!showDevCode); setDevError(''); }} style={{ background: 'none', border: 'none', color: txMut, fontSize: 13, cursor: 'pointer', fontFamily: sans, padding: 0 }}>Beta Access</button>
         </div>
         {showDevCode && (
@@ -393,7 +394,6 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
         )}
         {devError && <p style={{ color: '#ef4444', fontSize: 11, marginBottom: 8 }}>{devError}</p>}
         <p style={{ fontSize: 13, color: txMut }}>© 2026 PathForge · Built with AI, designed for ambition.</p>
-        <p style={{ fontSize: 13, color: txMut, marginTop: 8 }}>Questions? <a href="mailto:pathforgeapp@gmail.com" style={{ color: accent, textDecoration: 'none' }}>pathforgeapp@gmail.com</a></p>
       </footer>
     </div>
   );
