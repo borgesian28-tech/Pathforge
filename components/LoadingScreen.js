@@ -168,7 +168,7 @@ export default function LoadingScreen({ status, career, onRetry, error }) {
 
   if (error) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #08080f 0%, #0c0c1a 50%, #08080f 100%)', padding: '80px 20px 40px', overflow: 'auto' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #0a0a0a 0%, #0d0d0d 50%, #0a0a0a 100%)', padding: '80px 20px 40px', overflow: 'auto' }}>
         <div style={{ maxWidth: 420, textAlign: 'center' }} className="fade-in">
           <div style={{ fontSize: 56, marginBottom: 20 }}>⚡</div>
           <h2 style={{ fontFamily: "'Playfair Display', serif", color: '#fff', fontSize: 24, margin: '0 0 12px' }}>Hit a Snag</h2>
@@ -184,7 +184,7 @@ export default function LoadingScreen({ status, career, onRetry, error }) {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #08080f 0%, #0c0c1a 50%, #08080f 100%)', padding: '80px 20px 40px', overflow: 'auto' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #0a0a0a 0%, #0d0d0d 50%, #0a0a0a 100%)', padding: '80px 20px 40px', overflow: 'auto' }}>
       <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }} className="fade-in">
         {/* Spinner */}
         <div style={{ position: 'relative', width: 80, height: 80, margin: '0 auto 28px' }}>
@@ -198,7 +198,7 @@ export default function LoadingScreen({ status, career, onRetry, error }) {
         <p style={{ color: c.accent, fontSize: 14, fontWeight: 500, marginBottom: 24 }}>{status}{dots}</p>
 
         {/* Progress bar */}
-        <div style={{ width: '100%', maxWidth: 320, margin: '0 auto 24px', background: '#1a1a2e', borderRadius: 6, height: 8, overflow: 'hidden' }}>
+        <div style={{ width: '100%', maxWidth: 320, margin: '0 auto 24px', background: '#1e1e1e', borderRadius: 6, height: 8, overflow: 'hidden' }}>
           <div style={{ height: '100%', width: progress + '%', background: 'linear-gradient(90deg, ' + c.accent + ', ' + c.color + ')', borderRadius: 6, transition: 'width 1s ease' }} />
         </div>
 
@@ -218,7 +218,7 @@ export default function LoadingScreen({ status, career, onRetry, error }) {
         </div>
 
         {/* Fun fact */}
-        <div style={{ background: '#111122', border: '1px solid #1e1e32', borderRadius: 12, padding: '14px 18px', maxWidth: 360, margin: '0 auto', textAlign: 'left' }}>
+        <div style={{ background: '#141414', border: '1px solid #2a2a2a', borderRadius: 12, padding: '14px 18px', maxWidth: 360, margin: '0 auto', textAlign: 'left' }}>
           <div style={{ color: c.accent, fontSize: 10, fontWeight: 700, letterSpacing: 1.5, marginBottom: 6 }}>DID YOU KNOW?</div>
           <p style={{ color: '#8a8a9a', fontSize: 13, margin: 0, lineHeight: 1.6, minHeight: 40 }}>{facts[factIdx]}</p>
         </div>
