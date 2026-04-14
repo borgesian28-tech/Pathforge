@@ -90,12 +90,12 @@ export default function PrivacyPage() {
         <div style={{ marginTop: 48, paddingTop: 32, borderTop: '1px solid ' + bdr, textAlign: 'center' }}>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 12, flexWrap: 'wrap' }}>
             <a href="/terms" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Terms of Service</a>
+            <a href="/privacy" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Privacy Policy</a>
             <a href="/pricing" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Pricing</a>
             <a href="/waitlist" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Waitlist</a>
-            <a href="mailto:pathforgeapp@gmail.com" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Contact</a>
+            <a href="/contact" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Contact</a>
           </div>
-          <p style={{ fontSize: 13, color: txMut, marginTop: 8 }}>Questions about your privacy? Email us at <a href="mailto:pathforgeapp@gmail.com" style={{ color: accent, textDecoration: 'none' }}>pathforgeapp@gmail.com</a></p>
-          <p style={{ fontSize: 13, color: txMut, marginTop: 4 }}>© 2026 PathForge · Built with AI, designed for ambition.</p>
+          <p style={{ fontSize: 13, color: txMut }}>© 2026 PathForge · Built with AI, designed for ambition.</p>
         </div>
       </div>
     </div>
