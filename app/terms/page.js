@@ -116,10 +116,12 @@ export default function TermsPage() {
 
       {/* FOOTER */}
       <footer style={{ padding: '40px 24px', borderTop: '1px solid ' + bdr, textAlign: 'center', background: bg, transition: 'background 0.3s' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 16, flexWrap: 'wrap' }}>
           <a href="/terms" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Terms of Service</a>
           <a href="/privacy" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Privacy Policy</a>
           <a href="/pricing" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Pricing</a>
+          <a href="/waitlist" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Waitlist</a>
+          <a href="mailto:pathforgeapp@gmail.com" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Contact</a>
         </div>
         <p style={{ fontSize: 13, color: txMut }}>© 2026 PathForge · Built with AI, designed for ambition.</p>
       </footer>
