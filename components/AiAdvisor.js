@@ -10,9 +10,9 @@ export default function AiAdvisor({ profile, accent, primaryColor, darkMode, inl
   var inputRef = useRef(null);
   var dm = darkMode !== false;
 
-  var chatBg = dm ? '#0c0c18' : '#ffffff';
-  var chatBdr = dm ? '#1e1e32' : '#d5d5e0';
-  var chatCard = dm ? '#111122' : '#f7f7fa';
+  var chatBg = dm ? '#0d0d0d' : '#ffffff';
+  var chatBdr = dm ? '#2a2a2a' : '#d5d5e0';
+  var chatCard = dm ? '#141414' : '#f7f7fa';
   var tx = dm ? '#fff' : '#111111';
   var txSub = dm ? '#ccc' : '#222222';
   var txMut = dm ? '#6a6a7a' : '#666666';
@@ -148,7 +148,7 @@ export default function AiAdvisor({ profile, accent, primaryColor, darkMode, inl
             placeholder="Ask anything about your career path..."
             style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid ' + chatBdr, background: chatCard, color: tx, fontSize: 13, outline: 'none' }} />
           <button onClick={function() { sendMessage(); }} disabled={!input.trim() || loading}
-            style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: input.trim() && !loading ? accent : (dm ? '#2a2a3e' : '#d5d5e0'), color: input.trim() && !loading ? '#000' : txMut, fontWeight: 700, fontSize: 14, cursor: input.trim() && !loading ? 'pointer' : 'default' }}>
+            style={{ padding: '10px 16px', borderRadius: 10, border: 'none', background: input.trim() && !loading ? accent : (dm ? '#333333' : '#d5d5e0'), color: input.trim() && !loading ? '#000' : txMut, fontWeight: 700, fontSize: 14, cursor: input.trim() && !loading ? 'pointer' : 'default' }}>
             ↑
           </button>
         </div>
