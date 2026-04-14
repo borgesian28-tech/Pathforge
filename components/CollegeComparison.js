@@ -23,7 +23,7 @@ export default function CollegeComparison({ darkMode, accent, primaryColor }) {
 
     var prompt = 'Compare these two colleges side by side: "' + college1.trim() + '" vs "' + college2.trim() + '".\n\n' +
       'Return ONLY a valid JSON object (no markdown, no backticks) with this exact structure:\n' +
-      '{"college1":{"name":"Full Name","location":"City, State","type":"Private/Public","founded":"Year","enrollment":"XX,XXX","acceptanceRate":"XX%","avgGPA":"X.XX","satRange":"XXXX-XXXX","actRange":"XX-XX","ranking":"#XX National","tuition":"$XX,XXX/year","financialAid":"XX% receive aid","topMajors":["Major1","Major2","Major3","Major4","Major5"],"studentFaculty":"XX:1","setting":"Urban/Suburban/Rural","athletics":"Division X","notableAlumni":"2-3 names"},"college2":{same fields}}\n\nAll data must be factually accurate for real US colleges.';
+      '{"college1":{"name":"Full Name","location":"City, State","type":"Private/Public","founded":"Year","enrollment":"XX,XXX","acceptanceRate":"XX%","avgGPA":"X.XX","satRange":"XXXX-XXXX","actRange":"XX-XX","ranking":"#XX National","tuition":"$XX,XXX/year","financialAid":"XX% receive aid","topMajors":["Major1","Major2","Major3","Major4","Major5"],"studentFaculty":"XX:1","setting":"Urban/Suburban/Rural","athletics":"Division X","notableAlumni":"Name1, Name2, Name3"},"college2":{same fields}}\n\nCRITICAL: notableAlumni must be a comma-separated string of 3 real well-known alumni (e.g. "Elon Musk, Bill Gates, Sheryl Sandberg"). All stats must be accurate and consistent — use real published data.';
 
     fetch('/api/chat', {
       method: 'POST',
