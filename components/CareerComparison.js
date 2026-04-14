@@ -22,14 +22,14 @@ export default function CareerComparison({ darkMode, accent, primaryColor }) {
 
     var prompt = 'Compare these two careers side by side: "' + career1.trim() + '" vs "' + career2.trim() + '".\n\n' +
       'Return ONLY a valid JSON object (no markdown, no backticks) with this exact structure:\n' +
-      '{"career1":{"title":"Job Title","description":"1-2 sentence description of what they do","entrySalary":"$XX,XXX-$XX,XXX","midSalary":"$XXX,XXX-$XXX,XXX","seniorSalary":"$XXX,XXX-$XXX,XXX+","education":"Typical degree/path","avgHours":"XX-XX hrs/week","workLifeBalance":"Rating out of 10","stressLevel":"Low/Medium/High/Very High","travelRequired":"None/Minimal/Moderate/Heavy","remoteOptions":"Full/Hybrid/Office","growthOutlook":"X% growth next 10yr","topCompanies":["Company1","Company2","Company3","Company4","Company5"],"dayInLife":"2-3 sentences describing typical day","prosAndCons":"1 sentence on biggest pro and con"},"career2":{same fields}}';
+      '{"career1":{"title":"Job Title","description":"1-2 sentence description of what they do","entrySalary":"$XX,XXX-$XX,XXX","midSalary":"$XXX,XXX-$XXX,XXX","seniorSalary":"$XXX,XXX-$XXX,XXX+","education":"Typical degree/path","avgHours":"XX-XX hrs/week","workLifeBalance":"X/10","stressLevel":"Low/Medium/High/Very High","travelRequired":"None/Minimal/Moderate/Heavy","remoteOptions":"Full/Hybrid/Office","growthOutlook":"X% growth next 10yr","topCompanies":["Company1","Company2","Company3","Company4","Company5"],"dayInLife":"2-3 sentences describing typical day","prosAndCons":"1 sentence on biggest pro and con"},"career2":{same fields}}';
 
     fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         messages: [{ role: 'user', content: prompt }],
-        context: 'You are a career expert. Return ONLY raw JSON, no markdown, no explanation. All salary and career data should be accurate for the US market in 2025.'
+        context: 'You are a career expert. Return ONLY raw JSON, no markdown, no explanation. All salary and career data should be accurate for the US market in 2025. CRITICAL: workLifeBalance must always be a score out of 10 in the format "X/10" (e.g. "7/10"). Use consistent, research-backed data.'
       })
     })
     .then(function(res) { return res.json(); })
