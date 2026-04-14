@@ -150,7 +150,7 @@ export default function HighSchoolDashboard({ roadmap, onReset, isDemo, onUnlock
   var txMut = dm ? '#606070' : '#777784';
   var txDim = dm ? '#8a8a9a' : '#555555';
   var accent = '#C9A84C';
-  var primaryColor = '#6366f1';
+  var primaryColor = '#C9A84C';
   var sidebarBg = dm ? '#0c0c0f' : '#ffffff';
   var sidebarBdr = dm ? '#222222' : '#e8e8ee';
   var headerBg = dm ? '#0c0c0f' : '#ffffff';
@@ -331,7 +331,11 @@ export default function HighSchoolDashboard({ roadmap, onReset, isDemo, onUnlock
             <span style={{ color: accent, fontSize: 12, fontWeight: 500 }}>• {currentRoadmap.careerField}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-            <div ref={settingsRef} style={{ position: 'relative' }}>
+            <button onClick={function() {
+              var isBeta = !isDemo && (!subscription || subscription.tier === 'free');
+              onReset(isBeta);
+            }} style={{ height: 32, padding: '0 12px', borderRadius: 8, border: '1px solid ' + bdr, background: bgCard, color: txSub, fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 5 }}>↻ New</button>
+          <div ref={settingsRef} style={{ position: 'relative' }}>
               <button onClick={function() { setSettingsOpen(!settingsOpen); }} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid ' + bdr, background: bgCard, color: txSub, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>⋮</button>
               {settingsOpen && (
                 <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 6, width: 200, background: bgCard, border: '1px solid ' + bdr, borderRadius: 12, boxShadow: '0 8px 30px rgba(0,0,0,0.3)', overflow: 'hidden', zIndex: 100 }}>
@@ -339,9 +343,8 @@ export default function HighSchoolDashboard({ roadmap, onReset, isDemo, onUnlock
                     { label: '📄 Export as PDF', action: function() { setSettingsOpen(false); handleExport(); } },
                     { label: '📋 Copy to Clipboard', action: function() { setSettingsOpen(false); handleShare(); } },
                     { label: '🔗 Link Catalog', action: function() { setSettingsOpen(false); setHsModalInput(''); setHsModal({ title: 'Link Course Catalog', placeholder: "Paste your school's course catalog URL" }); } },
-                    { label: '↻ New Roadmap', action: function() { setSettingsOpen(false); onReset(); } },
                   ].map(function(item, i) {
-                    return (<button key={i} onClick={item.action} style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', borderBottom: i < 3 ? '1px solid ' + bdr : 'none', color: txSub, fontSize: 13, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8 }}>{item.label}</button>);
+                    return (<button key={i} onClick={item.action} style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', borderBottom: i < 2 ? '1px solid ' + bdr : 'none', color: txSub, fontSize: 13, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8 }}>{item.label}</button>);
                   })}
                 </div>
               )}
