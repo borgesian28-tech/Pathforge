@@ -126,7 +126,7 @@ export default function WaitlistPage() {
           <a href="/privacy" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Privacy Policy</a>
           <a href="/pricing" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Pricing</a>
           <a href="/waitlist" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Waitlist</a>
-          <a href="mailto:pathforgeapp@gmail.com" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Contact</a>
+          <a href="/contact" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Contact</a>
         </div>
         <p style={{ fontSize: 13, color: txMut }}>© 2026 PathForge · Built with AI, designed for ambition.</p>
       </footer>
