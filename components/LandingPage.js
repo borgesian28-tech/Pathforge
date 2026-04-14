@@ -47,9 +47,9 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
     }
   };
 
-  var accent = '#6c5ce7';
-  var accentLight = dark ? '#a29bfe' : '#5a4bd1';
-  var accentSoft = dark ? 'rgba(108,92,231,0.25)' : '#ede9fe';
+  var accent = '#C9A84C';
+  var accentLight = dark ? '#C9A84C' : '#a07830';
+  var accentSoft = dark ? 'rgba(201,168,76,0.25)' : '#ede9fe';
   var green = dark ? '#00e676' : '#16a34a';
   var greenDim = dark ? 'rgba(0,230,118,0.15)' : 'rgba(22,163,74,0.1)';
   var bg = dark ? '#0a0a0c' : '#ffffff';
@@ -92,15 +92,15 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
         "@keyframes pulseDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }",
         "@keyframes fadeUpHero { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }",
         ".lp-btn-primary { transition: all 0.25s !important; }",
-        ".lp-btn-primary:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 32px rgba(108,92,231,0.25) !important; }",
+        ".lp-btn-primary:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 32px rgba(201,168,76,0.25) !important; }",
         ".lp-btn-demo { transition: all 0.25s !important; }",
         ".lp-btn-demo:hover { transform: translateY(-1px) !important; opacity: 0.9 !important; }",
         ".lp-feature-card { transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s !important; }",
         ".lp-feature-card:hover { transform: translateY(-3px) !important; }",
         ".lp-nav-cta { transition: transform 0.2s, box-shadow 0.2s !important; }",
-        ".lp-nav-cta:hover { transform: translateY(-1px) !important; box-shadow: 0 6px 24px rgba(108,92,231,0.25) !important; }",
+        ".lp-nav-cta:hover { transform: translateY(-1px) !important; box-shadow: 0 6px 24px rgba(201,168,76,0.25) !important; }",
         "@media (max-width: 860px) { .lp-features-grid { grid-template-columns: 1fr !important; } .lp-steps-row { grid-template-columns: 1fr !important; } .lp-steps-line { display: none !important; } .lp-proof-grid { grid-template-columns: 1fr !important; } .lp-mock-row { flex-direction: column !important; } .lp-mock-sidebar { width: 100% !important; flex-direction: row !important; flex-wrap: wrap !important; } .lp-mock-grid { grid-template-columns: 1fr !important; } .lp-hero-h1 { font-size: 42px !important; } .lp-nav { padding: 10px 14px !important; } .lp-hero-buttons { flex-direction: column !important; align-items: stretch !important; } .lp-nav-links { gap: 6px !important; } }"
-      ].join('\n') + '\n.lp-gradient-text { background: ' + (dark ? 'linear-gradient(135deg, #a29bfe, #e0c3fc)' : 'linear-gradient(135deg, #6c5ce7, #a78bfa)') + '; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; color: transparent; }'}</style>
+      ].join('\n') + '\n.lp-gradient-text { background: ' + (dark ? 'linear-gradient(135deg, #C9A84C, #e8c97a)' : 'linear-gradient(135deg, #C9A84C, #C9A84C)') + '; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; color: transparent; }'}</style>
 
       {/* NAV */}
       <nav className="lp-nav" style={{
@@ -203,8 +203,8 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
                   return (
                     <div key={i} style={{
                       padding: '10px 14px', borderRadius: 10, fontSize: 13,
-                      color: isActive ? '#a29bfe' : '#5f5d6e',
-                      background: isActive ? 'rgba(108,92,231,0.25)' : 'transparent',
+                      color: isActive ? '#C9A84C' : '#5f5d6e',
+                      background: isActive ? 'rgba(201,168,76,0.25)' : 'transparent',
                       fontWeight: isActive ? 600 : 400,
                     }}>{item}</div>
                   );
@@ -233,7 +233,7 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
                         <div style={{ fontSize: 14, color: '#f0eff4', fontWeight: 500, marginBottom: 4 }}>{c.course}</div>
                         <div style={{ fontSize: 11, color: '#5f5d6e', marginBottom: 8 }}>{c.code}</div>
                         <div style={{ height: 4, borderRadius: 4, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', borderRadius: 4, background: '#a29bfe', width: c.progress + '%' }} />
+                          <div style={{ height: '100%', borderRadius: 4, background: '#C9A84C', width: c.progress + '%' }} />
                         </div>
                       </div>
                     );
@@ -327,7 +327,7 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
                     <div style={{
                       width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 16, fontWeight: 700,
-                      background: 'linear-gradient(135deg, ' + accent + ', #a78bfa)', color: '#fff',
+                      background: 'linear-gradient(135deg, ' + accent + ', #C9A84C)', color: '#fff',
                     }}>{t.initial}</div>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 600, color: tx }}>{t.name}</div>
@@ -377,6 +377,7 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
       <footer style={{ padding: '40px 24px', borderTop: '1px solid ' + bdr, textAlign: 'center', background: bg, transition: 'background 0.3s' }}>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 16 }}>
           <a href="/terms" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Terms of Service</a>
+          <a href="/privacy" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Privacy Policy</a>
           <a href="/pricing" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Pricing</a>
           <a href="/waitlist" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Waitlist</a>
           <button onClick={function() { setShowDevCode(!showDevCode); setDevError(''); }} style={{ background: 'none', border: 'none', color: txMut, fontSize: 13, cursor: 'pointer', fontFamily: sans, padding: 0 }}>Beta Access</button>
@@ -392,6 +393,7 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
         )}
         {devError && <p style={{ color: '#ef4444', fontSize: 11, marginBottom: 8 }}>{devError}</p>}
         <p style={{ fontSize: 13, color: txMut }}>© 2026 PathForge · Built with AI, designed for ambition.</p>
+        <p style={{ fontSize: 13, color: txMut, marginTop: 8 }}>Questions? <a href="mailto:pathforgeapp@gmail.com" style={{ color: accent, textDecoration: 'none' }}>pathforgeapp@gmail.com</a></p>
       </footer>
     </div>
   );
