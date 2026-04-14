@@ -12,16 +12,16 @@ export default function InterviewSimulator({ profile, accent, primaryColor, dark
   var inputRef = useRef(null);
   var dm = darkMode !== false;
 
-  var bg = dm ? '#08080f' : '#ffffff';
-  var bgCard = dm ? '#111122' : '#f7f7fa';
-  var bgSec = dm ? '#1a1a2e' : '#ededf3';
-  var bdr = dm ? '#1e1e32' : '#d5d5e0';
-  var bdrL = dm ? '#2a2a3e' : '#c5c5d0';
+  var bg = dm ? '#0a0a0a' : '#ffffff';
+  var bgCard = dm ? '#141414' : '#f7f7fa';
+  var bgSec = dm ? '#1e1e1e' : '#ededf3';
+  var bdr = dm ? '#2a2a2a' : '#d5d5e0';
+  var bdrL = dm ? '#333333' : '#c5c5d0';
   var tx = dm ? '#fff' : '#111111';
   var txSub = dm ? '#ddd' : '#222222';
   var txMut = dm ? '#6a6a7a' : '#666666';
   var txDim = dm ? '#8a8a9a' : '#555555';
-  var inputBg = dm ? '#111122' : '#f7f7fa';
+  var inputBg = dm ? '#141414' : '#f7f7fa';
 
   useEffect(function() {
     if (messagesEnd.current) messagesEnd.current.scrollIntoView({ behavior: 'smooth' });
