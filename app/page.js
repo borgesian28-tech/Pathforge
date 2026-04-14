@@ -77,12 +77,17 @@ export default function Home() {
     }
   };
 
-  const handleReset = function() {
+  const handleReset = function(skipLanding) {
     setProfile(null);
     setSavedProgress(null);
     setLoadingError(false);
-    setShowLanding(true);
     setIsDemo(false);
+    // Beta/dev code users skip the landing page and go straight to onboarding
+    if (skipLanding) {
+      setShowLanding(false);
+    } else {
+      setShowLanding(true);
+    }
   };
 
   const handleGetStarted = function() {
@@ -105,7 +110,7 @@ export default function Home() {
 
   if (authLoading || checkingSaved) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #08080f 0%, #0c0c1a 50%, #08080f 100%)' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #0a0a0a 0%, #0d0d0d 50%, #0a0a0a 100%)' }}>
         <div style={{ width: 48, height: 48, borderRadius: '50%', border: '3px solid transparent', borderTopColor: '#C9A84C', animation: 'spin 1s linear infinite', marginBottom: 16 }} />
         <p style={{ color: '#aaa', fontSize: 14 }}>Loading...</p>
         <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
