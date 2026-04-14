@@ -18,8 +18,8 @@ export default function WaitlistPage() {
   var bdr = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)';
   var bgCard = dark ? '#111115' : '#f8f8fb';
   var navBg = dark ? 'rgba(10,10,12,0.82)' : 'rgba(255,255,255,0.82)';
-  var accentLight = dark ? '#a29bfe' : '#5a4bd1';
-  var accent = '#6c5ce7';
+  var accentLight = dark ? '#C9A84C' : '#a07830';
+  var accent = '#C9A84C';
   var green = '#10b981';
 
   var handleSubmit = function() {
@@ -121,10 +121,12 @@ export default function WaitlistPage() {
 
       {/* FOOTER */}
       <footer style={{ padding: '40px 24px', borderTop: '1px solid ' + bdr, textAlign: 'center', background: bg, transition: 'background 0.3s' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 16, flexWrap: 'wrap' }}>
           <a href="/terms" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Terms of Service</a>
+          <a href="/privacy" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Privacy Policy</a>
           <a href="/pricing" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Pricing</a>
           <a href="/waitlist" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Waitlist</a>
+          <a href="mailto:pathforgeapp@gmail.com" style={{ color: txMut, fontSize: 13, textDecoration: 'none' }}>Contact</a>
         </div>
         <p style={{ fontSize: 13, color: txMut }}>© 2026 PathForge · Built with AI, designed for ambition.</p>
       </footer>
