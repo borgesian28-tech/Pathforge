@@ -4,9 +4,9 @@ import { useState } from 'react';
 export default function BeyondClassroom({ data, accent, color, darkMode }) {
   const [openSection, setOpenSection] = useState('technical');
   var dm = darkMode !== false;
-  var bgCard = dm ? '#111122' : '#f7f7fa';
+  var bgCard = dm ? '#141414' : '#f7f7fa';
   var bgDeep = dm ? '#0a0a18' : '#ffffff';
-  var bdr = dm ? '#1e1e32' : '#d5d5e0';
+  var bdr = dm ? '#2a2a2a' : '#d5d5e0';
   var tx = dm ? '#fff' : '#111111';
   var txSub = dm ? '#ccc' : '#333333';
   var txMut = dm ? '#6a6a7a' : '#666666';
@@ -78,7 +78,7 @@ export default function BeyondClassroom({ data, accent, color, darkMode }) {
   return (
     <div style={{ marginTop: 20 }}>
       {data.intro && (
-        <div style={{ background: dm ? 'linear-gradient(135deg, #ff640022, #111122)' : 'linear-gradient(135deg, #ff640015, #fff8f0)', border: '1px solid #ff640044', borderRadius: 14, padding: '16px 18px', marginBottom: 16, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+        <div style={{ background: dm ? 'linear-gradient(135deg, #ff640022, #141414)' : 'linear-gradient(135deg, #ff640015, #fff8f0)', border: '1px solid #ff640044', borderRadius: 14, padding: '16px 18px', marginBottom: 16, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
           <span style={{ fontSize: 24, flexShrink: 0 }}>⚡</span>
           <div>
             <div style={{ color: '#ff6400', fontSize: 12, fontWeight: 700, letterSpacing: 1, marginBottom: 4 }}>WHY THIS MATTERS</div>
@@ -104,7 +104,7 @@ export default function BeyondClassroom({ data, accent, color, darkMode }) {
             <div style={{ position: 'absolute', left: 6, top: 0, bottom: 0, width: 2, background: 'linear-gradient(180deg, ' + accent + ', transparent)' }} />
             {data.networkingPlaybook?.map((p, i) => (
               <div key={i} style={{ position: 'relative', marginBottom: 16 }}>
-                <div style={{ position: 'absolute', left: -17, top: 4, width: 10, height: 10, borderRadius: '50%', background: accent, border: '2px solid ' + (dm ? '#08080f' : '#ffffff') }} />
+                <div style={{ position: 'absolute', left: -17, top: 4, width: 10, height: 10, borderRadius: '50%', background: accent, border: '2px solid ' + (dm ? '#0a0a0a' : '#ffffff') }} />
                 <div style={{ color: accent, fontSize: 12, fontWeight: 700, letterSpacing: 0.5 }}>{p.phase}</div>
                 <div style={{ color: txMut, fontSize: 11, marginBottom: 6 }}>{p.semester}</div>
                 {p.actions?.map((a, j) => (
@@ -130,7 +130,7 @@ export default function BeyondClassroom({ data, accent, color, darkMode }) {
           <div style={{ display: 'grid', gap: 8 }}>
             {data.weeklyHabits?.map((h, i) => (
               <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 14px', background: bgDeep, borderRadius: 8, border: '1px solid ' + bdr }}>
-                <div style={{ width: 24, height: 24, borderRadius: 6, border: '2px solid ' + (dm ? '#3a3a4e' : '#b0b0bb'), flexShrink: 0, marginTop: 1 }} />
+                <div style={{ width: 24, height: 24, borderRadius: 6, border: '2px solid ' + (dm ? '#444444' : '#b0b0bb'), flexShrink: 0, marginTop: 1 }} />
                 <span style={{ color: txSub, fontSize: 13, lineHeight: 1.5 }}>{h}</span>
               </div>
             ))}
