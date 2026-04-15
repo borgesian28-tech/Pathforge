@@ -101,11 +101,8 @@ export default function Home() {
   };
 
   const handleUnlock = function() {
-    // User wants to upgrade from demo — go back to landing to enter dev code
-    setProfile(null);
-    setSavedProgress(null);
-    setIsDemo(false);
-    setShowLanding(true);
+    // Demo users go to pricing page to subscribe
+    if (typeof window !== 'undefined') window.location.href = '/pricing';
   };
 
   if (authLoading || checkingSaved) {
@@ -131,9 +128,9 @@ export default function Home() {
     // Dev code users (isDemo=false, no subscription) get premium-equivalent access
     var effectiveSub = !isDemo && subscription.tier === 'free' ? { tier: 'premium', status: 'active' } : subscription;
     return profile.programLevel === 'highschool' ? (
-      <HighSchoolDashboard roadmap={profile.hsRoadmap} onReset={handleReset} isDemo={effectiveDemo} onUnlock={handleUnlock} subscription={effectiveSub} />
+      <HighSchoolDashboard roadmap={profile.hsRoadmap} onReset={handleReset} isDemo={effectiveDemo} onUnlock={handleUnlock} subscription={effectiveSub} isBetaUser={!isDemo && !user && subscription.tier === 'free'} />
     ) : (
-      <Dashboard profile={profile} onReset={handleReset} savedProgress={savedProgress} isDemo={effectiveDemo} onUnlock={handleUnlock} subscription={effectiveSub} />
+      <Dashboard profile={profile} onReset={handleReset} savedProgress={savedProgress} isDemo={effectiveDemo} onUnlock={handleUnlock} subscription={effectiveSub} isBetaUser={!isDemo && !user && subscription.tier === 'free'} />
     );
   }
 
