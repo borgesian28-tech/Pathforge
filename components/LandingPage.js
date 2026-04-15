@@ -49,7 +49,7 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
 
   var accent = '#C9A84C';
   var accentLight = dark ? '#C9A84C' : '#a07830';
-  var accentSoft = dark ? 'rgba(201,168,76,0.25)' : '#ede9fe';
+  var accentSoft = dark ? 'rgba(201,168,76,0.2)' : 'rgba(201,168,76,0.12)';
   var green = dark ? '#00e676' : '#16a34a';
   var greenDim = dark ? 'rgba(0,230,118,0.15)' : 'rgba(22,163,74,0.1)';
   var bg = dark ? '#0a0a0c' : '#ffffff';
@@ -88,7 +88,7 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
   return (
     <div style={{ background: bg, color: tx, fontFamily: sans, overflowX: 'clip', WebkitFontSmoothing: 'antialiased', transition: 'background 0.3s, color 0.3s', minHeight: '100vh' }}>
       <style>{[
-        "@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');",
+        
         "@keyframes pulseDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }",
         "@keyframes fadeUpHero { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }",
         ".lp-btn-primary { transition: all 0.25s !important; }",
@@ -117,7 +117,7 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
             width: 32, height: 32, borderRadius: 8, border: '1px solid ' + bdr,
             background: 'transparent', color: tx, fontSize: 14, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', flexShrink: 0,
-          }}>{dark ? '☀️' : '🌙'}</button>
+          }}>{dark ? 'Light mode' : 'Dark mode'}</button>
           <a href="/waitlist" style={{ color: tx, fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', padding: '6px 14px', borderRadius: 8, border: '1px solid ' + bdr, background: 'transparent', transition: 'all 0.2s', whiteSpace: 'nowrap' }}>Waitlist</a>
           <a href="/pricing" style={{ color: tx, fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', padding: '6px 14px', borderRadius: 8, border: '1px solid ' + bdr, background: 'transparent', transition: 'all 0.2s', whiteSpace: 'nowrap' }}>Pricing</a>
           <button className="lp-nav-cta" onClick={function() { setShowDevCode(false); onDemo(); }} style={{
@@ -261,10 +261,7 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
                   padding: '36px 30px', borderRadius: radius, background: bgCard,
                   border: '1px solid ' + bdr, cursor: 'default', position: 'relative', overflow: 'hidden',
                 })}>
-                  <div style={{
-                    width: 48, height: 48, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 22, marginBottom: 20, background: accentSoft,
-                  }}>{f.icon}</div>
+                  {f.icon ? <div style={{ width: 48, height: 48, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, marginBottom: 20, background: accentSoft }}>{f.icon}</div> : null}
                   <h3 style={{ fontFamily: serif, fontSize: 22, marginBottom: 10, letterSpacing: -0.3, color: tx }}>{f.title}</h3>
                   <p style={{ fontSize: 14, color: txDim, lineHeight: 1.65 }}>{f.desc}</p>
                 </div>
