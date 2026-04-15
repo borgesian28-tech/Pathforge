@@ -452,10 +452,9 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
         {isDemo && (
           <div style={{ marginBottom: 16, background: 'linear-gradient(135deg, #C9A84C22, ' + bgCard + ')', border: '1px solid #C9A84C44', borderRadius: 14, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 200 }}>
-              <span style={{ fontSize: 24 }}>🔓</span>
               <div>
                 <div style={{ color: tx, fontSize: 15, fontWeight: 700 }}>You're viewing a demo</div>
-                <div style={{ color: txDim, fontSize: 13, marginTop: 2 }}>Freshman & sophomore courses are unlocked. Sign up free to access your full roadmap, AI advisor, interviews, and more.</div>
+                <div style={{ color: txDim, fontSize: 13, marginTop: 2 }}>Freshman & sophomore courses are unlocked. Sign up to access your full roadmap, AI advisor, interviews, and more.</div>
               </div>
             </div>
             <button onClick={onUnlock} style={{ padding: '10px 24px', borderRadius: 100, border: 'none', background: '#C9A84C', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>Unlock Full Access →</button>
