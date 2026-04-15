@@ -94,7 +94,7 @@ function HSChatbot({ careerField, accent, primaryColor, darkMode, inline }) {
   );
 }
 
-export default function HighSchoolDashboard({ roadmap, onReset, isDemo, onUnlock, subscription }) {
+export default function HighSchoolDashboard({ roadmap, onReset, isDemo, onUnlock, subscription, isBetaUser }) {
   const [activeTab, setActiveTab] = useState('courses');
   const [activeYear, setActiveYear] = useState(0);
   const [expandedCollege, setExpandedCollege] = useState(null);
@@ -331,10 +331,7 @@ export default function HighSchoolDashboard({ roadmap, onReset, isDemo, onUnlock
             <span style={{ color: accent, fontSize: 12, fontWeight: 500 }}>• {currentRoadmap.careerField}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-            <button onClick={function() {
-              var isBeta = !isDemo && (!subscription || subscription.tier === 'free');
-              onReset(isBeta);
-            }} style={{ height: 32, padding: '0 12px', borderRadius: 8, border: '1px solid ' + bdr, background: bgCard, color: txSub, fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 5 }}>↻ New</button>
+            <button onClick={function() { onReset(isBetaUser); }} style={{ height: 32, padding: '0 12px', borderRadius: 8, border: '1px solid ' + bdr, background: bgCard, color: txSub, fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 5 }}>↻ New</button>
           <div ref={settingsRef} style={{ position: 'relative' }}>
               <button onClick={function() { setSettingsOpen(!settingsOpen); }} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid ' + bdr, background: bgCard, color: txSub, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>⋮</button>
               {settingsOpen && (
