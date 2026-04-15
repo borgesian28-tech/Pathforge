@@ -105,8 +105,8 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #0a0a0a 0%, #1e1e1e 50%, #0a0a0a 100%)', padding: 20, position: 'relative' }}>
       {onBack && <button onClick={onBack} style={{ position: 'fixed', top: 20, left: 20, zIndex: 50, padding: '8px 16px', borderRadius: 8, border: '1px solid #333333', background: 'rgba(20,20,20,0.8)', backdropFilter: 'blur(8px)', color: '#8a8a9a', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>← Back</button>}
       <div style={{ maxWidth: 520, textAlign: 'center' }} className={slideClass} key={animKey}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🎓</div>
-        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(28px, 5vw, 42px)', color: '#fff', margin: '0 0 6px' }}>PathForge</h1>
+        
+        <h1 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 'clamp(28px, 5vw, 42px)', color: '#fff', margin: '0 0 6px' }}>PathForge</h1>
         <p style={{ color: '#C9A84C', fontSize: 13, fontWeight: 600, letterSpacing: 2, marginBottom: 6 }}>AI-POWERED ACADEMIC ADVISING</p>
         <p style={{ color: '#8a8a9a', fontSize: 'clamp(14px, 2.5vw, 16px)', lineHeight: 1.6, marginBottom: 32 }}>Real courses. Real clubs. Career prep school won't teach you.<br />From high school to master's — personalized to you.</p>
         {user ? (
@@ -138,7 +138,7 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
       <div style={{ maxWidth: 600, width: '100%' }} className={slideClass} key={animKey}>
         <button onClick={() => goBack(0)} style={backBtn}>← Back</button>
         <p style={{ color: '#C9A84C', fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP 1 OF 4</p>
-        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>Hey {name}, where do you want to go?</h2>
+        <h2 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>Hey {name}, where do you want to go?</h2>
         <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 24 }}>Pick a career path — or describe your own.</p>
         <div style={{ display: 'grid', gap: 10 }}>
           {CAREER_OPTIONS.map((c) => {
@@ -172,13 +172,13 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
       <div style={{ maxWidth: 520, width: '100%' }} className={slideClass} key={animKey}>
         <button onClick={() => goBack(1)} style={backBtn}>← Back</button>
         <p style={{ color: CAREER_OPTIONS.find(c => c.id === selectedCareer)?.accent || '#C9A84C', fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP 2 OF 4</p>
-        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>What level are you?</h2>
+        <h2 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>What level are you?</h2>
         <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 24 }}>This helps us tailor the roadmap to your program.</p>
         <div style={{ display: 'grid', gap: 12 }}>
           {[
             { id: 'highschool', label: 'High School', icon: '📖', desc: "Preparing for college applications" },
-            { id: 'undergraduate', label: 'Undergraduate', icon: '🎓', desc: "4-year bachelor's degree program" },
-            { id: 'masters', label: "Master's / Graduate", icon: '📚', desc: 'Graduate-level degree program' },
+            { id: 'undergraduate', label: 'Undergraduate', icon: '', desc: "4-year bachelor's degree program" },
+            { id: 'masters', label: "Master's / Graduate", icon: '', desc: 'Graduate-level degree program' },
           ].map((p) => {
             const sel = programLevel === p.id;
             const ac = CAREER_OPTIONS.find(c => c.id === selectedCareer)?.accent || '#C9A84C';
@@ -213,7 +213,7 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
         <div style={{ maxWidth: 520, width: '100%' }} className={slideClass} key={animKey}>
           <button onClick={() => goBack(2)} style={backBtn}>← Back</button>
           <p style={{ color: accent, fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP 3 OF 4</p>
-          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>What's your intended major?</h2>
+          <h2 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>What's your intended major?</h2>
           <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 20 }}>Pick a suggested major or type your own. You can always change or add more later.</p>
           {suggestedMajors.length > 0 && (
             <div style={{ display: 'grid', gap: 8, marginBottom: 16 }}>
@@ -248,15 +248,15 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
         <p style={{ color: accent, fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP {programLevel === 'highschool' ? '3 OF 3' : '4 OF 4'}</p>
         {programLevel === 'highschool' ? (
           <>
-            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>Ready to build your plan!</h2>
+            <h2 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>Ready to build your plan!</h2>
             <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 20 }}>We'll create a personalized 4-year high school roadmap to prepare you for top colleges in {isCustom ? customGoal : career.label}.</p>
             {isCustom && <div style={{ background: '#141414', border: '1px solid #fbbf2433', borderRadius: 12, padding: '12px 16px', marginBottom: 16 }}><div style={{ color: '#fbbf24', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>YOUR CUSTOM GOAL</div><p style={{ color: '#ccc', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{customGoal}</p></div>}
-            <div style={{ background: '#0A5C3615', border: '1px solid #0A5C3633', borderRadius: 12, padding: '12px 16px', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}><span style={{ fontSize: 16, marginTop: 1 }}>🎓</span><p style={{ color: '#8a8a9a', fontSize: 13, margin: 0, lineHeight: 1.5 }}>Your roadmap includes <strong style={{ color: '#4ade80' }}>AP/Honors course recommendations</strong>, extracurriculars, top colleges, and a complete timeline for college applications.</p></div>
-            <button onClick={handleBuild} style={btn(true, accent, clr)}>🚀 Build My High School Roadmap</button>
+            <div style={{ background: '#0A5C3615', border: '1px solid #0A5C3633', borderRadius: 12, padding: '12px 16px', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}><p style={{ color: '#8a8a9a', fontSize: 13, margin: 0, lineHeight: 1.5 }}>Your roadmap includes <strong style={{ color: '#4ade80' }}>AP/Honors course recommendations</strong>, extracurriculars, top colleges, and a complete timeline for college applications.</p></div>
+            <button onClick={handleBuild} style={btn(true, accent, clr)}>Build My High School Roadmap</button>
           </>
         ) : (
           <>
-            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>Which school are you attending?</h2>
+            <h2 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>Which school are you attending?</h2>
             <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 20 }}>We'll find real courses, clubs, AND everything your school won't teach you.</p>
             {(selectedMajor || customMajor.trim()) && (
               <div style={{ background: clr + '15', border: '1px solid ' + accent + '33', borderRadius: 12, padding: '10px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -266,8 +266,8 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
             )}
             <input type="text" placeholder="e.g. Williams College, NYU, Stanford..." value={school} onChange={(e) => setSchool(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && school.trim() && handleBuild()} style={{ ...inp, marginBottom: 16 }} />
             {isCustom && <div style={{ background: '#141414', border: '1px solid #fbbf2433', borderRadius: 12, padding: '12px 16px', marginBottom: 16 }}><div style={{ color: '#fbbf24', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>YOUR CUSTOM GOAL</div><p style={{ color: '#ccc', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{customGoal}</p></div>}
-            <div style={{ background: '#0A5C3615', border: '1px solid #0A5C3633', borderRadius: 12, padding: '12px 16px', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}><span style={{ fontSize: 16, marginTop: 1 }}>🚀</span><p style={{ color: '#8a8a9a', fontSize: 13, margin: 0, lineHeight: 1.5 }}>Your roadmap includes <strong style={{ color: '#4ade80' }}>what school won't teach you</strong> — technical skills, networking playbooks, interview prep, and insider tips.</p></div>
-            <button onClick={handleBuild} disabled={!school.trim()} style={btn(!!school.trim(), accent, clr)}>🚀 Search & Build My Roadmap</button>
+            <div style={{ background: '#0A5C3615', border: '1px solid #0A5C3633', borderRadius: 12, padding: '12px 16px', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}><p style={{ color: '#8a8a9a', fontSize: 13, margin: 0, lineHeight: 1.5 }}>Your roadmap includes <strong style={{ color: '#4ade80' }}>what school won't teach you</strong> — technical skills, networking playbooks, interview prep, and insider tips.</p></div>
+            <button onClick={handleBuild} disabled={!school.trim()} style={btn(!!school.trim(), accent, clr)}>Build My Roadmap</button>
           </>
         )}
       </div>
