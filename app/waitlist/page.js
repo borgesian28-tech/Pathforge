@@ -64,7 +64,7 @@ export default function WaitlistPage() {
 
       {/* MAIN */}
       <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '120px 24px 80px', minHeight: 'calc(100vh - 200px)' }}>
-        <div style={{ fontSize: 56, marginBottom: 24 }}>🚀</div>
+        
         <h1 style={{ fontFamily: serif, fontSize: 'clamp(36px, 5vw, 56px)', lineHeight: 1.1, letterSpacing: -1, margin: '0 auto 16px', maxWidth: 600, color: tx }}>
           Be the first to know.
         </h1>
@@ -102,11 +102,11 @@ export default function WaitlistPage() {
           <h3 style={{ fontFamily: serif, fontSize: 24, color: tx, marginBottom: 24 }}>What's coming</h3>
           <div style={{ display: 'grid', gap: 12, textAlign: 'left' }}>
             {[
-              { icon: '📚', text: 'AI-powered 4-year course roadmaps tailored to your school' },
+              { icon: '', text: 'AI-powered 4-year course roadmaps tailored to your school' },
               { icon: '🔍', text: 'College search tool — find schools that match your goals' },
               { icon: '💬', text: 'AI guidance counselor that knows your career path' },
-              { icon: '🎯', text: 'Interview prep and career outcomes data' },
-              { icon: '⚡', text: 'Early access pricing for waitlist members' },
+              { icon: '', text: 'Interview prep and career outcomes data' },
+              { icon: '', text: 'Early access pricing for waitlist members' },
             ].map(function(item, i) {
               return (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderRadius: 12, background: bgCard, border: '1px solid ' + bdr }}>
