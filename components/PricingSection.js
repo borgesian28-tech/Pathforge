@@ -115,7 +115,6 @@ export default function PricingSection({ onSelectPlan, user, onLogin, darkMode }
       {showComingSoon && (
         <div onClick={function() { setShowComingSoon(false); setWaitlistSubmitted(false); setWaitlistEmail(''); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div onClick={function(e) { e.stopPropagation(); }} style={{ background: dm ? '#131318' : '#ffffff', border: '1px solid ' + bdr, borderRadius: 18, padding: '40px 36px', maxWidth: 420, width: '100%', textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🚀</div>
             <h3 style={{ fontFamily: serif, fontSize: 24, color: tx, margin: '0 0 8px' }}>Coming Soon!</h3>
             <p style={{ color: txDim, fontSize: 15, lineHeight: 1.7, marginBottom: 8 }}>The <strong style={{ color: accent }}>{selectedPlanName}</strong> plan is launching very soon.</p>
             {!waitlistSubmitted ? (
