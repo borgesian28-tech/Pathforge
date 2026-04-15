@@ -70,7 +70,7 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
     { icon: '', title: 'Beyond the Classroom', desc: 'Clubs, organizations, competitions, and experiences that actually matter for your career.' },
     { icon: '', title: 'Career Outcomes', desc: 'Real salary data, top employers, job placement rates, and career growth outlook.' },
     { icon: '', title: 'High School Planning', desc: 'AP and honors course recommendations tailored to your dream major — freshman through senior year.' },
-    { icon: '🎤', title: 'Mock Interviews', desc: 'Practice behavioral, technical, and case study interviews with AI feedback and scoring.' },
+    { icon: '', title: 'Mock Interviews', desc: 'Practice behavioral, technical, and case study interviews with AI feedback and scoring.' },
   ];
 
   var steps = [
@@ -114,9 +114,7 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
         </div>
         <div className="lp-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'nowrap' }}>
           <button onClick={function() { setDark(!dark); }} style={{
-            width: 32, height: 32, borderRadius: 8, border: '1px solid ' + bdr,
-            background: 'transparent', color: tx, fontSize: 14, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', flexShrink: 0,
+            padding: '6px 12px', borderRadius: 8, border: '1px solid ' + bdr, background: 'transparent', color: tx, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s', flexShrink: 0,
           }}>{dark ? 'Light mode' : 'Dark mode'}</button>
           <a href="/waitlist" style={{ color: tx, fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', padding: '6px 14px', borderRadius: 8, border: '1px solid ' + bdr, background: 'transparent', transition: 'all 0.2s', whiteSpace: 'nowrap' }}>Waitlist</a>
           <a href="/pricing" style={{ color: tx, fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', padding: '6px 14px', borderRadius: 8, border: '1px solid ' + bdr, background: 'transparent', transition: 'all 0.2s', whiteSpace: 'nowrap' }}>Pricing</a>
@@ -250,7 +248,7 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
         <div style={{ maxWidth: 1140, margin: '0 auto' }}>
           <div data-reveal="feat-head" style={revealStyle('feat-head')}>
             <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 3, color: accentLight, fontWeight: 600, marginBottom: 16 }}>Features</div>
-            <div style={{ fontFamily: serif, fontSize: 'clamp(36px, 4.5vw, 56px)', lineHeight: 1.1, letterSpacing: -1, maxWidth: 600, color: tx }}>Everything your academic advisor should be.</div>
+            <div style={{ fontFamily: serif, fontSize: 'clamp(36px, 4.5vw, 56px)', lineHeight: 1.1, letterSpacing: -1, color: tx }}>Everything your academic advisor should be.</div>
             <p style={{ marginTop: 16, fontSize: 17, color: txDim, maxWidth: 520, lineHeight: 1.7 }}>PathForge doesn't just list courses — it builds a complete strategy from freshman year to your first job offer.</p>
           </div>
           <div className="lp-features-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 56 }}>
