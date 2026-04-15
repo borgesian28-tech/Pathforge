@@ -62,7 +62,7 @@ export default function PrivacyPage() {
         <button onClick={function() { router.push('/'); }} style={{ fontFamily: serif, fontSize: 20, color: tx, background: 'none', border: 'none', cursor: 'pointer', letterSpacing: -0.3 }}>PathForge</button>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           <button onClick={function() { router.back(); }} style={{ background: 'none', border: '1px solid ' + bdr, color: txMut, padding: '6px 14px', borderRadius: 8, fontSize: 13, cursor: 'pointer', fontFamily: sans }}>← Back</button>
-          <button onClick={function() { setDark(!dark); }} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid ' + bdr, background: bgCard, color: tx, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{dark ? '☀️' : '🌙'}</button>
+          <button onClick={function() { setDark(!dark); }} style={{ padding: '6px 12px', height: 32, borderRadius: 8, border: '1px solid ' + bdr, background: bgCard, color: tx, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{dark ? 'Light mode' : 'Dark mode'}</button>
         </div>
       </nav>
 
