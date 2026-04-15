@@ -7,7 +7,7 @@ import InterviewSimulator from './InterviewSimulator';
 import CareerComparison from './CareerComparison';
 import { useAuth } from './AuthContext';
 
-export default function Dashboard({ profile, onReset, savedProgress, isDemo, onUnlock, subscription }) {
+export default function Dashboard({ profile, onReset, savedProgress, isDemo, onUnlock, subscription, isBetaUser }) {
   const { user, login, logout, saveRoadmap, saveProgress } = useAuth();
   const [activeTab, setActiveTab] = useState('courses');
   const [activeSemester, setActiveSemester] = useState(0);
@@ -422,13 +422,10 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
             <h1 style={{ fontSize: 15, fontWeight: 600, color: tx, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentProfile.name}'s Roadmap</h1>
             <span style={{ color: accentColor, fontSize: 12, fontWeight: 500, flexShrink: 0 }}>• {currentProfile.careerLabel}</span>
-            {saveStatus && <span style={{ color: '#4ade80', fontSize: 11, fontWeight: 600, flexShrink: 0 }}>✓ {saveStatus}</span>}
+            {saveStatus && <span style={{ color: '#4ade80', fontSize: 11, fontWeight: 600, flexShrink: 0 }}>{saveStatus}</span>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-            <button onClick={function() {
-              var isBeta = !isDemo && (!subscription || subscription.tier === 'free') && !user;
-              onReset(isBeta);
-            }} style={{ height: 32, padding: '0 12px', borderRadius: 8, border: '1px solid ' + bdr, background: bgCard, color: txSub, fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 5 }}>↻ New</button>
+            <button onClick={function() { onReset(isBetaUser); }} style={{ height: 32, padding: '0 12px', borderRadius: 8, border: '1px solid ' + bdr, background: bgCard, color: txSub, fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 5 }}>↻ New</button>
           <div ref={settingsRef} style={{ position: 'relative' }}>
               <button onClick={function() { setSettingsOpen(!settingsOpen); }} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid ' + bdr, background: bgCard, color: txSub, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>⋮</button>
               {settingsOpen && (
@@ -477,7 +474,7 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
         <div style={{ marginBottom: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
             <div style={{ color: txMut, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Your Majors</div>
-            {majors.length === 2 && (<button onClick={function() { setCombinedView(!combinedView); }} style={{ background: combinedView ? accentColor + '22' : 'transparent', border: '1px solid ' + accentColor + '44', borderRadius: 6, color: accentColor, fontSize: 11, fontWeight: 600, padding: '4px 10px', cursor: 'pointer' }}>{combinedView ? '✓ Combined' : 'Combine'}</button>)}
+            {majors.length === 2 && (<button onClick={function() { setCombinedView(!combinedView); }} style={{ background: combinedView ? accentColor + '22' : 'transparent', border: '1px solid ' + accentColor + '44', borderRadius: 6, color: accentColor, fontSize: 11, fontWeight: 600, padding: '4px 10px', cursor: 'pointer' }}>{combinedView ? 'Combined' : 'Combine'}</button>)}
           </div>
           <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
             {majors.length > 1 && majors.map(function(maj, idx) { var isActive = idx === activeMajorIndex; return (<div key={idx} style={{ position: 'relative', display: 'inline-flex' }} onMouseEnter={function() { setHoveredMajor(idx); }} onMouseLeave={function() { setHoveredMajor(-1); }}><button onClick={function() { switchToMajor(idx); }} style={{ background: isActive ? accentColor : bgSec, border: '1px solid ' + (isActive ? accentColor : bdrL), color: isActive ? '#000' : txSub, padding: '8px 24px 8px 14px', borderRadius: 8, fontSize: 13, fontWeight: isActive ? 700 : 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{maj.courseData.major || maj.major}</button>{hoveredMajor === idx && (<button onClick={function(e) { e.stopPropagation(); removeMajor(idx); }} style={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', width: 18, height: 18, borderRadius: '50%', border: 'none', background: '#ff444488', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>)}</div>); })}
@@ -485,7 +482,7 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
           </div>
         </div>
 
-        {recommendedMajors.length > 0 && (<div style={{ marginBottom: 16 }}><button onClick={function() { setShowMajors(!showMajors); }} style={{ background: glassBg, border: '1px solid ' + bdr, borderRadius: 10, padding: '8px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}><span style={{ fontSize: 14 }}>🎓</span><span style={{ color: txSub, fontSize: 12, fontWeight: 600, flex: 1, textAlign: 'left' }}>Recommended Majors at {currentProfile.school}</span><span style={{ color: txMut, fontSize: 14, transform: showMajors ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▾</span></button>{showMajors && (<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>{recommendedMajors.map(function(m, i) { var isCurrent = m === (courseData.major || currentProfile.major); return (<button key={i} onClick={function() { if (!isCurrent && !switchingMajor) handleMajorSwitch(m); }} style={{ padding: '6px 14px', borderRadius: 20, background: isCurrent ? accentColor : bgSec, color: isCurrent ? '#000' : txSub, fontSize: 12, fontWeight: 600, border: isCurrent ? 'none' : '1px solid ' + bdrL, cursor: isCurrent ? 'default' : 'pointer', opacity: switchingMajor ? 0.5 : 1 }}>{isCurrent ? '✓ ' : ''}{m}</button>); })}</div>)}</div>)}
+        {recommendedMajors.length > 0 && (<div style={{ marginBottom: 16 }}><button onClick={function() { setShowMajors(!showMajors); }} style={{ background: glassBg, border: '1px solid ' + bdr, borderRadius: 10, padding: '8px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}><span style={{ fontSize: 14 }}>🎓</span><span style={{ color: txSub, fontSize: 12, fontWeight: 600, flex: 1, textAlign: 'left' }}>Recommended Majors at {currentProfile.school}</span><span style={{ color: txMut, fontSize: 14, transform: showMajors ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▾</span></button>{showMajors && (<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>{recommendedMajors.map(function(m, i) { var isCurrent = m === (courseData.major || currentProfile.major); return (<button key={i} onClick={function() { if (!isCurrent && !switchingMajor) handleMajorSwitch(m); }} style={{ padding: '6px 14px', borderRadius: 20, background: isCurrent ? accentColor : bgSec, color: isCurrent ? '#000' : txSub, fontSize: 12, fontWeight: 600, border: isCurrent ? 'none' : '1px solid ' + bdrL, cursor: isCurrent ? 'default' : 'pointer', opacity: switchingMajor ? 0.5 : 1 }}>{isCurrent ? '' : ''}{m}</button>); })}</div>)}</div>)}
 
         {activeTab === 'courses' && (
           <div style={{ marginTop: 20 }}>
@@ -506,7 +503,7 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
                   var done = sem.courses && sem.courses.every(function(_, ci) { return completedCourses[i + '-' + ci]; });
                   var isCurrent = currentSemesterIdx === i;
                   var semLocked = isDemo && i >= 4;
-                  return (<button key={i} onClick={function() { if (semLocked) return; setActiveSemester(i); }} onDoubleClick={function() { if (!semLocked) setCurrentSemesterIdx(i); }} title={semLocked ? 'Sign up to unlock' : isCurrent ? 'Current semester' : 'Double-click to set as current'} style={{ padding: '8px 14px', borderRadius: 20, border: isCurrent && !semLocked ? '2px solid ' + accentColor : 'none', background: semLocked ? (darkMode ? '#222222' : '#e8e8ee') : activeSemester === i ? accentColor : done ? '#1a3a24' : bgSec, color: semLocked ? (darkMode ? '#444444' : '#b0b0b8') : activeSemester === i ? '#000' : done ? '#4ade80' : txSub, fontSize: 12, fontWeight: 600, cursor: semLocked ? 'default' : 'pointer', whiteSpace: 'nowrap', flexShrink: 0, position: 'relative', opacity: semLocked ? 0.6 : 1 }}>{semLocked ? '🔒 ' : done ? '✓ ' : ''}{isCurrent && !semLocked ? '📍 ' : ''}{sem.name}</button>);
+                  return (<button key={i} onClick={function() { if (semLocked) return; setActiveSemester(i); }} onDoubleClick={function() { if (!semLocked) setCurrentSemesterIdx(i); }} title={semLocked ? 'Sign up to unlock' : isCurrent ? 'Current semester' : 'Double-click to set as current'} style={{ padding: '8px 14px', borderRadius: 20, border: isCurrent && !semLocked ? '2px solid ' + accentColor : 'none', background: semLocked ? (darkMode ? '#222222' : '#e8e8ee') : activeSemester === i ? accentColor : done ? '#1a3a24' : bgSec, color: semLocked ? (darkMode ? '#444444' : '#b0b0b8') : activeSemester === i ? '#000' : done ? '#4ade80' : txSub, fontSize: 12, fontWeight: 600, cursor: semLocked ? 'default' : 'pointer', whiteSpace: 'nowrap', flexShrink: 0, position: 'relative', opacity: semLocked ? 0.6 : 1 }}>{semLocked ? '🔒 ' : done ? '' : ''}{isCurrent && !semLocked ? '' : ''}{sem.name}</button>);
                 })}
               </div>
               <button onClick={function() { if (semRef.current) semRef.current.scrollBy({ left: 150, behavior: 'smooth' }); }} style={{ position: 'absolute', right: -4, top: '50%', transform: 'translateY(-50%)', zIndex: 2, width: 28, height: 28, borderRadius: '50%', border: '1px solid ' + bdrL, background: tabBg + 'ee', color: txSub, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>›</button>
@@ -515,7 +512,7 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
               <div style={{ marginBottom: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <h3 style={{ color: tx, fontSize: 18, fontFamily: "'Playfair Display', serif", margin: '8px 0 4px' }}>{semesters[activeSemester].name}</h3>
+                    <h3 style={{ color: tx, fontSize: 18, fontFamily: "'Instrument Serif', Georgia, serif", margin: '8px 0 4px' }}>{semesters[activeSemester].name}</h3>
                     {currentSemesterIdx === activeSemester && <span style={{ background: accentColor + '22', color: accentColor, padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700 }}>📍 CURRENT</span>}
                     {currentSemesterIdx !== activeSemester && <button onClick={function() { setCurrentSemesterIdx(activeSemester); }} style={{ background: 'none', border: '1px solid ' + bdrL, borderRadius: 10, color: txMut, padding: '2px 8px', fontSize: 10, fontWeight: 600, cursor: 'pointer' }}>Set as current</button>}
                   </div>
@@ -702,7 +699,7 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
           <div style={{ marginTop: 20 }}>
             {outcomes ? (<>
               <div style={{ marginBottom: 16 }}>
-                <h3 style={{ fontFamily: "'Playfair Display', serif", color: tx, fontSize: 20, margin: '0 0 12px' }}>💰 Salary Outlook</h3>
+                <h3 style={{ fontFamily: "'Instrument Serif', Georgia, serif", color: tx, fontSize: 20, margin: '0 0 12px' }}>Salary Outlook</h3>
                 <div style={{ display: 'grid', gap: 10 }}>
                   {[{ label: 'Entry Level', data: outcomes.entrySalary, icon: '🌱' }, { label: 'Mid Career (5-10 yrs)', data: outcomes.midSalary, icon: '📈' }, { label: 'Senior Level (10+ yrs)', data: outcomes.seniorSalary, icon: '🏆' }].map(function(tier, i) {
                     if (!tier.data) return null;
@@ -728,7 +725,7 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
                 {outcomes.medianTimeToOffer && (<div style={{ background: bgCard, border: '1px solid ' + bdr, borderRadius: 12, padding: '14px 16px', textAlign: 'center' }}><div style={{ color: accentColor, fontSize: 16, fontWeight: 700 }}>{outcomes.medianTimeToOffer}</div><div style={{ color: txMut, fontSize: 11, fontWeight: 600, marginTop: 4, textTransform: 'uppercase', letterSpacing: 1 }}>Time to Offer</div></div>)}
               </div>
               {outcomes.topCities && outcomes.topCities.length > 0 && (<div style={{ background: bgCard, border: '1px solid ' + bdr, borderRadius: 14, padding: '16px 18px', marginBottom: 16 }}><h4 style={{ color: tx, fontSize: 14, fontWeight: 700, margin: '0 0 10px' }}>📍 Top Cities</h4><div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>{outcomes.topCities.map(function(city, i) { return <span key={i} style={{ background: primaryColor + '33', color: accentColor, padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>{city}</span>; })}</div></div>)}
-              {outcomes.topEmployers && outcomes.topEmployers.length > 0 && (<div style={{ marginBottom: 16 }}><h3 style={{ fontFamily: "'Playfair Display', serif", color: tx, fontSize: 20, margin: '0 0 12px' }}>🏢 Top Employers from {currentProfile.school}</h3><div style={{ display: 'grid', gap: 8 }}>{outcomes.topEmployers.map(function(emp, i) { return (<div key={i} style={{ background: bgCard, border: '1px solid ' + bdr, borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}><div style={{ width: 36, height: 36, borderRadius: 8, background: accentColor + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0, color: accentColor, fontWeight: 700 }}>{(i + 1)}</div><div style={{ flex: 1 }}><div style={{ color: tx, fontWeight: 700, fontSize: 14 }}>{emp.name}</div><div style={{ color: txMut, fontSize: 12, marginTop: 2 }}>{emp.type}{emp.roles && emp.roles.length > 0 ? ' • ' + emp.roles.join(', ') : ''}</div></div></div>); })}</div></div>)}
+              {outcomes.topEmployers && outcomes.topEmployers.length > 0 && (<div style={{ marginBottom: 16 }}><h3 style={{ fontFamily: "'Instrument Serif', Georgia, serif", color: tx, fontSize: 20, margin: '0 0 12px' }}>Top Employers — {currentProfile.school}</h3><div style={{ display: 'grid', gap: 8 }}>{outcomes.topEmployers.map(function(emp, i) { return (<div key={i} style={{ background: bgCard, border: '1px solid ' + bdr, borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}><div style={{ width: 36, height: 36, borderRadius: 8, background: accentColor + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0, color: accentColor, fontWeight: 700 }}>{(i + 1)}</div><div style={{ flex: 1 }}><div style={{ color: tx, fontWeight: 700, fontSize: 14 }}>{emp.name}</div><div style={{ color: txMut, fontSize: 12, marginTop: 2 }}>{emp.type}{emp.roles && emp.roles.length > 0 ? ' • ' + emp.roles.join(', ') : ''}</div></div></div>); })}</div></div>)}
               {outcomes.growthOutlook && (<div style={{ background: 'linear-gradient(135deg, ' + primaryColor + '33, ' + bgCard + ')', border: '1px solid ' + accentColor + '33', borderRadius: 14, padding: '16px 18px', marginBottom: 16 }}><h4 style={{ color: accentColor, fontSize: 12, fontWeight: 700, letterSpacing: 1.5, margin: '0 0 8px', textTransform: 'uppercase' }}>Industry Outlook</h4><p style={{ color: txSub, fontSize: 14, margin: 0, lineHeight: 1.6 }}>{outcomes.growthOutlook}</p></div>)}
               <div style={{ background: bgSec, border: '1px solid ' + bdrL, borderRadius: 10, padding: '10px 14px', display: 'flex', gap: 8, alignItems: 'flex-start' }}><span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>ℹ️</span><p style={{ color: txDim, fontSize: 12, margin: 0, lineHeight: 1.5 }}>Salary data is AI-estimated. Verify with <a href={'https://www.google.com/search?q=' + encodeURIComponent(currentProfile.careerLabel + ' salary')} target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none', fontWeight: 600 }}>Glassdoor or Payscale ↗</a></p></div>
             </>) : (<div style={{ textAlign: 'center', padding: '40px 20px' }}><div style={{ fontSize: 48, marginBottom: 12 }}>💰</div><h3 style={{ color: tx, fontSize: 18, margin: '0 0 8px' }}>Outcome data unavailable</h3><p style={{ color: txMut, fontSize: 14 }}>Try regenerating your roadmap.</p></div>)}
@@ -751,13 +748,13 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
                   <div style={{ position: 'absolute', left: -23, top: 14, width: 14, height: 14, borderRadius: '50%', background: done ? '#4ade80' : i === 0 ? accentColor : bdrL, border: '2px solid ' + bg }} />
                   <div style={{ background: expandedMilestone === i ? cardHov : bgCard, border: '1px solid ' + bdr, borderRadius: 12, padding: '14px 16px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div><span style={{ color: txMut, fontSize: 11, fontWeight: 600 }}>Semester {i + 1} • {semesterLabels[i] || semesters[i]?.name || ''}</span><div style={{ color: done ? '#4ade80' : tx, fontSize: 15, fontWeight: 600, marginTop: 2 }}>{done ? '✓ ' : ''}{ms.label}</div></div>
+                      <div><span style={{ color: txMut, fontSize: 11, fontWeight: 600 }}>Semester {i + 1} • {semesterLabels[i] || semesters[i]?.name || ''}</span><div style={{ color: done ? '#4ade80' : tx, fontSize: 15, fontWeight: 600, marginTop: 2 }}>{done ? '' : ''}{ms.label}</div></div>
                       <span style={{ color: txMut, fontSize: 18, transform: expandedMilestone === i ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▾</span>
                     </div>
                     {expandedMilestone === i && semesters[i] && (
                       <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid ' + bdr }}>
                         {semesters[i].courses && semesters[i].courses.map(function(c, ci) {
-                          return (<div key={ci} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0' }}><span style={{ color: completedCourses[i + '-' + ci] ? '#4ade80' : txSub, fontSize: 13 }}>{completedCourses[i + '-' + ci] ? '✓ ' : ''}{c.code} — {c.title}</span><span style={{ color: txMut, fontSize: 12 }}>{c.credits} cr</span></div>);
+                          return (<div key={ci} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0' }}><span style={{ color: completedCourses[i + '-' + ci] ? '#4ade80' : txSub, fontSize: 13 }}>{completedCourses[i + '-' + ci] ? '' : ''}{c.code} — {c.title}</span><span style={{ color: txMut, fontSize: 12 }}>{c.credits} cr</span></div>);
                         })}
                       </div>
                     )}
@@ -775,7 +772,7 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
                 {logoUrl && <img src={logoUrl} alt="" style={{ width: 40, height: 40, borderRadius: 8, background: '#fff', padding: 2 }} onError={function(e) { e.target.style.display = 'none'; }} />}
                 <div style={{ fontSize: 36 }}>{careerObj.icon}</div>
               </div>
-              <h3 style={{ fontFamily: "'Playfair Display', serif", color: tx, fontSize: 22, margin: '0 0 6px' }}>{currentProfile.careerLabel}</h3>
+              <h3 style={{ fontFamily: "'Instrument Serif', Georgia, serif", color: tx, fontSize: 22, margin: '0 0 6px' }}>{currentProfile.careerLabel}</h3>
               <p style={{ color: txSub, fontSize: 14, margin: 0 }}>{courseData.major} major at {courseData.schoolFullName || currentProfile.school}</p>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
@@ -794,7 +791,7 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
       {modal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={function() { closeModal(null); }}>
           <div onClick={function(e) { e.stopPropagation(); }} style={{ background: darkMode ? '#141414' : '#ffffff', border: '1px solid ' + bdr, borderRadius: 16, padding: '24px 28px', maxWidth: 420, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
-            <h3 style={{ color: tx, fontSize: 18, fontWeight: 700, margin: '0 0 16px', fontFamily: "'Playfair Display', serif" }}>{modal.title}</h3>
+            <h3 style={{ color: tx, fontSize: 18, fontWeight: 700, margin: '0 0 16px', fontFamily: "'Instrument Serif', Georgia, serif" }}>{modal.title}</h3>
             <input
               type="text"
               placeholder={modal.placeholder}
