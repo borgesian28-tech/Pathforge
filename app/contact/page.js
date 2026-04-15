@@ -80,9 +80,7 @@ export default function ContactPage() {
             padding: '6px 14px', borderRadius: 8, fontSize: 13, cursor: 'pointer', fontFamily: sans,
           }}>← Back</button>
           <button onClick={function() { setDark(!dark); }} style={{
-            width: 32, height: 32, borderRadius: 8, border: '1px solid ' + bdr,
-            background: 'transparent', color: tx, fontSize: 14, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '6px 12px', borderRadius: 8, border: '1px solid ' + bdr, background: 'transparent', color: tx, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s',
           }}>{dark ? 'Light mode' : 'Dark mode'}</button>
         </div>
       </nav>
