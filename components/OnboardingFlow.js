@@ -1,4 +1,4 @@
-'use client';
+='use client';
 import { useState } from 'react';
 import { CAREER_OPTIONS } from '@/lib/constants';
 
@@ -176,7 +176,7 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
         <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 24 }}>This helps us tailor the roadmap to your program.</p>
         <div style={{ display: 'grid', gap: 12 }}>
           {[
-            { id: 'highschool', label: 'High School', icon: '📖', desc: "Preparing for college applications" },
+            { id: 'highschool', label: 'High School', icon: '', desc: "Preparing for college applications" },
             { id: 'undergraduate', label: 'Undergraduate', icon: '', desc: "4-year bachelor's degree program" },
             { id: 'masters', label: "Master's / Graduate", icon: '', desc: 'Graduate-level degree program' },
           ].map((p) => {
@@ -186,7 +186,7 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
             return (
               <button key={p.id} onClick={() => setProgramLevel(p.id)}
                 style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '18px 20px', borderRadius: 14, border: sel ? '2px solid ' + ac : '1px solid #333333', background: sel ? co + '22' : '#141414', cursor: 'pointer', transition: 'all 0.25s', textAlign: 'left' }}>
-                <span style={{ fontSize: 32 }}>{p.icon}</span>
+                {p.icon ? <span style={{ fontSize: 32 }}>{p.icon}</span> : null}
                 <div style={{ flex: 1 }}>
                   <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{p.label}</div>
                   <div style={{ color: '#6a6a7a', fontSize: 13, marginTop: 2 }}>{p.desc}</div>
