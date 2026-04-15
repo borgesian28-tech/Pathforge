@@ -83,7 +83,7 @@ export default function InterviewSimulator({ profile, accent, primaryColor, dark
       <div style={{ marginTop: 20 }}>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <div style={{ fontSize: 36, marginBottom: 8 }}>🎯</div>
-          <h3 style={{ fontFamily: "'Playfair Display', serif", color: tx, fontSize: 22, margin: '0 0 6px' }}>Mock Interview Simulator</h3>
+          <h3 style={{ fontFamily: "'Instrument Serif', Georgia, serif", color: tx, fontSize: 22, margin: '0 0 6px' }}>Mock Interview Simulator</h3>
           <p style={{ color: txMut, fontSize: 14, margin: 0 }}>Practice real {careerLabel} interview questions with AI feedback</p>
         </div>
         <div style={{ display: 'grid', gap: 12 }}>
