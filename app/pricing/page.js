@@ -39,7 +39,7 @@ export default function PricingPage() {
             width: 36, height: 36, borderRadius: 10, border: '1px solid ' + bdr,
             background: bgCard, color: tx, fontSize: 16, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s',
-          }}>{dark ? '☀️' : '🌙'}</button>
+          }}>{dark ? 'Light mode' : 'Dark mode'}</button>
           <button onClick={function() { router.push('/'); }} style={{
             padding: '10px 26px', borderRadius: 100, border: '1px solid ' + bdr,
             background: 'transparent', color: txDim, fontFamily: sans,
