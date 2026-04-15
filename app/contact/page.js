@@ -104,7 +104,7 @@ export default function ContactPage() {
             <div style={{ fontSize: 12, color: txMut, fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 4 }}>Email us directly</div>
             <a href="mailto:pathforgeapp@gmail.com" style={{ fontSize: 16, color: accent, textDecoration: 'none', fontWeight: 500 }}>pathforgeapp@gmail.com</a>
           </div>
-          <a href="mailto:pathforgeapp@gmail.com?subject=PathForge%20Inquiry" style={{
+          <a href="https://mail.google.com/mail/?view=cm&to=pathforgeapp@gmail.com&su=PathForge%20Inquiry" target="_blank" rel="noopener noreferrer" style={{
             padding: '8px 18px', borderRadius: 8, border: '1px solid ' + accent,
             background: 'transparent', color: accent, fontSize: 13, fontWeight: 600,
             cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap',
