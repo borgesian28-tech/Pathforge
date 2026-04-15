@@ -65,11 +65,11 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
   var starColor = dark ? '#ffc107' : '#f59e0b';
 
   var features = [
-    { icon: '🎯', title: 'Real Course Plans', desc: 'AI-generated roadmaps with actual courses from your school\'s catalog — semester by semester, year by year.' },
-    { icon: '🤖', title: 'AI Career Advisor', desc: 'Chat with an AI advisor that knows your school, your major, and your career goals.' },
-    { icon: '🏆', title: 'Beyond the Classroom', desc: 'Clubs, organizations, competitions, and experiences that actually matter for your career.' },
-    { icon: '💰', title: 'Career Outcomes', desc: 'Real salary data, top employers, job placement rates, and career growth outlook.' },
-    { icon: '🎓', title: 'High School Planning', desc: 'AP and honors course recommendations tailored to your dream major — freshman through senior year.' },
+    { icon: '', title: 'Real Course Plans', desc: 'AI-generated roadmaps with actual courses from your school\'s catalog — semester by semester, year by year.' },
+    { icon: '', title: 'AI Career Advisor', desc: 'Chat with an AI advisor that knows your school, your major, and your career goals.' },
+    { icon: '', title: 'Beyond the Classroom', desc: 'Clubs, organizations, competitions, and experiences that actually matter for your career.' },
+    { icon: '', title: 'Career Outcomes', desc: 'Real salary data, top employers, job placement rates, and career growth outlook.' },
+    { icon: '', title: 'High School Planning', desc: 'AP and honors course recommendations tailored to your dream major — freshman through senior year.' },
     { icon: '🎤', title: 'Mock Interviews', desc: 'Practice behavioral, technical, and case study interviews with AI feedback and scoring.' },
   ];
 
@@ -198,7 +198,7 @@ export default function LandingPage({ onGetStarted, onDemo, onDevLogin, user, on
           <div style={{ padding: 32 }}>
             <div className="lp-mock-row" style={{ display: 'flex', gap: 20 }}>
               <div className="lp-mock-sidebar" style={{ width: 200, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {['📚 Courses', '🏆 Beyond Class', '💰 Outcomes', '🤖 AI Advisor', '🎯 Interviews'].map(function(item, i) {
+                {['Courses', 'Beyond Class', 'Outcomes', 'AI Advisor', 'Interviews'].map(function(item, i) {
                   var isActive = i === 0;
                   return (
                     <div key={i} style={{
