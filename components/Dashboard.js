@@ -427,7 +427,7 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
             <button onClick={function() { onReset(isBetaUser); }} style={{ height: 32, padding: '0 12px', borderRadius: 8, border: '1px solid ' + bdr, background: bgCard, color: txSub, fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 5 }}>New Roadmap</button>
           <div ref={settingsRef} style={{ position: 'relative' }}>
-              <button onClick={function() { setSettingsOpen(!settingsOpen); }} style={{ padding: '6px 12px', height: 32, borderRadius: 8, border: '1px solid ' + bdr, background: bgCard, color: txSub, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>⋮</button>
+              <button onClick={function() { setSettingsOpen(!settingsOpen); }} style={{ padding: '6px 12px', height: 32, whiteSpace: 'nowrap', fontSize: 12, borderRadius: 8, border: '1px solid ' + bdr, background: bgCard, color: txSub, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>⋮</button>
               {settingsOpen && (
                 <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 6, width: 220, background: bgCard, border: '1px solid ' + bdr, borderRadius: 12, boxShadow: '0 8px 30px rgba(0,0,0,0.3)', overflow: 'hidden', zIndex: 100 }}>
                   {[
@@ -442,7 +442,7 @@ export default function Dashboard({ profile, onReset, savedProgress, isDemo, onU
               )}
             </div>
             {user && user.photoURL && <img src={user.photoURL} alt="" style={{ width: 28, height: 28, borderRadius: '50%' }} referrerPolicy="no-referrer" />}
-            <button onClick={function() { setDarkMode(!darkMode); }} style={{ padding: '6px 12px', height: 32, borderRadius: 8, border: '1px solid ' + bdr, background: bgCard, color: tx, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{darkMode ? 'Light mode' : 'Dark mode'}</button>
+            <button onClick={function() { setDarkMode(!darkMode); }} style={{ padding: '6px 12px', height: 32, whiteSpace: 'nowrap', fontSize: 12, borderRadius: 8, border: '1px solid ' + bdr, background: bgCard, color: tx, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{darkMode ? 'Light mode' : 'Dark mode'}</button>
           </div>
         </header>
 
