@@ -26,13 +26,29 @@ export default function ContactPage() {
 
   var canSubmit = name.trim() && email.includes('@') && message.trim();
 
-  var handleSubmit = function() {
-    if (!canSubmit) return;
-    var mailtoLink = 'mailto:pathforgeapp@gmail.com'
-      + '?subject=' + encodeURIComponent((subject || 'PathForge Contact') + ' — from ' + name)
-      + '&body=' + encodeURIComponent('Name: ' + name + '\nEmail: ' + email + '\n\n' + message);
-    window.location.href = mailtoLink;
-    setSubmitted(true);
+  var [sending, setSending] = useState(false);
+  var [error, setError] = useState('');
+
+  var handleSubmit = async function() {
+    if (!canSubmit || sending) return;
+    setSending(true);
+    setError('');
+    try {
+      var res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, subject, message }),
+      });
+      var data = await res.json();
+      if (data.success) {
+        setSubmitted(true);
+      } else {
+        setError('Something went wrong. Please email us directly at pathforgeapp@gmail.com');
+      }
+    } catch (e) {
+      setError('Something went wrong. Please email us directly at pathforgeapp@gmail.com');
+    }
+    setSending(false);
   };
 
   var subjects = [
@@ -88,7 +104,7 @@ export default function ContactPage() {
             <div style={{ fontSize: 12, color: txMut, fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 4 }}>Email us directly</div>
             <a href="mailto:pathforgeapp@gmail.com" style={{ fontSize: 16, color: accent, textDecoration: 'none', fontWeight: 500 }}>pathforgeapp@gmail.com</a>
           </div>
-          <a href="mailto:pathforgeapp@gmail.com" style={{
+          <a href="mailto:pathforgeapp@gmail.com?subject=PathForge%20Inquiry" style={{
             padding: '8px 18px', borderRadius: 8, border: '1px solid ' + accent,
             background: 'transparent', color: accent, fontSize: 13, fontWeight: 600,
             cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap',
@@ -140,8 +156,9 @@ export default function ContactPage() {
               />
             </div>
 
+            {error && <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 8 }}>{error}</p>}
             <button
-              onClick={handleSubmit} disabled={!canSubmit}
+              onClick={handleSubmit} disabled={!canSubmit || sending}
               style={{
                 width: '100%', padding: '13px 24px', borderRadius: 8, border: 'none',
                 background: canSubmit ? accent : (dark ? '#222' : '#e5e5e5'),
@@ -149,7 +166,7 @@ export default function ContactPage() {
                 fontSize: 14, fontWeight: 700, cursor: canSubmit ? 'pointer' : 'default',
                 fontFamily: sans, transition: 'all 0.2s',
               }}>
-              Send Message →
+{sending ? 'Sending...' : 'Send Message →'}
             </button>
           </div>
         ) : (
@@ -157,7 +174,7 @@ export default function ContactPage() {
             <div style={{ fontSize: 32, marginBottom: 16 }}>✓</div>
             <h2 style={{ fontFamily: serif, fontSize: 24, color: tx, margin: '0 0 12px' }}>Message sent</h2>
             <p style={{ fontSize: 15, color: txDim, lineHeight: 1.7, margin: '0 0 24px' }}>
-              Your email client should have opened with a pre-filled message. We'll get back to you at <strong style={{ color: tx }}>{email}</strong> within 1–2 business days.
+              Your message has been sent. We'll get back to you at <strong style={{ color: tx }}>{email}</strong> within 1–2 business days.
             </p>
             <button onClick={function() { router.push('/'); }} style={{
               padding: '10px 24px', borderRadius: 8, border: '1px solid ' + bdr,
