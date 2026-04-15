@@ -53,7 +53,7 @@ export default function WaitlistPage() {
             width: 36, height: 36, borderRadius: 10, border: '1px solid ' + bdr,
             background: bgCard, color: tx, fontSize: 16, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s',
-          }}>{dark ? '☀️' : '🌙'}</button>
+          }}>{dark ? 'Light mode' : 'Dark mode'}</button>
           <button onClick={function() { router.push('/'); }} style={{
             padding: '10px 26px', borderRadius: 100, border: '1px solid ' + bdr,
             background: 'transparent', color: txDim, fontFamily: sans,
@@ -103,14 +103,14 @@ export default function WaitlistPage() {
           <div style={{ display: 'grid', gap: 12, textAlign: 'left' }}>
             {[
               { icon: '', text: 'AI-powered 4-year course roadmaps tailored to your school' },
-              { icon: '🔍', text: 'College search tool — find schools that match your goals' },
-              { icon: '💬', text: 'AI guidance counselor that knows your career path' },
+              { icon: '', text: 'College search tool — find schools that match your goals' },
+              { icon: '', text: 'AI guidance counselor that knows your career path' },
               { icon: '', text: 'Interview prep and career outcomes data' },
               { icon: '', text: 'Early access pricing for waitlist members' },
             ].map(function(item, i) {
               return (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderRadius: 12, background: bgCard, border: '1px solid ' + bdr }}>
-                  <span style={{ fontSize: 20, flexShrink: 0 }}>{item.icon}</span>
+                  
                   <span style={{ color: txDim, fontSize: 14, lineHeight: 1.5 }}>{item.text}</span>
                 </div>
               );
