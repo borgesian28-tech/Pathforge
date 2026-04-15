@@ -36,9 +36,7 @@ export default function PricingPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={function() { setDark(!dark); }} style={{
-            width: 36, height: 36, borderRadius: 10, border: '1px solid ' + bdr,
-            background: bgCard, color: tx, fontSize: 16, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s',
+            padding: '6px 12px', borderRadius: 8, border: '1px solid ' + bdr, background: 'transparent', color: tx, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.3s',
           }}>{dark ? 'Light mode' : 'Dark mode'}</button>
           <button onClick={function() { router.push('/'); }} style={{
             padding: '10px 26px', borderRadius: 100, border: '1px solid ' + bdr,
