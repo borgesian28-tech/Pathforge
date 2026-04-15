@@ -134,10 +134,10 @@ export default function LoadingScreen({ status, career, onRetry, error }) {
 
   var steps = [
     { label: 'Searching course catalog', icon: '🔍' },
-    { label: 'Finding advanced courses', icon: '📚' },
+    { label: 'Finding advanced courses', icon: '' },
     { label: 'Building your roadmap', icon: '🗺️' },
     { label: 'Gathering career data', icon: '💼' },
-    { label: 'Finalizing your plan', icon: '✨' },
+    { label: 'Finalizing your plan', icon: '' },
   ];
 
   useEffect(function() {
@@ -171,7 +171,7 @@ export default function LoadingScreen({ status, career, onRetry, error }) {
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #0a0a0a 0%, #0d0d0d 50%, #0a0a0a 100%)', padding: '80px 20px 40px', overflow: 'auto' }}>
         <div style={{ maxWidth: 420, textAlign: 'center' }} className="fade-in">
           <div style={{ fontSize: 56, marginBottom: 20 }}>⚡</div>
-          <h2 style={{ fontFamily: "'Playfair Display', serif", color: '#fff', fontSize: 24, margin: '0 0 12px' }}>Hit a Snag</h2>
+          <h2 style={{ fontFamily: "'Instrument Serif', Georgia, serif", color: '#fff', fontSize: 24, margin: '0 0 12px' }}>Hit a Snag</h2>
           <p style={{ color: '#aaa', fontSize: 15, lineHeight: 1.6, marginBottom: 8 }}>Our AI is processing a lot of data right now. This happens sometimes — it doesn't mean anything is wrong with your request.</p>
           <p style={{ color: '#6a6a7a', fontSize: 13, lineHeight: 1.5, marginBottom: 28 }}>The retry usually works on the first try. We're searching through thousands of real courses to build your personalized roadmap.</p>
           <button onClick={onRetry} style={{ padding: '14px 40px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, ' + c.accent + ', ' + c.color + ')', color: '#000', fontWeight: 700, fontSize: 16, cursor: 'pointer', width: '100%', marginBottom: 12, transition: 'all 0.3s' }}>
@@ -194,7 +194,7 @@ export default function LoadingScreen({ status, career, onRetry, error }) {
           <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>{c.icon}</div>
         </div>
 
-        <h2 style={{ fontFamily: "'Playfair Display', serif", color: '#fff', fontSize: 'clamp(20px, 4vw, 26px)', margin: '0 0 8px' }}>Building Your Roadmap</h2>
+        <h2 style={{ fontFamily: "'Instrument Serif', Georgia, serif", color: '#fff', fontSize: 'clamp(20px, 4vw, 26px)', margin: '0 0 8px' }}>Building Your Roadmap</h2>
         <p style={{ color: c.accent, fontSize: 14, fontWeight: 500, marginBottom: 24 }}>{status}{dots}</p>
 
         {/* Progress bar */}
