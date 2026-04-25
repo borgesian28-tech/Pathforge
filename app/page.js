@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import LandingPage from '@/components/LandingPage';
@@ -18,7 +19,11 @@ export default function Home() {
   const [checkingSaved, setCheckingSaved] = useState(false);
   const [showLanding, setShowLanding] = useState(true);
   const [isDemo, setIsDemo] = useState(false);
+  const [resetConfirm, setResetConfirm] = useState(null); // null | { skipLanding: bool }
   const lastRequest = useRef(null);
+  // Tracks whether we've already attempted to rehydrate the saved roadmap for the current user.
+  // Prevents the rehydration effect from re-firing after a deliberate reset.
+  const rehydratedForUid = useRef(null);
 
   // Handle Stripe checkout redirect
   useEffect(function() {
@@ -33,21 +38,48 @@ export default function Home() {
     }
   }, []);
 
-  // If user is logged in and has a saved roadmap, skip landing page
+  // Reset rehydration tracker when user logs out so a future login re-attempts hydration
   useEffect(function() {
-    if (user && !profile) {
-      setCheckingSaved(true);
-      loadRoadmap().then(function(data) {
-        if (data && data.profile && data.profile.courseData) {
-          setProfile(data.profile);
+    if (!user) {
+      rehydratedForUid.current = null;
+    }
+  }, [user]);
+
+  // If user is logged in and has a saved roadmap, auto-load it.
+  // Runs once per uid; resilient to either college (courseData) or high-school (hsRoadmap) shapes,
+  // and falls through cleanly on Firestore errors so the user never gets stuck.
+  useEffect(function() {
+    if (!user) return;
+    if (profile) return;
+    if (rehydratedForUid.current === user.uid) return;
+
+    rehydratedForUid.current = user.uid;
+    setCheckingSaved(true);
+
+    loadRoadmap()
+      .then(function(data) {
+        if (!data || !data.profile) return;
+
+        var p = data.profile;
+        // A profile is "valid" if it has either college course data OR a high-school roadmap.
+        var hasCollegeData = !!p.courseData;
+        var hasHighSchoolData = !!p.hsRoadmap;
+
+        if (hasCollegeData || hasHighSchoolData) {
+          setProfile(p);
           setSavedProgress(data.completedCourses || {});
           setShowLanding(false);
           setIsDemo(false);
         }
+      })
+      .catch(function(err) {
+        console.error('Failed to load saved roadmap:', err);
+        // Swallow the error — user falls through to landing page, which is the safe default.
+      })
+      .finally(function() {
         setCheckingSaved(false);
       });
-    }
-  }, [user]);
+  }, [user, profile, loadRoadmap]);
 
   const handleLoading = function(isLoading, career, status) {
     setLoading(isLoading);
@@ -77,17 +109,39 @@ export default function Home() {
     }
   };
 
+  // Reset is gated by a confirmation modal whenever the user has a logged-in saved roadmap,
+  // because confirming will cause handleComplete to overwrite it on the next generation.
   const handleReset = function(skipLanding) {
+    var hasSavedRoadmap = !!user && !isDemo && !!profile;
+    if (hasSavedRoadmap) {
+      setResetConfirm({ skipLanding: !!skipLanding });
+      return;
+    }
+    performReset(skipLanding);
+  };
+
+  const performReset = function(skipLanding) {
     setProfile(null);
     setSavedProgress(null);
     setLoadingError(false);
     setIsDemo(false);
-    // Beta/dev code users skip the landing page and go straight to onboarding
+    // Allow the rehydration effect to refire if the user backs out without generating
+    rehydratedForUid.current = null;
     if (skipLanding) {
       setShowLanding(false);
     } else {
       setShowLanding(true);
     }
+  };
+
+  const handleConfirmReset = function() {
+    var skipLanding = resetConfirm && resetConfirm.skipLanding;
+    setResetConfirm(null);
+    performReset(skipLanding);
+  };
+
+  const handleCancelReset = function() {
+    setResetConfirm(null);
   };
 
   const handleGetStarted = function() {
@@ -127,10 +181,18 @@ export default function Home() {
     var effectiveDemo = !hasAccess;
     // Dev code users (isDemo=false, no subscription) get premium-equivalent access
     var effectiveSub = !isDemo && subscription.tier === 'free' ? { tier: 'premium', status: 'active' } : subscription;
-    return profile.programLevel === 'highschool' ? (
+
+    var dashboardEl = profile.programLevel === 'highschool' ? (
       <HighSchoolDashboard roadmap={profile.hsRoadmap} onReset={handleReset} isDemo={effectiveDemo} onUnlock={handleUnlock} subscription={effectiveSub} isBetaUser={!isDemo && !user && subscription.tier === 'free'} />
     ) : (
       <Dashboard profile={profile} onReset={handleReset} savedProgress={savedProgress} isDemo={effectiveDemo} onUnlock={handleUnlock} subscription={effectiveSub} isBetaUser={!isDemo && !user && subscription.tier === 'free'} />
+    );
+
+    return (
+      <>
+        {dashboardEl}
+        {resetConfirm ? <ResetConfirmModal onConfirm={handleConfirmReset} onCancel={handleCancelReset} /> : null}
+      </>
     );
   }
 
@@ -157,5 +219,87 @@ export default function Home() {
       onLogin={login}
       onBack={function() { setShowLanding(true); setIsDemo(false); }}
     />
+  );
+}
+
+// Confirmation modal shown before a reset replaces a saved roadmap.
+// Inline so this fix is a single-file change.
+function ResetConfirmModal(props) {
+  return (
+    <div
+      onClick={props.onCancel}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0, 0, 0, 0.72)',
+        backdropFilter: 'blur(6px)',
+        WebkitBackdropFilter: 'blur(6px)',
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+        animation: 'rcm-fade 0.18s ease-out',
+      }}
+    >
+      <div
+        onClick={function(e) { e.stopPropagation(); }}
+        style={{
+          background: '#111115',
+          border: '1px solid #2a2a30',
+          borderRadius: 16,
+          padding: 28,
+          maxWidth: 440,
+          width: '100%',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+          animation: 'rcm-pop 0.22s ease-out',
+        }}
+      >
+        <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
+        <h2 style={{ color: '#f0eff4', fontSize: 20, fontWeight: 700, margin: '0 0 10px' }}>
+          Start over?
+        </h2>
+        <p style={{ color: '#9896a6', fontSize: 14, lineHeight: 1.55, margin: '0 0 24px' }}>
+          This will replace your current saved roadmap. Your completed-course progress and any
+          edits will be lost when you generate a new one. This can&apos;t be undone.
+        </p>
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+          <button
+            onClick={props.onCancel}
+            style={{
+              background: 'transparent',
+              color: '#f0eff4',
+              border: '1px solid #2a2a30',
+              borderRadius: 10,
+              padding: '10px 18px',
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            Keep my roadmap
+          </button>
+          <button
+            onClick={props.onConfirm}
+            style={{
+              background: '#C9A84C',
+              color: '#0a0a0a',
+              border: 'none',
+              borderRadius: 10,
+              padding: '10px 18px',
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            Yes, start over
+          </button>
+        </div>
+        <style>{
+          '@keyframes rcm-fade{from{opacity:0}to{opacity:1}}' +
+          '@keyframes rcm-pop{from{transform:scale(0.96);opacity:0}to{transform:scale(1);opacity:1}}'
+        }</style>
+      </div>
+    </div>
   );
 }
