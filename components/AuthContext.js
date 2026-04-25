@@ -1,7 +1,7 @@
 'use client';
 import { createContext, useContext, useState, useEffect } from 'react';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { auth, googleProvider, db } from '@/lib/firebase';
 
 const AuthContext = createContext({});
@@ -100,6 +100,37 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // Clear the user's saved roadmap from Firestore. Preserves the user doc itself
+  // (and its subscription field) by using updateDoc with field deletions, rather than
+  // deleting the whole doc — that way subscription state survives a "start over".
+  var deleteRoadmap = async function() {
+    if (!user) return false;
+    try {
+      var ref = doc(db, 'users', user.uid);
+      var snap = await getDoc(ref);
+      if (!snap.exists()) return true;
+      var existing = snap.data() || {};
+      // If the doc only holds a roadmap (no subscription), just delete it cleanly.
+      if (!existing.subscription) {
+        await deleteDoc(ref);
+        return true;
+      }
+      // Otherwise overwrite with a doc that keeps subscription + identity but drops the roadmap.
+      var preserved = {
+        name: existing.name || (user && user.displayName) || null,
+        email: existing.email || (user && user.email) || null,
+        subscription: existing.subscription,
+        createdAt: existing.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      await setDoc(ref, preserved);
+      return true;
+    } catch (err) {
+      console.error('Delete roadmap error:', err);
+      return false;
+    }
+  };
+
   var saveProgress = async function(completedCourses) {
     if (!user) return;
     try {
@@ -113,13 +144,15 @@ export function AuthProvider({ children }) {
     }
   };
 
-  var startCheckout = async function(priceId) {
+  var startCheckout = async function(plan, billing) {
+    if (!user) return;
     try {
       var res = await fetch('/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          priceId: priceId,
+          plan: plan,
+          billing: billing,
           userId: user ? user.uid : null,
           userEmail: user ? user.email : null,
         }),
@@ -165,7 +198,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{
       user, loading, login, logout,
-      saveRoadmap, loadRoadmap, saveProgress,
+      saveRoadmap, loadRoadmap, deleteRoadmap, saveProgress,
       subscription, subLoading, startCheckout, openPortal, refreshSubscription,
     }}>
       {children}
