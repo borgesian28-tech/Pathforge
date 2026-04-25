@@ -9,7 +9,7 @@ import Dashboard from '@/components/Dashboard';
 import HighSchoolDashboard from '@/components/HighSchoolDashboard';
 
 export default function Home() {
-  const { user, loading: authLoading, login, logout, saveRoadmap, loadRoadmap, subscription, refreshSubscription } = useAuth();
+  const { user, loading: authLoading, login, logout, saveRoadmap, loadRoadmap, deleteRoadmap, subscription, refreshSubscription } = useAuth();
   const [profile, setProfile] = useState(null);
   const [savedProgress, setSavedProgress] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -22,8 +22,11 @@ export default function Home() {
   const [resetConfirm, setResetConfirm] = useState(null); // null | { skipLanding: bool }
   const lastRequest = useRef(null);
   // Tracks whether we've already attempted to rehydrate the saved roadmap for the current user.
-  // Prevents the rehydration effect from re-firing after a deliberate reset.
+  // Prevents the rehydration effect from re-firing within a session.
   const rehydratedForUid = useRef(null);
+  // Set to true after a confirmed reset so the rehydration effect can't immediately
+  // re-load the data we just deleted (race against Firestore eventual consistency).
+  const suppressRehydration = useRef(false);
 
   // Handle Stripe checkout redirect
   useEffect(function() {
@@ -42,6 +45,7 @@ export default function Home() {
   useEffect(function() {
     if (!user) {
       rehydratedForUid.current = null;
+      suppressRehydration.current = false;
     }
   }, [user]);
 
@@ -51,6 +55,7 @@ export default function Home() {
   useEffect(function() {
     if (!user) return;
     if (profile) return;
+    if (suppressRehydration.current) return;
     if (rehydratedForUid.current === user.uid) return;
 
     rehydratedForUid.current = user.uid;
@@ -59,6 +64,8 @@ export default function Home() {
     loadRoadmap()
       .then(function(data) {
         if (!data || !data.profile) return;
+        // If a reset happened mid-flight, don't re-apply stale data.
+        if (suppressRehydration.current) return;
 
         var p = data.profile;
         // A profile is "valid" if it has either college course data OR a high-school roadmap.
@@ -93,6 +100,8 @@ export default function Home() {
     setLoadingError(false);
     setProfile(p);
     setSavedProgress(null);
+    // A successful generation re-establishes a saved roadmap, so allow rehydration again next session.
+    suppressRehydration.current = false;
     if (user && !isDemo) saveRoadmap(p, {});
   };
 
@@ -110,23 +119,26 @@ export default function Home() {
   };
 
   // Reset is gated by a confirmation modal whenever the user has a logged-in saved roadmap,
-  // because confirming will cause handleComplete to overwrite it on the next generation.
+  // because confirming will delete it from Firestore.
+  // The skipLanding arg from the dashboard's reset button is ignored on confirmed reset —
+  // "start over" should always send the user straight into onboarding, not back to the marketing page.
   const handleReset = function(skipLanding) {
     var hasSavedRoadmap = !!user && !isDemo && !!profile;
     if (hasSavedRoadmap) {
       setResetConfirm({ skipLanding: !!skipLanding });
       return;
     }
-    performReset(skipLanding);
+    performLocalReset(skipLanding);
   };
 
-  const performReset = function(skipLanding) {
+  // Pure local reset (no Firestore mutation). Used for demo resets and not-logged-in resets.
+  const performLocalReset = function(skipLanding) {
     setProfile(null);
     setSavedProgress(null);
     setLoadingError(false);
     setIsDemo(false);
-    // Allow the rehydration effect to refire if the user backs out without generating
     rehydratedForUid.current = null;
+    suppressRehydration.current = false;
     if (skipLanding) {
       setShowLanding(false);
     } else {
@@ -135,9 +147,22 @@ export default function Home() {
   };
 
   const handleConfirmReset = function() {
-    var skipLanding = resetConfirm && resetConfirm.skipLanding;
     setResetConfirm(null);
-    performReset(skipLanding);
+    // Lock out rehydration BEFORE we kick off the delete, so any in-flight loadRoadmap
+    // resolving late can't write the data back into state.
+    suppressRehydration.current = true;
+    // Optimistically clear local state and route into onboarding.
+    setProfile(null);
+    setSavedProgress(null);
+    setLoadingError(false);
+    setIsDemo(false);
+    setShowLanding(false);
+    // Delete the Firestore record. Fire-and-forget — the UI doesn't block on this.
+    if (user && deleteRoadmap) {
+      deleteRoadmap().catch(function(err) {
+        console.error('Reset: deleteRoadmap failed:', err);
+      });
+    }
   };
 
   const handleCancelReset = function() {
@@ -222,7 +247,7 @@ export default function Home() {
   );
 }
 
-// Confirmation modal shown before a reset replaces a saved roadmap.
+// Confirmation modal shown before a reset deletes a saved roadmap.
 // Inline so this fix is a single-file change.
 function ResetConfirmModal(props) {
   return (
@@ -260,8 +285,8 @@ function ResetConfirmModal(props) {
           Start over?
         </h2>
         <p style={{ color: '#9896a6', fontSize: 14, lineHeight: 1.55, margin: '0 0 24px' }}>
-          This will replace your current saved roadmap. Your completed-course progress and any
-          edits will be lost when you generate a new one. This can&apos;t be undone.
+          This will permanently delete your saved roadmap and any completed-course progress.
+          You&apos;ll be sent to onboarding to build a new one. This can&apos;t be undone.
         </p>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
           <button
