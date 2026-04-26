@@ -6,8 +6,8 @@ export async function POST(request) {
   try {
     var body = null;
     try { body = await request.json(); } catch(e) { body = {}; }
+
     var careerGoal = body.careerGoal || body.career || body.careerPath || '';
-    
     if (!careerGoal || !careerGoal.trim()) {
       return Response.json({ error: 'Missing career goal' }, { status: 400 });
     }
@@ -20,6 +20,7 @@ export async function POST(request) {
 
     const career = careerGoal;
     var catalogUrl = body.catalogUrl || '';
+    var priorCoursework = (body.priorCoursework || '').trim();
 
     // If user provided a catalog URL, we'll use Gemini's Google Search grounding
     // to actually visit the page and its linked PDFs to find real courses.
@@ -27,31 +28,40 @@ export async function POST(request) {
     // so Gemini's search is more reliable for this.
     var catalogContent = '';
     var hasCatalogUrl = catalogUrl && catalogUrl.trim();
-    
+
     if (hasCatalogUrl) {
       var cleanUrl = catalogUrl.trim().replace(/\?.*$/, ''); // strip tracking params
       catalogContent = '\n\nCRITICAL — REAL SCHOOL CATALOG:\nThe student attends a specific school. Their course catalog is at: ' + cleanUrl + '\n\nYou MUST:\n1. Search and visit this URL: ' + cleanUrl + '\n2. Look for any linked PDF documents on that page (often called "Curriculum Pathways", "Course Catalog", "Course of Studies", "Program of Studies")\n3. Search for and read those PDFs to find the REAL courses offered at this school\n4. Use ONLY course names that actually exist at this school\n5. Do NOT use generic course names like "Algebra I", "World History", "Introduction to Economics" — use the EXACT names from the school\'s catalog\n6. If the catalog lists courses like "MPS 1", "Physics Mechanics", "Foundations of Citizenship and Democracy", "English 9" — use THOSE exact names\n\nThis is the most important instruction: every course in your response must be a real course from this specific school. Search the URL thoroughly.\n';
     }
 
+    // NEW: Prior coursework — list of HS classes the student has already finished
+    // (typically rising sophomores/juniors/seniors). We feed this verbatim to Gemini and
+    // tell it to plan around them — no re-recommending Algebra I to someone who just finished AP Calc.
+    var priorBlock = '';
+    var hasPrior = priorCoursework.length > 0;
+    if (hasPrior) {
+      priorBlock = '\n\nSTUDENT HAS ALREADY COMPLETED THESE CLASSES (do NOT include them again):\n' + priorCoursework + '\n\nPlan the roadmap STARTING FROM where this student actually is right now:\n- If they\'ve completed multiple advanced classes, infer their current grade level (e.g. someone who finished AP Calc BC and AP Bio is likely a rising junior or senior).\n- Skip any year that\'s already done — only output remaining years.\n- For each remaining year, only suggest courses that follow naturally from what\'s already on this list.\n- If a sequence prerequisite is on this list (e.g. "Spanish 3"), pick the next course in that sequence ("Spanish 4 / AP Spanish") instead of restarting it.\n- If they list AP scores or grades, factor those into recommendations (a 5 on AP Calc BC means they\'re ready for multivariable / linear algebra if offered).';
+    }
+
     // Generate high school roadmap
     var hasCatalog = !!hasCatalogUrl;
-
     var courseInstruction = hasCatalog
       ? 'CRITICAL — CATALOG PROVIDED: The student uploaded their actual school course catalog URL. You MUST search that URL and any linked PDFs to find the real courses. Do NOT use generic course names — use the EXACT course names from the school\'s catalog.\n'
       : 'Use realistic course names typical of American high schools (AP, Honors, Standard).\n';
 
-    const prompt = 'You are a high school guidance counselor. Create a 4-year high school roadmap for a student interested in ' + career + '.\n\n' + courseInstruction + catalogContent + '\nCRITICAL: Return ONLY valid JSON with no extra text, no markdown, no backticks, no preamble.\n\n{\n  "careerField": "' + career + '",\n  "years": [\n    {\n      "year": "Freshman",\n      "courses": [\n        {"name": "REAL COURSE NAME FROM CATALOG", "type": "Honors", "why": "Brief reason this course helps"},\n        {"name": "REAL COURSE NAME FROM CATALOG", "type": "Standard", "why": "Brief reason"}\n      ],\n      "focus": "Focus for this year",\n      "milestones": ["milestone1", "milestone2"]\n    }\n  ],\n  "extracurriculars": [\n    {"activity": "Club Name", "type": "Club", "relevance": "Why it matters", "commitment": "2-3 hours/week"}\n  ],\n  "topColleges": [\n    {"name": "University", "strengths": "Why this school", "selectivity": "Highly Selective"}\n  ],\n  "standardizedTests": {\n    "sat": {"when": "When to take", "target": "Score range", "prep": "How to prepare"},\n    "act": {"when": "When to take", "target": "Score range", "prep": "How to prepare"},\n    "ap": ["AP Exam 1", "AP Exam 2"]\n  },\n  "summerActivities": [\n    {"year": "After Freshman Year", "activities": ["activity1", "activity2"]}\n  ],\n  "collegeAppTimeline": [\n    {"when": "Junior Spring", "tasks": ["task1", "task2"]}\n  ],\n  "skills": ["skill1", "skill2"]\n}\n\nReturn 4 years (Freshman, Sophomore, Junior, Senior) with 6-8 courses each.\n' + (hasCatalog ? 'EVERY course name MUST come from the school\'s actual catalog. Do NOT invent course names. Search the catalog URL provided.\n' : '') + '8-12 colleges for ' + career + '.\n5-7 extracurriculars.\nJSON ONLY - no other text.';
+    const prompt = 'You are a high school guidance counselor. Create a 4-year high school roadmap for a student interested in ' + career + '.\n\n' + courseInstruction + catalogContent + priorBlock + '\nCRITICAL: Return ONLY valid JSON with no extra text, no markdown, no backticks, no preamble.\n\n{\n  "careerField": "' + career + '",\n  "years": [\n    {\n      "year": "Freshman",\n      "courses": [\n        {"name": "REAL COURSE NAME FROM CATALOG", "type": "Honors", "why": "Brief reason this course helps"},\n        {"name": "REAL COURSE NAME FROM CATALOG", "type": "Standard", "why": "Brief reason"}\n      ],\n      "focus": "Focus for this year",\n      "milestones": ["milestone1", "milestone2"]\n    }\n  ],\n  "extracurriculars": [\n    {"activity": "Club Name", "type": "Club", "relevance": "Why it matters", "commitment": "2-3 hours/week"}\n  ],\n  "topColleges": [\n    {"name": "University", "strengths": "Why this school", "selectivity": "Highly Selective"}\n  ],\n  "standardizedTests": {\n    "sat": {"when": "When to take", "target": "Score range", "prep": "How to prepare"},\n    "act": {"when": "When to take", "target": "Score range", "prep": "How to prepare"},\n    "ap": ["AP Exam 1", "AP Exam 2"]\n  },\n  "summerActivities": [\n    {"year": "After Freshman Year", "activities": ["activity1", "activity2"]}\n  ],\n  "collegeAppTimeline": [\n    {"when": "Junior Spring", "tasks": ["task1", "task2"]}\n  ],\n  "skills": ["skill1", "skill2"]\n}\n\nReturn ' + (hasPrior ? 'ONLY THE REMAINING years for this student (skip any year already completed based on the prior coursework). Each year should have 6-8 courses.' : '4 years (Freshman, Sophomore, Junior, Senior) with 6-8 courses each.') + '\n' + (hasCatalog ? 'EVERY course name MUST come from the school\'s actual catalog. Do NOT invent course names. Search the catalog URL provided.\n' : '') + '8-12 colleges for ' + career + '.\n5-7 extracurriculars.\nJSON ONLY - no other text.';
 
     // ALWAYS use search grounding when catalog URL is provided so Gemini can visit it
     var useSearch = hasCatalog;
-    
+
     var geminiBody = {
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { 
-        maxOutputTokens: hasCatalog ? 6144 : 4096, 
-        temperature: 0.3 
+      generationConfig: {
+        maxOutputTokens: hasCatalog ? 6144 : 4096,
+        temperature: 0.3
       },
     };
+
     if (useSearch) geminiBody.tools = [{ google_search: {} }];
 
     const response = await fetch(GEMINI_API_URL, {
@@ -68,7 +78,7 @@ export async function POST(request) {
     }
 
     const data = await response.json();
-    
+
     // Extract text from response
     let text = '';
     if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
@@ -78,7 +88,7 @@ export async function POST(request) {
     }
 
     text = text.trim();
-    
+
     // Clean markdown code blocks if present
     if (text.includes('```')) {
       const match = text.match(/```(?:json)?\s*([\s\S]*?)```/);
@@ -93,7 +103,6 @@ export async function POST(request) {
 
     let depth = 0, inString = false, escape = false, end = -1;
     const substr = text.substring(start);
-    
     for (let i = 0; i < substr.length; i++) {
       const char = substr[i];
       if (escape) { escape = false; continue; }
@@ -109,19 +118,19 @@ export async function POST(request) {
     }
 
     const roadmap = JSON.parse(substr.substring(0, end + 1));
-    
+
     // Validate response structure
     if (!roadmap.years || !Array.isArray(roadmap.years) || roadmap.years.length < 1) {
       throw new Error('Invalid roadmap structure');
     }
 
     return Response.json(roadmap);
-    
+
   } catch (err) {
     console.error('HS roadmap error:', err);
-    return Response.json({ 
+    return Response.json({
       error: 'Failed to generate high school roadmap',
-      message: err.message 
+      message: err.message
     }, { status: 500 });
   }
 }
