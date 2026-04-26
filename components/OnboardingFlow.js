@@ -13,58 +13,90 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
   const [selectedMajor, setSelectedMajor] = useState('');
   const [customMajor, setCustomMajor] = useState('');
   const [customGoal, setCustomGoal] = useState('');
+  // NEW: optional prior coursework. Free-text; parsed/normalized on the server.
+  const [priorCoursework, setPriorCoursework] = useState('');
+
+  // Step indices:
+  // 0 name | 1 career | 2 program level | 3 major (college only) | 4 prior coursework | 5 finalize (school for college, "ready" for HS)
+  // For high-school students we hop 2 -> 4 -> 5 (no major step).
+  const FINAL_STEP = 5;
 
   var goTo = function(s) { setSlideDir(s > step ? 'right' : 'left'); setAnimKey(function(k) { return k + 1; }); setStep(s); };
   var goBack = function(s) { setSlideDir('left'); setAnimKey(function(k) { return k + 1; }); setStep(s); };
   var slideClass = slideDir === 'right' ? 'slide-in-right' : 'slide-in-left';
+
+  // Total step count for the "STEP X OF Y" labels — HS sees 4 user-facing steps, college sees 5.
+  var totalSteps = function() { return programLevel === 'highschool' ? 4 : 5; };
+  // User-facing step number (1-indexed) for a given internal step. HS skips the major step.
+  var displayStepNum = function(internal) {
+    if (programLevel === 'highschool') {
+      // 1 name skipped, internal 1 -> 1, 2 -> 2, 4 -> 3, 5 -> 4
+      if (internal === 1) return 1;
+      if (internal === 2) return 2;
+      if (internal === 4) return 3;
+      if (internal === 5) return 4;
+    }
+    if (internal === 1) return 1;
+    if (internal === 2) return 2;
+    if (internal === 3) return 3;
+    if (internal === 4) return 4;
+    if (internal === 5) return 5;
+    return internal;
+  };
+
   const handleBuild = async () => {
     if (!school.trim() && programLevel !== 'highschool') return;
     if (!selectedCareer) return;
-    
+
     const career = CAREER_OPTIONS.find((c) => c.id === selectedCareer);
     const isCustom = selectedCareer === 'custom';
     const major = customMajor.trim() || selectedMajor || '';
+    const trimmedPrior = priorCoursework.trim();
 
     if (programLevel === 'highschool') {
       var hsCareer = career || { id: selectedCareer, label: selectedCareer, icon: '🎯', color: '#1e1e1e', accent: '#C9A84C', majors: [] };
       var hsCareerGoal = isCustom ? customGoal : hsCareer.label;
+
       onLoading(true, selectedCareer, 'Building your high school roadmap...');
 
       var doHsFetch = function() {
         fetch('/api/generate-hs', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ careerGoal: hsCareerGoal }),
+          body: JSON.stringify({
+            careerGoal: hsCareerGoal,
+            priorCoursework: trimmedPrior || undefined,
+          }),
         })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-          if (data && data.years && data.years.length > 0) {
-            onComplete({
-              name: name,
-              career: selectedCareer,
-              careerLabel: data.careerField || hsCareerGoal,
-              programLevel: 'highschool',
-              hsRoadmap: data,
-              careerObj: hsCareer,
-            });
-          } else {
-            console.error('HS: No years in response', Object.keys(data || {}));
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (data && data.years && data.years.length > 0) {
+              onComplete({
+                name: name,
+                career: selectedCareer,
+                careerLabel: data.careerField || hsCareerGoal,
+                programLevel: 'highschool',
+                hsRoadmap: data,
+                careerObj: hsCareer,
+                priorCoursework: trimmedPrior || '',
+              });
+            } else {
+              console.error('HS: No years in response', Object.keys(data || {}));
+              if (onError) onError();
+            }
+          })
+          .catch(function(err) {
+            console.error('HS fetch failed:', err);
             if (onError) onError();
-          }
-        })
-        .catch(function(err) {
-          console.error('HS fetch failed:', err);
-          if (onError) onError();
-        });
+          });
       };
-
       if (onSaveRetry) onSaveRetry(doHsFetch);
       doHsFetch();
       return;
     }
 
     onLoading(true, selectedCareer, 'Searching ' + school + "'s course catalog...");
-    
+
     var doFetch = async function() {
       try {
         const res = await fetch('/api/generate', {
@@ -76,6 +108,7 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
             majorName: major,
             customGoal: isCustom ? customGoal : null,
             programLevel: programLevel,
+            priorCoursework: trimmedPrior || undefined,
           }),
         });
         if (!res.ok) throw new Error('API error');
@@ -88,11 +121,11 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
             school, major: data.major || major,
             courseData: data, programLevel: programLevel,
             careerObj: isCustom ? { ...career, label: data.careerTitle || 'Custom Path' } : career,
+            priorCoursework: trimmedPrior || '',
           });
         } else { throw new Error('Invalid data'); }
       } catch (err) { console.error(err); if (onError) onError(); else { onLoading(false); } }
     };
-    
     if (onSaveRetry) onSaveRetry(doFetch);
     doFetch();
   };
@@ -105,7 +138,6 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #0a0a0a 0%, #1e1e1e 50%, #0a0a0a 100%)', padding: 20, position: 'relative' }}>
       {onBack && <button onClick={onBack} style={{ position: 'fixed', top: 20, left: 20, zIndex: 50, padding: '8px 16px', borderRadius: 8, border: '1px solid #333333', background: 'rgba(20,20,20,0.8)', backdropFilter: 'blur(8px)', color: '#8a8a9a', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>← Back</button>}
       <div style={{ maxWidth: 520, textAlign: 'center' }} className={slideClass} key={animKey}>
-        
         <h1 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 'clamp(28px, 5vw, 42px)', color: '#fff', margin: '0 0 6px' }}>PathForge</h1>
         <p style={{ color: '#C9A84C', fontSize: 13, fontWeight: 600, letterSpacing: 2, marginBottom: 6 }}>AI-POWERED ACADEMIC ADVISING</p>
         <p style={{ color: '#8a8a9a', fontSize: 'clamp(14px, 2.5vw, 16px)', lineHeight: 1.6, marginBottom: 32 }}>Real courses. Real clubs. Career prep school won't teach you.<br />From high school to master's — personalized to you.</p>
@@ -137,7 +169,7 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #0a0a0a 0%, #1e1e1e 50%, #0a0a0a 100%)', padding: 20 }}>
       <div style={{ maxWidth: 600, width: '100%' }} className={slideClass} key={animKey}>
         <button onClick={() => goBack(0)} style={backBtn}>← Back</button>
-        <p style={{ color: '#C9A84C', fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP 1 OF 4</p>
+        <p style={{ color: '#C9A84C', fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP 1 OF {totalSteps()}</p>
         <h2 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>Hey {name}, where do you want to go?</h2>
         <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 24 }}>Pick a career path — or describe your own.</p>
         <div style={{ display: 'grid', gap: 10 }}>
@@ -171,7 +203,7 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #0a0a0a 0%, #1e1e1e 50%, #0a0a0a 100%)', padding: 20 }}>
       <div style={{ maxWidth: 520, width: '100%' }} className={slideClass} key={animKey}>
         <button onClick={() => goBack(1)} style={backBtn}>← Back</button>
-        <p style={{ color: CAREER_OPTIONS.find(c => c.id === selectedCareer)?.accent || '#C9A84C', fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP 2 OF 4</p>
+        <p style={{ color: CAREER_OPTIONS.find(c => c.id === selectedCareer)?.accent || '#C9A84C', fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP 2 OF {totalSteps()}</p>
         <h2 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>What level are you?</h2>
         <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 24 }}>This helps us tailor the roadmap to your program.</p>
         <div style={{ display: 'grid', gap: 12 }}>
@@ -212,7 +244,7 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #0a0a0a 0%, #1e1e1e 50%, #0a0a0a 100%)', padding: 20 }}>
         <div style={{ maxWidth: 520, width: '100%' }} className={slideClass} key={animKey}>
           <button onClick={() => goBack(2)} style={backBtn}>← Back</button>
-          <p style={{ color: accent, fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP 3 OF 4</p>
+          <p style={{ color: accent, fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP {displayStepNum(3)} OF {totalSteps()}</p>
           <h2 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>What's your intended major?</h2>
           <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 20 }}>Pick a suggested major or type your own. You can always change or add more later.</p>
           {suggestedMajors.length > 0 && (
@@ -241,16 +273,68 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
     );
   }
 
+  // STEP 4 — Prior coursework (NEW)
+  // Tailored copy per program level. Always optional — there's a Skip button.
+  if (step === 4) {
+    var isHs = programLevel === 'highschool';
+    var isMastersLvl = programLevel === 'masters';
+    var heading = isHs
+      ? "What classes have you already taken?"
+      : isMastersLvl
+        ? "Any relevant coursework you've already completed?"
+        : "Any classes you've already taken?";
+    var subhead = isHs
+      ? "Optional — list any high school courses you've already finished. We'll skip them in your roadmap."
+      : isMastersLvl
+        ? "Optional — list undergrad or grad classes that count toward this program. We'll plan around them."
+        : "Optional — list classes you've already completed (AP credits, transfer credits, prior college). We won't re-recommend them.";
+    var placeholder = isHs
+      ? "e.g. AP Calc BC, AP Bio, Spanish 3, Honors English 10..."
+      : isMastersLvl
+        ? "e.g. Microeconomics, Statistical Inference, Linear Algebra, Machine Learning..."
+        : "e.g. AP Calc BC (5), AP Stats, Calculus II at community college...";
+    var backStep = isHs ? 2 : 3;
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #0a0a0a 0%, #1e1e1e 50%, #0a0a0a 100%)', padding: 20 }}>
+        <div style={{ maxWidth: 520, width: '100%' }} className={slideClass} key={animKey}>
+          <button onClick={() => goBack(backStep)} style={backBtn}>← Back</button>
+          <p style={{ color: accent, fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP {displayStepNum(4)} OF {totalSteps()}</p>
+          <h2 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>{heading}</h2>
+          <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 16 }}>{subhead}</p>
+          <textarea
+            placeholder={placeholder}
+            value={priorCoursework}
+            onChange={(e) => setPriorCoursework(e.target.value)}
+            rows={5}
+            style={{ ...inp, resize: 'vertical', fontSize: 14, minHeight: 120, lineHeight: 1.5 }}
+          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, color: '#6a6a7a', fontSize: 12 }}>
+            <span style={{ fontSize: 14 }}>💡</span>
+            <span>Separate classes with commas. We'll match them to your school's catalog when possible.</span>
+          </div>
+          <button onClick={() => goTo(5)} style={btn(true, accent, clr)}>{priorCoursework.trim() ? 'Continue →' : 'Skip — I\'ll add later'}</button>
+        </div>
+      </div>
+    );
+  }
+
+  // STEP 5 — Finalize. School+build for college / "ready" screen for HS.
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(160deg, #0a0a0a 0%, #1e1e1e 50%, #0a0a0a 100%)', padding: 20 }}>
       <div style={{ maxWidth: 520, width: '100%' }} className={slideClass} key={animKey}>
-        <button onClick={() => goBack(programLevel === 'highschool' ? 2 : 3)} style={backBtn}>← Back</button>
-        <p style={{ color: accent, fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP {programLevel === 'highschool' ? '3 OF 3' : '4 OF 4'}</p>
+        <button onClick={() => goBack(4)} style={backBtn}>← Back</button>
+        <p style={{ color: accent, fontSize: 14, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>STEP {displayStepNum(5)} OF {totalSteps()}</p>
         {programLevel === 'highschool' ? (
           <>
             <h2 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 'clamp(24px, 4vw, 34px)', color: '#fff', margin: '0 0 8px' }}>Ready to build your plan!</h2>
             <p style={{ color: '#8a8a9a', fontSize: 15, marginBottom: 20 }}>We'll create a personalized 4-year high school roadmap to prepare you for top colleges in {isCustom ? customGoal : career.label}.</p>
             {isCustom && <div style={{ background: '#141414', border: '1px solid #fbbf2433', borderRadius: 12, padding: '12px 16px', marginBottom: 16 }}><div style={{ color: '#fbbf24', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>YOUR CUSTOM GOAL</div><p style={{ color: '#ccc', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{customGoal}</p></div>}
+            {priorCoursework.trim() && (
+              <div style={{ background: accent + '12', border: '1px solid ' + accent + '33', borderRadius: 12, padding: '12px 16px', marginBottom: 16 }}>
+                <div style={{ color: accent, fontSize: 12, fontWeight: 700, marginBottom: 4 }}>ALREADY COMPLETED</div>
+                <p style={{ color: '#ccc', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{priorCoursework.trim()}</p>
+              </div>
+            )}
             <div style={{ background: '#0A5C3615', border: '1px solid #0A5C3633', borderRadius: 12, padding: '12px 16px', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}><p style={{ color: '#8a8a9a', fontSize: 13, margin: 0, lineHeight: 1.5 }}>Your roadmap includes <strong style={{ color: '#4ade80' }}>AP/Honors course recommendations</strong>, extracurriculars, top colleges, and a complete timeline for college applications.</p></div>
             <button onClick={handleBuild} style={btn(true, accent, clr)}>Build My High School Roadmap</button>
           </>
@@ -262,6 +346,12 @@ export default function OnboardingFlow({ onComplete, onLoading, onError, onSaveR
               <div style={{ background: clr + '15', border: '1px solid ' + accent + '33', borderRadius: 12, padding: '10px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontSize: 16 }}>📘</span>
                 <span style={{ color: '#ccc', fontSize: 13 }}>Major: <strong style={{ color: accent }}>{customMajor.trim() || selectedMajor}</strong></span>
+              </div>
+            )}
+            {priorCoursework.trim() && (
+              <div style={{ background: accent + '12', border: '1px solid ' + accent + '33', borderRadius: 12, padding: '10px 16px', marginBottom: 16, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <span style={{ fontSize: 16, marginTop: 1 }}>✅</span>
+                <span style={{ color: '#ccc', fontSize: 13, flex: 1 }}>Already taken: <span style={{ color: accent }}>{priorCoursework.trim()}</span></span>
               </div>
             )}
             <input type="text" placeholder="e.g. Williams College, NYU, Stanford..." value={school} onChange={(e) => setSchool(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && school.trim() && handleBuild()} style={{ ...inp, marginBottom: 16 }} />
